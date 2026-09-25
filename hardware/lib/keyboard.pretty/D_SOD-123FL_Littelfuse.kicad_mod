@@ -1,0 +1,109 @@
+(footprint "D_SOD-123FL_Littelfuse"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Littelfuse SOD-123FL (SMF4L series), pads 0.98 x 1.25 mm at 3.22 mm pitch (datasheet p. 5)")
+	(tags "SOD-123FL TVS Littelfuse SMF4L")
+	(property "Reference" "REF**"
+		(at 0 -2 0)
+		(layer "F.SilkS")
+		(uuid "7da95fd1-8baf-4003-a8b2-611eb77e1299")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "D_SOD-123FL_Littelfuse"
+		(at 0 2 0)
+		(layer "F.Fab")
+		(uuid "4de561a6-3bd7-44b4-9a79-e0029781e4a0")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ca7b89c2-e0e4-4aea-ad02-3c17dce64ebe")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "271ba849-f353-4a47-9097-8f5db88e9b3c")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -0.9 -1.12)
+		(end 0.9 -1.12)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "5ca8aa68-87ef-41fb-849b-9cb88c53d7ca")
+	)
+	(fp_line
+		(start -0.9 1.12)
+		(end 0.9 1.12)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "757239a9-2078-49ab-971b-1f040b3a31f6")
+	)
+	(fp_rect
+		(start -2.35 -1.25)
+		(end 2.35 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "91f34573-b830-4b0a-8b82-baec363d2fa0")
+	)
+	(fp_rect
+		(start -1.55 -1)
+		(end 1.55 1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "60586031-ada9-4a36-9da9-e3c2fadb321a")
+	)
+	(pad "1" smd rect
+		(at -1.61 0)
+		(size 0.98 1.25)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "9faf79c3-a088-4227-8b44-d764a9a6dd67")
+	)
+	(pad "2" smd rect
+		(at 1.61 0)
+		(size 0.98 1.25)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "131f0dd3-8834-44c3-815a-891b1e5326a2")
+	)
+	(embedded_fonts no)
+)

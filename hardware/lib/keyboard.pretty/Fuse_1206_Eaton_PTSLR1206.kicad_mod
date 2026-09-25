@@ -1,0 +1,109 @@
+(footprint "Fuse_1206_Eaton_PTSLR1206"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Eaton PTSLR1206 PTC fuse (V075-V500), pads 1.0 x 1.9 mm, 2.0 mm gap (datasheet 11048 p. 3)")
+	(tags "PTC polyfuse resettable 1206 Eaton PTSLR1206")
+	(property "Reference" "REF**"
+		(at 0 -2 0)
+		(layer "F.SilkS")
+		(uuid "959b95c7-e817-48fa-acac-1b84d8847ed7")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "Fuse_1206_Eaton_PTSLR1206"
+		(at 0 2 0)
+		(layer "F.Fab")
+		(uuid "626666ee-03dd-4e0a-bcb5-5a33558f15d3")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "0d477a8d-d171-486e-8eb4-b284fe85d040")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "57d50808-5831-48ab-b6c2-29aba0516ee3")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -0.85 -1.07)
+		(end 0.85 -1.07)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "d876dbaf-cd8b-4f0e-aa60-b307dfccf8d6")
+	)
+	(fp_line
+		(start -0.85 1.07)
+		(end 0.85 1.07)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "afcc42bf-c045-47d1-aada-2d913e89b796")
+	)
+	(fp_rect
+		(start -2.25 -1.2)
+		(end 2.25 1.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "81a5a20b-0ced-48a1-b8f4-ce55b823a381")
+	)
+	(fp_rect
+		(start -1.75 -0.9)
+		(end 1.75 0.9)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "f8427feb-5675-47d3-b99e-e39548125a83")
+	)
+	(pad "1" smd rect
+		(at -1.5 0)
+		(size 1 1.9)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "673ba693-513a-4380-bc66-92a7efc73753")
+	)
+	(pad "2" smd rect
+		(at 1.5 0)
+		(size 1 1.9)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "9712fa1b-2320-4214-bbe5-c78573cc44c7")
+	)
+	(embedded_fonts no)
+)

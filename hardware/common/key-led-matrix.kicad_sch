@@ -1,0 +1,7 @@
+(kicad_sch (version 20250114) (generator "eeschema") (generator_version "10.0")
+	(uuid "5d30de67-aeb5-4513-810e-2bffe52bb8a2")
+	(paper "A4")
+	(title_block (title "Key board LED matrix block"))
+	(lib_symbols)
+	(sheet_instances (path "/" (page "1")))
+)

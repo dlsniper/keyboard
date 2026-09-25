@@ -1,0 +1,7 @@
+(kicad_sch (version 20250114) (generator "eeschema") (generator_version "10.0")
+	(uuid "b935176e-a36e-43db-9980-24899fc83175")
+	(paper "A4")
+	(title_block (title "keys-numpad"))
+	(lib_symbols)
+	(sheet_instances (path "/" (page "1")))
+)

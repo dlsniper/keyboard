@@ -1,0 +1,7 @@
+(kicad_sch (version 20250114) (generator "eeschema") (generator_version "10.0")
+	(uuid "40d50624-d294-43b8-95ed-a1a078296b32")
+	(paper "A4")
+	(title_block (title "keys-right"))
+	(lib_symbols)
+	(sheet_instances (path "/" (page "1")))
+)

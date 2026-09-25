@@ -1,0 +1,109 @@
+(footprint "L_Wuerth_WE-LQS-2512"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Wuerth WE-LQS 2512 semi-shielded power inductor (74404024022), datasheet recommended land pattern")
+	(tags "inductor Wuerth WE-LQS 2512")
+	(property "Reference" "REF**"
+		(at 0 -2 0)
+		(layer "F.SilkS")
+		(uuid "110d306e-12e5-4515-a9b6-c8308c306225")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "L_Wuerth_WE-LQS-2512"
+		(at 0 2 0)
+		(layer "F.Fab")
+		(uuid "dfdbac6a-79a2-4754-bb00-5e165e147f7c")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "d28786ea-f2b1-4f9c-a6b7-dc36437b114d")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "527d8dad-7009-4eb7-83e4-7008c75da192")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -0.3 -1.15)
+		(end 0.3 -1.15)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3b8d400d-775f-4778-b9d8-750b774b806d")
+	)
+	(fp_line
+		(start -0.3 1.15)
+		(end 0.3 1.15)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "6b9d3337-e8d7-4237-bcc1-1f7d880232c1")
+	)
+	(fp_rect
+		(start -1.75 -1.25)
+		(end 1.75 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "e13efa0d-5e8c-4957-9544-1c8a0939e26e")
+	)
+	(fp_rect
+		(start -1.25 -1)
+		(end 1.25 1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "2ced6ac9-e42b-4e84-933c-1d180a106154")
+	)
+	(pad "1" smd rect
+		(at -0.95 0)
+		(size 1.1 2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "3097e7e2-62f7-4e12-a38b-bd5a8bbfe300")
+	)
+	(pad "2" smd rect
+		(at 0.95 0)
+		(size 1.1 2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "8cbf5d47-e379-42df-a7b5-ed7e9d37dd30")
+	)
+	(embedded_fonts no)
+)

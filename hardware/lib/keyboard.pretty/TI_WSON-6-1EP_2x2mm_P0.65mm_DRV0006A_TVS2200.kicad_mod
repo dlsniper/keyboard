@@ -1,0 +1,136 @@
+(footprint "TI_WSON-6-1EP_2x2mm_P0.65mm_DRV0006A_TVS2200"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "TI DRV0006A WSON-6 2 x 2 mm, TVS2200 land pattern (drawing 4222173/C)")
+	(tags "WSON DRV TVS2200 TI")
+	(property "Reference" "REF**"
+		(at 0 -2 0)
+		(layer "F.SilkS")
+		(uuid "209d0a40-278f-43d4-91c6-98b6f8e41ad7")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "TI_WSON-6-1EP_2x2mm_P0.65mm_DRV0006A_TVS2200"
+		(at 0 2 0)
+		(layer "F.Fab")
+		(uuid "2343e6a6-b186-466b-9002-050e0170661b")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ced78709-9453-41b7-bfd1-63d70c0efc02")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "002f98d0-cc9c-479e-a12a-77a51504fa10")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_circle
+		(center -1.45 -0.95)
+		(end -1.37 -0.95)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+		(uuid "35e86bb5-ff23-47bf-9112-2ad762bce8e0")
+	)
+	(fp_rect
+		(start -1.45 -1.25)
+		(end 1.45 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "d37378c4-0834-45ef-ad6f-0c4cdecb1761")
+	)
+	(fp_rect
+		(start -1 -1)
+		(end 1 1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "e991ea4a-3724-4b80-ae7e-e391f06bfd70")
+	)
+	(pad "1" smd roundrect
+		(at -0.975 -0.65)
+		(size 0.45 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.166)
+		(uuid "1fd6bec8-f46d-43d0-923e-91718a218f0e")
+	)
+	(pad "2" smd roundrect
+		(at -0.975 0)
+		(size 0.45 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.166)
+		(uuid "2dc8005e-e37f-4104-b1e5-8eb20fbe080d")
+	)
+	(pad "3" smd roundrect
+		(at -0.975 0.65)
+		(size 0.45 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.166)
+		(uuid "9dae1367-26b2-4795-be3c-8db162e8d63b")
+	)
+	(pad "4" smd roundrect
+		(at 0.975 0.65)
+		(size 0.45 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.166)
+		(uuid "d3cb6ab7-8193-44b4-a6f5-e286747c8ac8")
+	)
+	(pad "5" smd roundrect
+		(at 0.975 0)
+		(size 0.45 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.166)
+		(uuid "fb125cbc-2222-42fd-9cac-7ec9e06fea3d")
+	)
+	(pad "6" smd roundrect
+		(at 0.975 -0.65)
+		(size 0.45 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.166)
+		(uuid "3136895a-f33b-4663-bdbf-6430f8a500cb")
+	)
+	(pad "7" smd rect
+		(at 0 0)
+		(size 1 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "f83fdace-1511-411a-9fa1-da71ec7f1e57")
+	)
+	(embedded_fonts no)
+)

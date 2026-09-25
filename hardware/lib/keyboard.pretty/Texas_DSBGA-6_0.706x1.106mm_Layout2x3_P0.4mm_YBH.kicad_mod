@@ -1,0 +1,130 @@
+(footprint "Texas_DSBGA-6_0.706x1.106mm_Layout2x3_P0.4mm_YBH"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "TI YBH0006 DSBGA-6, 2 x 3 at 0.4 mm, NSMD copper 0.2 mm (TPS22950 SLVSFJ2B, 4226594/A)")
+	(tags "WLCSP DSBGA CSP")
+	(property "Reference" "REF**"
+		(at 0 -1.403 0)
+		(layer "F.SilkS")
+		(uuid "fb873ca3-b633-433e-819d-28c80a18b46e")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "Texas_DSBGA-6_0.706x1.106mm_Layout2x3_P0.4mm_YBH"
+		(at 0 1.403 0)
+		(layer "F.Fab")
+		(uuid "f058cbb8-8bba-4224-af6a-8975f63c43e3")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "491b68c7-bfb4-4ce4-bc3d-ee038676c9d8")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "22defd1d-5cf4-413f-a057-0202bad89eff")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_circle
+		(center -0.653 -0.853)
+		(end -0.573 -0.853)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+		(uuid "77ca5f58-fb55-4e7c-bccc-326c4594e2a0")
+	)
+	(fp_rect
+		(start -0.603 -0.803)
+		(end 0.603 0.803)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "0173bf7d-2e37-44b4-9d1a-811a2d0d2217")
+	)
+	(fp_rect
+		(start -0.353 -0.553)
+		(end 0.353 0.553)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "46a23a9e-e75b-4637-a18c-5465dd7cc195")
+	)
+	(pad "A1" smd circle
+		(at -0.2 -0.4)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "543b630f-dd95-4312-a8f2-317329213d95")
+	)
+	(pad "A2" smd circle
+		(at 0.2 -0.4)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "9857992a-f29e-40db-a9f0-6d6bf38c7393")
+	)
+	(pad "B1" smd circle
+		(at -0.2 0)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "4c1bcc00-3ee8-4af8-a917-c28ef15e5ea3")
+	)
+	(pad "B2" smd circle
+		(at 0.2 0)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "fa17382f-e0d0-4bf0-bb5a-44ef79a6efa9")
+	)
+	(pad "C1" smd circle
+		(at -0.2 0.4)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "c6e667d6-1bee-4a65-ade1-bb38db91cd71")
+	)
+	(pad "C2" smd circle
+		(at 0.2 0.4)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "d5e079ea-b135-4b2b-b012-ad49fd48e871")
+	)
+	(embedded_fonts no)
+)

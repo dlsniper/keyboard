@@ -1,0 +1,16 @@
+(version 1)
+# U401 escape (2026-09-25): the MDBT50Q-1MV2 outer pad row leaves 0.40 mm between pads, too narrow for
+# 0.2 mm track / 0.15 mm clearance. Inside the U401_ESCAPE rule area (module pads + 1 mm), ordinary signals,
+# GND and unused module pins may use 0.127 mm track and clearance (the generic 0.127 mm fab minimum) and
+# 0.5 / 0.25 mm vias. POWER / VBUS_HI / USB keep their net-class values everywhere.
+# Values need units ("0.127mm"): KiCad 10.0.6 silently ignores a rules file with bare numbers.
+(rule "U401 escape clearance"
+  (condition "A.intersectsArea('U401_ESCAPE') && B.intersectsArea('U401_ESCAPE') && A.NetClass != 'POWER' && B.NetClass != 'POWER' && A.NetClass != 'VBUS_HI' && B.NetClass != 'VBUS_HI' && A.NetClass != 'USB' && B.NetClass != 'USB'")
+  (constraint clearance (min 0.127mm)))
+(rule "U401 escape track"
+  (condition "A.Type == 'Track' && A.intersectsArea('U401_ESCAPE') && A.NetClass != 'POWER' && A.NetClass != 'VBUS_HI' && A.NetClass != 'USB'")
+  (constraint track_width (min 0.127mm) (opt 0.127mm)))
+(rule "U401 escape via"
+  (condition "A.Type == 'Via' && A.intersectsArea('U401_ESCAPE') && A.NetClass != 'POWER' && A.NetClass != 'VBUS_HI' && A.NetClass != 'USB'")
+  (constraint via_diameter (min 0.5mm) (opt 0.5mm))
+  (constraint hole_size (min 0.25mm) (opt 0.25mm)))
