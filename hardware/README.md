@@ -7,7 +7,30 @@ project, then `tools/check_interconnect.py`; reports in `build/kicad-check/`).
 The generator always rewrites `lib/`, and only creates project files that are
 missing, so schematic and board work is never overwritten.
 
-## Projects
+## Rev 8 status (2026-09-26)
+
+The spec moved to rev 8 (hub + dumb key modules, spec §17). **The files below are
+still the rev 7 boards**, unchanged and committed as `0b22b91`; the board refactor is
+the next step after the rev 8 docs are reviewed (`next.md`). Planned disposition:
+
+| Project | Refs | Thickness | Rev 7 state | Rev 8 plan |
+| --- | --- | --- | --- | --- |
+| `keys-right/` `keys-left/` `keys-numpad/` | 1xx / 2xx / 3xx | 1.6 mm | empty | new design: sockets, LEDs, IS31FL3733, module controller (P19), LDO, `J_COMM`, `J_DIAL` on `right` |
+| `core/` | 4xx | 1.6 mm, 4 layers | schematic ERC 0; PCB 32 × 90 mm placed and routed except 7 nets (details below) | splits into **`hub-base/`** (horizontal: power path, TCA9548A, buttons, stacking headers) and **`hub-mcu/`** (vertical MCU board on the core layer's wall: MDBT50Q, crystal, SWD, USB ESD; `J_MCU` 2×25 right angle), 2026-09-26. From `sch_core.py`: keep the power path, MCU support and expansion LDO in `sch_core.py`; drop the matrix, UART, link, module-ID and `J_ROW`/`J_COL`/`J_LED`/`J_LINK`/`J_BAT` parts; add the TCA9548A, the slot 2×16, chain 2×6 and expansion 2×10 headers, `PACK_EN`/`PACK_SENSE`, the `AUX_5V` OR input; both PCBs new, outlines from the hub tower (M11) |
+| `usb-port/` | 5xx | 1.6 mm | ERC 0 | keep as the host port board |
+| (new) `connector-wired/` | 12xx | 1.6 mm | — | wired connector layer carrier: slot 2×16 + chain 2×6 on top, chain 2×6 underneath, 3 × `J_SLOT` (2026-09-26) |
+| `link/` | 6xx | 1.6 mm | ERC 0, variants `upstream`/`downstream` | becomes **`comms/`** (hub population = the wired connector layer's socket boards): drop the KTS1693 population; variants `hub` (TPS22950L, `J_SLOT` 14) and `module` (BAT54C, `J_COMM` 10); CC1/CC2 in place of SBU |
+| `seam/` | 7xx | 1.2 mm | ERC 0, 4 variants | **retire** (seams are mechanical only); 7xx stays unused |
+| `battery/` | 8xx | 1.6 mm | ERC 0 | revise: add the per-pack ideal diode, the `PACK_SENSE` BAT54, chain contacts in and through (E20, M10) |
+| `dial/` | 9xx | 1.6 mm | ERC 0, PCB DRC + parity 0 | keep; recheck the A/B filter against the module controller (P19) |
+| `expansion/` | 10xx | 1.6 mm | ERC 0 | keep, on the hub |
+| `plate/plate-*` | none | 1.5 mm | outlines pending | keep |
+| `common/` | — | — | empty sheets (LED matrix, link routing) | keep the LED matrix sheet; replace link routing with a module-controller block |
+
+`tools/check_interconnect.py` needs its `MATES`/`PENDING` tables rebuilt for rev 8
+(`J_SLOT`↔hub, `J_COMM`↔key boards, `J_CHAIN`).
+
+## Projects (rev 7 detail, still describing the files on disk)
 
 | Project | Refs | Thickness | Notes |
 | --- | --- | --- | --- |
