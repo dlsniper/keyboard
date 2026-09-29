@@ -1,11 +1,10 @@
 # Next
 
 State 2026-09-29, branch `next-steps`. **Spec rev 8** (`plans/keyboard.md`). Committed on this branch: the rev 8
-docs (`050284d`) and vendor datasheets (`1590e5b`). **Uncommitted, 2026-09-28/29** (review with `git diff`; commit
-only when the user asks): X1; F7's hardware side; `J_COMM`, `J_SLOT`, slot-header and hub MCU pad orders; key-board
-LDO; TCA9548A package; M10 part family; M11's first decisions (workflow, 90 × 90 mm, MDBT50Q-U1MV2 on the base board
-with an internal flex antenna, `J_MCU` and the vertical MCU board dropped); the MSPM0G3505 symbol, the TPS7A0233PDBV symbol and two
-TI land-pattern footprints (`tools/gen_kicad.py`, `hardware/lib/`). Rev 7 (per-module cores + wired/BLE split) is
+docs (`050284d`), vendor datasheets (`1590e5b`), and the 2026-09-28/29 work (`b76c3f6`: X1; F7's hardware side;
+`J_COMM`, `J_SLOT`, slot-header and hub MCU pad orders; key-board LDO; TCA9548A package; ESQ family and lead style;
+M11's first decisions; the MSPM0G3505 and TPS7A0233PDBV symbols, two TI land patterns; `mech/hub/build_hub.py` v0).
+Commit only when the user asks. Rev 7 (per-module cores + wired/BLE split) is
 commit `0b22b91`.
 
 **The user wants the hardware solved before any firmware work.** In progress: **M11, the hub tower**, modelled in
