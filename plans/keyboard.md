@@ -29,10 +29,10 @@ power design looks the way it does.
    | OPTIONAL LAYERS (0..n), e.g. a display; stack on the core's top   |
    |   expansion header (2x10, pass-through)                           |
    +===================== expansion header 2x10 =======================+
-   | CORE LAYER   base board (horizontal): power path, LED rail,  |MCU |<-- host USB-C (USB port board)
-   |              TCA9548A, buttons, all stacking headers         |brd |    expansion SH socket (expansion board)
-   |              + vertical MCU board on the wall: MDBT50Q,      |    |    antenna faces the room
-   |                crystal, SWD, USB ESD (2x25 right-angle join) |    |
+   | CORE LAYER   base board (one board, ~84 x 84 mm): MDBT50Q-U1MV2,  |<-- host USB-C (USB port board)
+   |              power path, LED rail, TCA9548A, buttons, all         |    expansion SH socket (expansion board)
+   |              stacking headers; u.FL -> flex antenna on the        |    antenna inside the case wall
+   |              inside of the case wall (RP-SMA knock-out, blanked)  |    (external RP-SMA optional)
    +==== slot header 2x16 ==== chain header 2x6 ======================+
    | CONNECTOR LAYER (swappable: wired now; radio, optical, mixed      |
    |   later). Wired: carrier PCB + 3 socket boards (hub-side comms    |--> slot 1 --> USB-C cable --> [left]
@@ -61,12 +61,13 @@ power design looks the way it does.
   optional layer), a **2×16 slot header** between the core and the connector layer
   only, and a **2×6 chain header** in the same place on every layer from the core
   down (§6). The expansion board's JST-SH socket stays for cabled accessories.
-- **The core layer is two boards** (decided 2026-09-26): a horizontal **base
-  board** (power path, LED rail, TCA9548A, buttons, every stacking header) and a
-  small **MCU board standing on the enclosure wall** (MDBT50Q, crystal, SWD, USB
-  ESD), joined by a 2.54 mm right-angle 2×25 header. The antenna's plane faces the
-  room, and the layers above and below are perpendicular to it rather than over
-  it.
+- **The core layer is one board** (decided 2026-09-29; the vertical MCU board of
+  2026-09-26 is dropped): the **base board** carries the **MDBT50Q-U1MV2** (u.FL,
+  no on-module antenna), the power path, LED rail, TCA9548A, buttons and every
+  stacking header. The module's u.FL feeds an **adhesive flex antenna on the
+  inside of a core-section wall**; the wall also has a **blanked RP-SMA
+  knock-out**, so an external antenna (u.FL-to-RP-SMA pigtail) is a swap, not a
+  respin (§11, §13).
 - **Each key module is a key board plus a module-side comms board.** The key board
   carries switches, diodes, RGB LEDs, the LED driver and a small **module
   controller** MCU (no radio) that scans the matrix and the dial, drives the LED
@@ -116,12 +117,12 @@ blocking are impossible regardless of how many keys are held.
 
 | | Hub |
 | --- | --- |
-| MCU | MDBT50Q-1MV2 or MDBT50Q-U1MV2 (land pattern and keepout for both) |
+| MCU | **MDBT50Q-U1MV2** (u.FL, 2026-09-29), on the base board; flex antenna inside the case wall, blanked RP-SMA knock-out for an external antenna |
 | Host | USB-C on the USB port board (KTS1693, CC sense); BLE |
 | Slots | 3, on the connector layer (rev A wired: a socket board per slot), each with a switched LED rail, one TCA9548A channel, `INT`; joined to the core by the 2×16 slot header |
 | Cells | battery chain, rev A 2 battery modules × 2 AA (alkaline or NiMH) |
 | Expansion | expansion board, cabled to the hub core |
-| Layers | optional layers (0..n) / core (base board + vertical MCU board) / connector / battery module 1…N, or Qi2 board instead of the battery modules (§1) |
+| Layers | optional layers (0..n) / core (one base board, MCU on it) / connector / battery module 1…N, or Qi2 board instead of the battery modules (§1) |
 | Future | Qi2 board in place of battery module 1 (§15); radio/optical/mixed connector layers and module-side boards (§15) |
 | SWD | test points + Tag-Connect footprint |
 
@@ -134,16 +135,15 @@ plug in with cables. The hub core and key boards sit behind that protection.
 
 | Board | Design | Per keyboard | Carries | Assembly | Replaced when |
 | --- | --- | --- | --- | --- | --- |
-| **Hub MCU board** (vertical, 2026-09-26) | 1 | 1 | MDBT50Q-1MV2 or -U1MV2 with its antenna at the free edge, 32.768 kHz crystal, `VDD`/`VBUS` decoupling, SWD pads + Tag-Connect TC2030-NL footprint, 27 Ω D+/D−, a 2.54 mm right-angle 2×25 header to the base board | assembler | MCU fault |
-| **Hub base board** (horizontal) | 1 | 1 | reset and bootloader tactiles, slide power switch and UVLO supervisor on the chain's `PACK_EN`, `VBUS_IN` OR (host USB + chain `AUX_5V`), logic LDO + logic boost (TPS61099DRV or MAX17222) + `VSYS` priority mux, LED boost + LED-rail mux, expansion LDO + `J_EXP`, **TCA9548A I2C switch**, 2×25 socket for the MCU board, 2×10 expansion header on top, 2×16 slot header and 2×6 chain header underneath, `J_USB`, `VBAT` sense, test points | assembler | power path fault |
+| **Hub base board** (horizontal, ~84 × 84 mm; one board since 2026-09-29) | 1 | 1 | **MDBT50Q-U1MV2** with its u.FL to an adhesive flex antenna on the inside of the case wall (or a u.FL-to-RP-SMA pigtail to the blanked knock-out), 32.768 kHz crystal, `VDD`/`VBUS` decoupling, SWD pads + Tag-Connect TC2030-NL footprint, 27 Ω D+/D−, reset and bootloader tactiles, slide power switch and UVLO supervisor on the chain's `PACK_EN`, `VBUS_IN` OR (host USB + chain `AUX_5V`), logic LDO + logic boost (TPS61099DRV or MAX17222) + `VSYS` priority mux, LED boost + LED-rail mux, expansion LDO + `J_EXP`, **TCA9548A I2C switch**, 2×10 expansion header on top, 2×16 slot header and 2×6 chain header underneath, `J_USB`, `VBAT` sense, test points | assembler | power path or MCU fault |
 | **Connector layer, wired** (2026-09-26) | 1 carrier PCB | 1 | carrier PCB: 2×16 slot header and 2×6 chain header on top, 2×6 chain header underneath (chain passed through), 3 × 14-pin `J_SLOT` to the socket boards; no active parts planned | assembler (headers) or by hand | rarely; the socket boards take the wear |
-| **Key board** | 3, one per module | 3 | hotswap sockets, diodes, RGB LEDs, IS31FL3733, **module controller**, 3.3 V LDO, I2C pull-ups, module-ID strap, SWD pads, `J_COMM`, `J_DIAL` (`right`) | assembler | rarely; sockets and LEDs are hand-reworkable |
+| **Key board** | 3, one per module | 3 | hotswap sockets, diodes, RGB LEDs, IS31FL3733, **module controller**, 3.3 V LDO (TPS7A0233PDBVR, TLV75733PDBVR second source on the same footprint), I2C pull-ups, module-ID strap, SWD pads, `BSL_invoke` rescue pad (PA18 + 3V3, §9), `J_COMM`, `J_DIAL` (`right`) | assembler | rarely; sockets and LEDs are hand-reworkable |
 | **Comms board, cable** | 1 PCB, 2 populations | 3 hub side (the wired connector layer's socket boards) + 3 module side | GCT USB4085 USB-C receptacle, TPD6E05U06 on A5, B5, A6, B6, A7, B7, SMF6.0A on VBUS. **Hub population:** TPS22950L slot switch + `ILIM` 624 Ω, CC pull-ups fed from `SLOT_EN`, **14-pin `J_SLOT`**. **Module population:** BAT54C joining CC1/CC2 into `INT`, **10-pin `J_COMM`**. KiCad design variants `hub` / `module`; the header pin counts differ so neither fits the other's position (repurposes the rev 7 link board) | assembler | socket worn, surge |
 | **USB port board** | 1 | 1 (host port, on the hub) | USB-C receptacle, 2 × 5.1 kΩ CC, KTS1693, OVLO divider, TVS2200 footprint, SMF6.0A, USBLC6-2SC6, TVS2200 on CC1/CC2; GCT USB4085 (unchanged from rev 7) | assembler | socket worn, surge, OVP latched and not recovering |
 | **Battery module** | 1 | 2 in rev A, more by chaining | one 2×AA holder and the rev 7 pack chain (SMF4L9.0CA, reverse-block and OVP AO3415A with gate clamps, TPS3840PL35 + RC, PTC, DNP OVP bypass, R806 bleeder), **plus its own ideal diode onto the chain's `VBAT`** (LM66200, one channel, decided 2026-09-26), a BAT54 onto `PACK_SENSE`, and chain-in / chain-through contacts | hand-solderable except the PTC and the LM66200 (0.5 mm-pitch SOT), both reflowed or hot-air soldered | reversed cells, 14500s, terminal ESD, corroded holder |
 | **Dial board** | 1 | 1 (`right`) | unchanged from rev 7: PEC11R, push-switch diode, 1 kΩ + 10 nF on A and B, DNP TPD4E1U06DBV, 5-pin `J_DIAL`; the A/B filter re-checked against the MSPM0G3505's 40 kΩ pull-up and unchanged (2026-09-26) | hand-solderable | encoder worn |
 | **Expansion board** | 1 | 1 (on the hub) | unchanged from rev 7: JST SM12B-SRSS-TB, TPD4E05U06 + TPD6E05U06, 15-pin `J_EXP`; shares the expansion bus with the top header (kept 2026-09-26 for cabled accessories) | assembler (ESD arrays) | socket worn, ESD hit |
-| *Optional top layers* (display first, future) | per add-on | 0..n | stack on the core's 2×10 expansion header and pass it through; each takes one SPI chip select by a jumper and has its own I2C address; ESD on anything user-touchable | — | — |
+| *Optional top layers* (display first, future) | per add-on | 0..n | stack on the core's 2×10 expansion header and pass it through; each takes one SPI chip select (CS0–CS3) by a jumper, carries a 24xx02-class ID EEPROM at 0x50 + its CS number (X1, §6) and needs distinct I2C addresses for anything else; ESD on anything user-touchable | — | — |
 | *Qi board* (future) | 1 | 0–1 | Qi2 receiver, `AUX_5V` into the hub's chain header, used instead of the battery stack (§15) | — | — |
 | *Radio / optical / mixed connector layers and module-side boards* (future) | per medium | 1 layer + 3 module boards | the layer uses the same 2×16 slot header and 2×6 chain pass-through; the module side uses `J_COMM`; a module-side wireless board may bring its own battery chain (§15) | — | — |
 
@@ -196,7 +196,7 @@ Rules that fall out of the partition:
 | Interconnect | **several small locking wire-to-board connectors, split by function**, JST GH family (1.25 mm, positive lock) proposed, **any fallback must also lock**; ≥2 contacts per power net; unique pin counts | hand-solderable, premade cables, a cable is a spare part |
 | Module ID | strap on the key board, read by the module controller, reported in the register map | identical module-controller firmware on every key board; the hub maps keys by ID, not by slot |
 | Service | slide switch off and USB unplugged before unplugging an internal cable, **backed by series R into the key board's logic pins**; tool-less cell access; M2 screws throughout; every external connector is user-replaceable by swapping the small board it sits on | builders will pull cables live anyway; plugs wear and take the surges |
-| MCU (hub) | Raytac MDBT50Q-1MV2, **second source MDBT50Q-U1MV2** (chip antenna); the hub core is laid out for both land patterns and both antenna keepouts | pre-certified, no RF work; Fanstel BT840 is a different pad layout and **not** a drop-in |
+| MCU (hub) | **Raytac MDBT50Q-U1MV2** (u.FL connector, no on-module antenna; 2026-09-29), **single source accepted**; on the base board; antenna: adhesive flex antenna on the inside of a core-section wall, **blanked RP-SMA knock-out** for an external antenna on a u.FL-to-RP-SMA pigtail | pre-certified module, antenna placed away from the stack's copper and cells; Raytac datasheet ver L: 1MV2 = chip antenna, P1MV2 = PCB antenna, U1MV2 = u.FL (the spec called U1MV2 the chip variant until 2026-09-29); all three share one land pattern; Fanstel BT840 is a different pad layout and **not** a drop-in |
 | LFCLK | external 32.768 kHz crystal | **not** on-module; internal RC is ±250 ppm |
 | Seams | numpad = digits+operators only; arrows+nav on `right`; **mechanical join only** (rev 8) | detaching numpad loses only digits; nothing electrical crosses a seam |
 | Lighting | IS31FL3733, common-anode RGB, 1 CS + 3 SW per LED | per-key independent colour, 8-bit PWM per channel; serial-chain parts cost 0.6 mA/LED idle |
@@ -278,7 +278,7 @@ key board.
                      |                    |                    |
                [COM-M] TVS           [COM-M] TVS           [COM-M] TVS
                      |                    |                    |
-               [KEY] IS31FL3733 VCC + LED anodes; 3.3 V LDO -> module controller, driver VIO, pull-ups
+               [KEY] IS31FL3733 VCC + LED anodes; TPS7A0233P LDO -> module controller, driver VIO, pull-ups
 ```
 
 The pack chain sits on each battery module, so a reversed cell, a 14500 pair or a
@@ -545,8 +545,9 @@ Rules:
   pinout **1 `VBAT`, 2 GND, 3 `VBAT`, 4 GND, 5 `AUX_5V`, 6 `PACK_EN`, 7
   `PACK_SENSE`, 8 `AUX_5V`, 9 GND, 10 `VBAT`, 11 GND, 12 `VBAT`**. Turned 180°, pin
   k meets pin 13−k, so power meets its own net and only `PACK_EN` and
-  `PACK_SENSE` swap, which leaves every pack off. Exact part (socket with long
-  tails, or pins + socket) open.
+  `PACK_SENSE` swap, which leaves every pack off. **Part family (M10, decided
+  2026-09-29): Samtec ESQ elevated socket with square stack-through tails, socket
+  on each board's top face, tails down** into the socket of the layer below (§11).
 
   **Why `PACK_SENSE` exists.** The UVLO supervisor must survive its own cutoff.
   Rev 7 fed it from both packs ahead of the OR through a BAT54C. With the OR moved
@@ -690,40 +691,58 @@ On USB the LED budget follows the host port's CC reading (§6). Full white is
 Raytac restricts 21 of the 48 pads to **low-frequency I/O only, ≤10 kHz — no
 UART, I2C, SPI or PWM** because they sit near the radio. Restricted (LF-only) pads:
 `P0.02 P0.03 P0.09 P0.10 P0.28 P0.29 P0.30 P0.31 P1.01–P1.07 P1.10–P1.15`
-(MDBT50Q-1MV2 datasheet version L, §2.5). `P0.09`/`P0.10` need
+(MDBT50Q datasheet version L, §2.5, one pin table for every variant). `P0.09`/`P0.10` need
 `CONFIG_NFCT_PINS_AS_GPIOS=y`. 24 full-function pads remain once XL1/XL2 (P0.00,
 P0.01) and nRESET (P0.18) are taken.
 
-| Use | Pins | Class |
-| --- | --- | --- |
-| Slot I2C (TWIM0) to the TCA9548A | 2 | **full-function** |
-| TCA9548A `RESET` | 1 | LF ok |
-| Slot `INT`, two per slot (one per cable CC pin, §6) | 6 | LF ok, wake-capable (any GPIO can wake from System OFF) |
-| Slot switch `SLOT_EN` | 3 | LF ok |
-| Expansion SDA/SCL/SCK/MOSI/CS/DC | 6 | **full-function** |
-| Expansion RST/INT | 2 | LF ok |
-| Host CC1/CC2 sense | 2 | LF ok, `AINx` |
-| Battery sense + divider EN | 2 | LF ok, sense on `AINx` |
-| LED boost EN (disable only), expansion LDO EN | 2 | LF ok |
-| Bootloader button | 1 | LF ok |
-| KTS1693 `ACOK` (host port) | 1 | LF ok |
-| `AUX_5V` present (Qi, §15) | 1 | LF ok |
-| `J_SLOT` spares for future comms boards, two per slot | 6 | **full-function** (a future UART or SPI) |
-| LFXO crystal XL1/XL2 | 2 | dedicated |
-| **Total** | **37 / 47** | |
-| Full-function pads used | **14 of 24** | |
+**Pad assignment (decided 2026-09-29).** Pad numbers from `RF_Module:Raytac_MDBT50Q`;
+the left column (pads 1–14) and the inner row (56–61) are all LF-only, the bottom
+row (16–29) all full-function, the right column (36–49) full-function except the
+three LF pads 50, 52, 54.
+
+| Pad | GPIO | Net | Class | | Pad | GPIO | Net | Class |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 3 | P1.10 | `S0_INT_A` | LF | | 36 | P0.14 | `EXP_SCK` | full |
+| 4 | P1.11 | `S0_INT_B` | LF | | 37 | P0.13 | `EXP_MOSI` | full |
+| 5 | P1.12 | `S1_INT_A` | LF | | 38 | P0.16 | `EXP_MISO` | full |
+| 6 | P1.13 | `S1_INT_B` | LF | | 39 | P0.15 | `EXP_DC` | full |
+| 7 | P1.14 | `S2_INT_A` | LF | | 41 | P0.17 | `EXP_CS0` | full |
+| 8 | P1.15 | `S2_INT_B` | LF | | 42 | P0.19 | `EXP_CS1` | full |
+| 9 | P0.03 | `S0_SLOT_EN` | LF | | 43 | P0.21 | `EXP_CS2` | full |
+| 10 | P0.29 | `CC2_SENSE` (AIN5) | LF | | 44 | P0.20 | `EXP_CS3` | full |
+| 11 | P0.02 | `VBAT_SENSE` (AIN0) | LF | | 45 | P0.23 | `EXP_SDA` | full |
+| 12 | P0.31 | `CC1_SENSE` (AIN7) | LF | | 46 | P0.22 | `EXP_SCL` | full |
+| 13 | P0.28 | `S1_SLOT_EN` | LF | | 47 | P1.00 | — | full, free |
+| 14 | P0.30 | `S2_SLOT_EN` | LF | | 48 | P0.24 | — | full, free |
+| 16 | P0.27 | `SLOT_SCL` | full | | 49 | P0.25 | — | full, free |
+| 19 | P0.26 | `SLOT_SDA` | full | | 50 | P1.02 | `BOOT` | LF |
+| 20 | P0.04 | `S0_SPARE1` (AIN2) | full | | 52 | P0.09 | `EXP_RST` | LF, NFC |
+| 21 | P0.05 | `S0_SPARE2` (AIN3) | full | | 54 | P0.10 | `EXP_LDO_EN` | LF, NFC |
+| 22 | P0.06 | `S1_SPARE1` | full | | 56 | P1.04 | `TCA_RESET` | LF |
+| 23 | P0.07 | `S1_SPARE2` | full | | 57 | P1.06 | `BAT_DIV_EN` | LF |
+| 24 | P0.08 | `S2_SPARE1` | full | | 58 | P1.07 | `LED_BOOST_EN` | LF |
+| 25 | P1.08 | `S2_SPARE2` | full | | 59 | P1.05 | `ACOK` | LF |
+| 26 | P1.09 | `SPARE` | full | | 60 | P1.03 | `AUX_5V_PRES` | LF |
+| 27 | P0.11 | — | full, free | | 61 | P1.01 | `EXP_INT` | LF |
+| 29 | P0.12 | — | full, free | | 40 | P0.18 | `NRESET` | reset |
+
+Dedicated: 17/18 XL1/XL2 (LFXO), 34/35 D−/D+, 32 `VBUS`, 28 `VDD`, 30 `VDDH`,
+31 `DCCH`, 51/53 SWDIO/SWDCLK, GND 1, 2, 15, 33, 55.
+
+- **Totals:** 19 full-function signals on 24 full-function pads (5 free: P0.11,
+  P0.12, P1.00, P0.24, P0.25); 21 LF signals exactly fill the 21 LF-only pads;
+  42 of 47 GPIOs plus nRESET. The CC and VBAT sense pads are rev 7's.
+- The NFC pads carry two outputs (`EXP_RST`, `EXP_LDO_EN`), which needs
+  `CONFIG_NFCT_PINS_AS_GPIOS=y` (UICR). Leakage between the NFC pads at different
+  levels is **not verified** (the nRF52840 product specification cannot be
+  downloaded here); both nets have ≤100 kΩ loads.
+- The hub keeps every `SPARE` pad hi-Z until a connector layer defines it (§6).
+- The module sits on the base board with everything it drives (2026-09-29; the
+  `J_MCU` join is dropped, §6).
 
 Rev 7's core union was 45 of 47 with 22 of 24 full-function pads; the key matrix,
-dial, two UARTs, link switch and module-ID pins are gone. The pad assignment is
-redone at hub capture; the rev 7 table (§5 of `0b22b91`) is the starting point.
-USB D+/D−, SWDIO/SWDCLK and VBUS are dedicated pads costing no GPIO. The
-TCA9548A's spare channels (8 − 3 slots) can carry the expansion bus or a Qi
-board's status bus. **Rev 8 stack changes (2026-09-26):** the expansion bus now also
-feeds the 2×10 top header, which adds MISO and three more chip selects (4 pins,
-full-function), so the hub uses ~41 of 47 pins and ~18 of 24 full-function pads.
-Every MCU pin used by the base board crosses the 2×25 right-angle join to the
-vertical MCU board (~40 signals + power; USB D± on adjacent pins with GND either
-side).
+dial, two UARTs, link switch and module-ID pins are gone. The TCA9548A's spare
+channels (8 − 3 slots) can carry a Qi board's status bus.
 
 ### Key board (module controller)
 
@@ -736,7 +755,14 @@ side).
 | Module-ID strap | 1–2 | 1–2 | 1–2 |
 | `J_COMM` spares (future comms) | 2 | 2 | 2 |
 | SWD | 2 | 2 | 2 |
-| **Total** | **25–26** | **29–30** | **21–22** |
+| `BSL_invoke` rescue pad (PA18, pull-down; §9) | 1 | 1 | 1 |
+| **Total** | **26–27** | **30–31** | **22–23** |
+
+Fixed pins: link SDA/SCL on **PA0/PA1** (default BSL I2C), `BSL_invoke` on **PA18**,
+SWD on PA19/PA20; on the 48-pin PT package these are pins 1, 2, 33, 34, 35, with
+`NRST` 4, `VDD` 6, `VSS` 7 and `VCORE` 48 (SLASEX6C Table 6-2 and Figure 6-3). Library:
+`keyboard:MSPM0G3505SPT` on `keyboard:TI_LQFP-48_7x7mm_P0.5mm_PT0048A` (TI drawing
+4215159/B land pattern, 2026-09-29).
 
 **Part (P19, decided 2026-09-26): TI MSPM0G3505 in LQFP-48 (`MSPM0G3505SPTR`)**,
 one part on all three key boards. SLASEX6C: Arm Cortex-M0+ to 80 MHz, 32 KB flash
@@ -764,8 +790,21 @@ unchanged.
 
 | Header | Pins | Between | Nets |
 | --- | --- | --- | --- |
-| `J_SLOT` | 14 | wired connector layer's carrier ↔ socket board (hub-side comms board, ×3) | `LED_RAIL` ×2 (into the slot switch), GND ×3, `VSYS` ×2 (3.3 V for an active comms board), SDA, SCL (the slot's TCA9548A channel), `INT_A`, `INT_B`, `SLOT_EN`, `SPARE1`, `SPARE2` (full-function hub pads, reserved) — **order to be set at capture** (mirrored, reversal-safe) |
-| `J_COMM` | 10 | key board ↔ module-side comms board | `VIN` ×2 (power into the key board), GND ×3, SDA, SCL, `INT`, `SPARE1`, `SPARE2` (module-controller pins, reserved) — **order to be set at capture** (mirrored, reversal-safe) |
+| `J_SLOT` | 14 | wired connector layer's carrier ↔ socket board (hub-side comms board, ×3) | `LED_RAIL` ×2 (into the slot switch), GND ×3, `VSYS` ×2 (3.3 V for an active comms board), SDA, SCL (the slot's TCA9548A channel), `INT_A`, `INT_B`, `SLOT_EN`, `SPARE1`, `SPARE2` (full-function hub pads, reserved). **Order (2026-09-29): 1 `LED_RAIL`, 2 `VSYS`, 3 GND, 4 SDA, 5 `SPARE1`, 6 GND, 7 `SLOT_EN`, 8 `INT_B`, 9 `INT_A`, 10 `SPARE2`, 11 SCL, 12 GND, 13 `VSYS`, 14 `LED_RAIL`** |
+| `J_COMM` | 10 | key board ↔ module-side comms board | `VIN` ×2 (power into the key board), GND ×3, SDA, SCL, `INT`, `SPARE1`, `SPARE2` (module-controller pins, reserved). **Order (2026-09-29): 1 `VIN`, 2 GND, 3 SDA, 4 `SPARE1`, 5 GND, 6 `INT`, 7 `SPARE2`, 8 SCL, 9 GND, 10 `VIN`** |
+
+Both are reversal-safe (pin k meets N + 1 − k on an end-reversed cable). `J_SLOT`:
+power meets its own net, SDA meets SCL, `SPARE1` meets `SPARE2`, GND meets `INT_A`
+(the hub input reads low, the comms board's CC pull-up sinks ~15 µA) and `SLOT_EN`
+meets `INT_B` (the hub drives a CC line to 3.3 V; the slot switch's `ON` sees a hub
+input and the TPS22950's smart pull-down keeps it off); SDA and SCL each sit beside
+a GND. `J_COMM`: SDA meets SCL, `SPARE1` meets `SPARE2`, GND meets `INT` (the open-drain
+`INT` just sinks; the hub sees `INT` stuck and flags the slot); on the flat GH cable
+SDA and SCL are four positions apart with GND between. **The spares on both headers
+are reserved inputs, and they face each other when reversed:** a future comms board
+that drives them uses series resistors. None of them can reach the far end over a
+USB 2.0 C-to-C cable, which has no spare conductor, so the rev A cable comms boards
+leave them NC.
 
 Two counts are over what rev A needs: `VSYS` on `J_SLOT` and the spares on both.
 They are the reservation for radio, optical and mixed comms boards (§15). A
@@ -856,19 +895,118 @@ type (M10). Power nets get ≥2 contacts each.
 
 | Connector | Contacts | Between | Nets |
 | --- | --- | --- | --- |
-| `J_CHAIN` | 12, 2.54 mm 2×6 stacking header (M10, E20, 2026-09-26; exact part open) | hub base board ↔ connector layer (passed through) ↔ battery module ↔ battery module …, or ↔ Qi2 board in place of battery module 1 | **1 `VBAT`, 2 GND, 3 `VBAT`, 4 GND, 5 `AUX_5V`, 6 `PACK_EN`, 7 `PACK_SENSE`, 8 `AUX_5V`, 9 GND, 10 `VBAT`, 11 GND, 12 `VBAT`** (reversal-safe, §4) |
+| `J_CHAIN` | 12, 2.54 mm 2×6 stacking header, Samtec **ESQ-106-24-G-D** socket up / tails down (M10, 2026-09-29), gap 17.5 mm | hub base board ↔ connector layer (passed through) ↔ battery module ↔ battery module …, or ↔ Qi2 board in place of battery module 1 | **1 `VBAT`, 2 GND, 3 `VBAT`, 4 GND, 5 `AUX_5V`, 6 `PACK_EN`, 7 `PACK_SENSE`, 8 `AUX_5V`, 9 GND, 10 `VBAT`, 11 GND, 12 `VBAT`** (reversal-safe, §4) |
 | `J_DIAL` | 5 | key board ↔ dial board (`right`) | unchanged from rev 7: **1 SW_ROW, 2 ENC_A, 3 GND, 4 ENC_B, 5 SW_COL** (reversal-safe) |
 | `J_COMM` | 10 | key board ↔ module-side comms board | above |
 | `J_USB` | 11 | hub core ↔ USB port board | unchanged from rev 7: **1 VBUS, 2 GND, 3 CC1, 4 GND, 5 D+, 6 VBUS, 7 D−, 8 ACOK, 9 CC2, 10 GND, 11 VBUS** |
 | `J_SLOT` | 14 | wired connector carrier ↔ socket board (×3) | above |
-| `J_MCU` | 50, 2.54 mm 2×25 right angle | hub base board ↔ vertical MCU board | every MCU signal the base board uses, `VSYS` and `VBUS` feeds, GND; USB D± adjacent with GND either side; order set at capture |
-| Slot header | 32, 2.54 mm 2×16 stacking | hub base board (underside) ↔ connector layer (top) | 3 slots × (SDA, SCL, `INT_A`, `INT_B`, `SLOT_EN`, `SPARE1`, `SPARE2`), `LED_RAIL` ×4, `VSYS` ×2, GND ×4, 1 spare; order set at capture |
-| Expansion header | 20, 2.54 mm 2×10 stacking, pass-through (proposed) | hub base board (top) ↔ optional layer ↔ optional layer … | 5V ×2, 3V3 (gated) ×2, GND ×4, SDA, SCL, SCK, MOSI, MISO, DC, RST, `INT` (shared open-drain), CS0–CS3 (each layer picks one by jumper); count and order set at capture (X1) |
+| Slot header | 32, 2.54 mm 2×16 stacking, Samtec **ESQ-116-24-G-D**, socket on the connector layer's top, the core's tails down (M10) | hub base board (underside) ↔ connector layer (top) | 3 slots × (SDA, SCL, `INT_A`, `INT_B`, `SLOT_EN`, `SPARE1`, `SPARE2`), `LED_RAIL` ×4, `VSYS` ×2, GND ×4, 1 spare (`SPARE`); order decided 2026-09-29, below |
+| Expansion header | 20, 2.54 mm 2×10 stacking, pass-through (X1, 2026-09-28), Samtec **ESQ-110-24-G-D**, socket up / tails down (M10) | hub base board (top) ↔ optional layer ↔ optional layer … | **1 5V, 2 GND, 3 3V3, 4 SDA, 5 `INT`, 6 CS0, 7 CS1, 8 DC, 9 SCK, 10 GND, 11 GND, 12 MOSI, 13 RST, 14 CS2, 15 CS3, 16 MISO, 17 SCL, 18 3V3, 19 GND, 20 5V** (below) |
 | `J_EXP` | 15 | hub core ↔ expansion board | unchanged from rev 7: **1 5V, 2 GND, 3 3V3, 4 SCL, 5 SDA, 6 RST, 7 DC, 8 GND, 9 CS, 10 MOSI, 11 INT, 12 SCK, 13 3V3, 14 GND, 15 5V** (mirrored) |
 | Expansion | 12, JST-SH | expansion board ↔ user | above |
 
 Rev 7's `J_ROW` (7), `J_COL` (13), `J_LED` (12), `J_LINK` (14), `J_LB` (9), `J_LBD`
 (10), `J_SEAM` (8) and the two 4-pin `J_BAT` headers are gone.
+
+**Top expansion header (X1, decided 2026-09-28).** 2×10, passed straight through
+by every optional layer; the same bus as `J_EXP` and the SH socket.
+
+```
+ 1 5V        2 GND         pin k meets pin 21-k when a layer is fitted 180°:
+ 3 3V3       4 SDA           5V-5V, 3V3-3V3, GND-GND (power on power)
+ 5 INT       6 CS0           SCK-MOSI, CS0-CS3, CS1-CS2, DC-RST (hub outputs meet hub outputs)
+ 7 CS1       8 DC            MISO-INT, SDA-SCL (layer-driven lines meet hub inputs)
+ 9 SCK      10 GND
+11 GND      12 MOSI
+13 RST      14 CS2
+15 CS3      16 MISO
+17 SCL      18 3V3
+19 GND      20 5V
+```
+
+- **5V** is `VBUS_LOCAL`, host USB only (as `J_EXP` 1/15); **3V3** is the gated
+  expansion LDO, 150 mA for everything on the bus including the SH socket.
+- **Chip selects:** CS0–CS3 run straight through; each layer picks one with a
+  solder jumper, so a layer keeps its CS in any stack order and ZMK's devicetree
+  stays fixed. At most four SPI layers. Each CS has a pull-up to 3V3 on the core.
+- **Layer ID:** every layer carries a 2 Kbit I2C EEPROM (24xx02 class, part open)
+  on SDA/SCL, its A0/A1 jumpers set to match the CS jumper (CSn → 0x50 + n). The
+  hub reads 0x50–0x53 with the expansion LDO on to learn which layers are fitted,
+  on which CS, their type and revision, and flags two layers set to the same CS.
+  **0x50–0x53 are reserved on the expansion bus**, SH-socket accessories included.
+  Drivers are still bound from the devicetree; the ID is for detection and checks.
+- A reversed layer fights nothing; an offset-by-one insertion is not made safe
+  by the pinout, the enclosure keys it (M11).
+
+**Slot header (decided 2026-09-29).** 2×16 between the base board's underside and
+the connector layer. The chain header at a different spot already keys the joint;
+the pinout is reversal-safe as well (pin p meets 33 − p).
+
+```
+col  odd            even
+ 1    1 LED_RAIL     2 LED_RAIL     rotated 180°:
+ 2    3 VSYS         4 GND            power meets power
+ 3    5 S0_SDA       6 S0_SCL         slot 0 meets slot 2, function for function
+ 4    7 S0_INT_A     8 S0_INT_B       (the hub maps keys by module ID, so both work)
+ 5    9 S0_SLOT_EN  10 S0_SPARE1      slot 1 folds onto itself: SDA-SCL,
+ 6   11 S0_SPARE2   12 GND            INT_A-INT_B, SPARE1-SPARE2, SLOT_EN-SPARE,
+ 7   13 S1_SDA      14 S1_INT_A       so slot 1 never powers and reads as absent
+ 8   15 S1_SLOT_EN  16 S1_SPARE1
+ 9   17 S1_SPARE2   18 SPARE
+10   19 S1_INT_B    20 S1_SCL
+11   21 GND         22 S2_SPARE2
+12   23 S2_SPARE1   24 S2_SLOT_EN
+13   25 S2_INT_B    26 S2_INT_A
+14   27 S2_SCL      28 S2_SDA
+15   29 GND         30 VSYS
+16   31 LED_RAIL    32 LED_RAIL
+```
+
+- `S0`–`S2` are the hub's slots (TCA9548A channels 0–2); slot numbers on the
+  connector layer follow the header, not the socket boards' positions.
+- **The hub keeps `SPARE` and every `SnSPAREm` hi-Z** until a connector layer
+  defines them; a layer that uses `SPARE` must tolerate meeting `S1_SLOT_EN`.
+- Offset-by-one is prevented by the chain header's position, not by the pinout;
+  the chain header must not sit where a 180°-rotated layer could still mate
+  offset (M11).
+- The `LED_RAIL` contacts carry up to all three slots (~0.9 A worst case at full
+  white, ~0.23 A per contact); rating with the part (M10).
+
+**`J_MCU` dropped (2026-09-29).** With the MDBT50Q-U1MV2 (u.FL) the module needs no
+free board edge, so it moved onto the base board; the vertical MCU board and its
+2×30 join (order decided earlier the same day) are gone. The pad assignment (§5)
+stays; the `J_MCU` pin order was never committed and is not kept.
+
+**Stacking headers (M10, decided 2026-09-29).** Every stacking joint (chain 2×6, slot
+2×16, expansion 2×10) uses a **Samtec ESQ** elevated socket with square stack-through
+tails (catalog page ESW/ESQ): **socket on each board's top face, tails down** into
+the socket of the layer below, as in PC/104. 5.7 A per pin (2 pins powered),
+insertion depth 3.68–6.35 mm, 0.64 mm square tails, phosphor bronze, `-G` 20 µ″ gold.
+For every lead style the tail length A and body height B add to 23.24 mm, so with a
+1.6 mm board one ESQ joint spans **~15.3–18.0 mm board to board** (spacing S ≥ B and
+3.68 ≤ A − 1.6 − (S − B) ≤ 6.35), enough to clear the 15.0 mm AA holder.
+**Lead style decided 2026-09-29 (M11): `-24`, standard insertion force, on every
+joint: ESQ-106-24-G-D (chain), ESQ-110-24-G-D (expansion), ESQ-116-24-G-D (slot)**;
+A 9.65 mm, B 13.59 mm; **every joint's gap S = 17.5 mm** (lower board top → upper
+board bottom), so every layer is **19.1 mm** board pitch; insertion 4.14 mm
+(3.68–6.35 holds for S 15.29–17.96, so the case holds S within +0.46/−2.2 mm);
+tails protrude **8.05 mm** under each board; 2.5 mm over the AA holder's 15.0 mm
+body (whether the cells stand above the body is not verified); 3.9 mm of bare tail
+between a socket's top and the board above. Rejected `-34` at S = 17.0 (5.5 mm
+tails, 2.0 mm over the holder) and at 16.13 (boards resting on the sockets, 1.1 mm
+over the holder); rejected low insertion force `-49` (no force figures on the
+catalog page; lower normal force against E20's contact budget).
+- **The bottom module's tails are live** (`VBAT` from every enabled pack): its case
+  must shroud them, tips recessed inside the case's bottom outline (M11): the
+  tails stand 8.05 mm below the board, so the shroud is ≥~9 mm deep. A
+  detached module is still dead (§4).
+- The core carries ESQ tails down into the connector layer (chain, slot) and the
+  expansion socket on its top face; optional layers stack the same way.
+- Open: a second source (the family is Samtec-only as far as checked), contact
+  resistance (not on the catalog page; E20 assumes ~20 mΩ, which a plain Würth
+  61301221121 2×6 header meets at 20 mΩ max), mating cycles with `-G` plating
+  (the page gives 100 with 10 µ″ gold), and soldering: wave or hand only, no
+  reflow.
 
 - **Host D+/D− cross one cable** (USB port board → hub core), kept ≤100 mm, with the
   two conductors adjacent and GND on both sides.
@@ -958,8 +1096,31 @@ module controller, the same on every key board; the TCA9548A keeps slots apart.
 | Event FIFO | count, then entries: key index + press/release, encoder step ±n, encoder push |
 | Scan config | debounce press/release ms, scan rate |
 | Lighting | PWM frame (3 bytes per LED, auto-increment), global current, shutdown |
-| Maintenance | reset, enter the ROM I2C bootstrap loader (update over the link, F7) |
+| Maintenance | reset, enter the ROM I2C bootstrap loader (update over the link, F7; entry and recovery below) |
 | Integrity | a CRC or sequence number on event and frame blocks, so the hub can count link errors (E16 fallback) |
+
+**Bootloader entry and recovery (hardware side of F7, decided 2026-09-29).** The
+link sits on the MSPM0's default BSL I2C pins, **PA0 = SDA, PA1 = SCL** (LQFP-48
+48-pin PT pins 1, 2; 5 V-tolerant open-drain; SLASEX6C Table 6-2), BSL target address 0x48
+by default (SLAU887A §4.2.2.2). Sources: SLASEX6C (rev C, Oct 2025) §8.33, SLAU887A
+(Nov 2025) §3.
+- **Normal entry is from software:** the Maintenance command makes the application
+  reset with `RESETLEVEL` = BOOTLOADERENTRY (SLAU887A §3.2.2).
+- **Interrupted updates:** the hub writes the vector-table sector last. Until it
+  lands, the stack pointer and reset vector are erased, and the boot code starts
+  the BSL on any boot (blank-device rule, §3.2.1). The hub power-cycles the slot
+  (`SLOT_EN`) for the power-on reset that the BSL needs after its 10 s
+  no-connection timeout (§3.1.1.1).
+- **Rescue:** PA18 stays TI's default `BSL_invoke` (active high, 48-pin PT pin 33)
+  with a pull-down, since the invoke pin must not float (§3.2.3), and gets a pad
+  beside a 3V3 pad on the key board. An image that boots but will not talk is
+  rescued by bridging the pads while replugging the cable. SWD pads stay as the
+  last resort. No NONMAIN (BCR/BSL configuration) changes are needed.
+- Rejected: **forcing the BSL from the hub through `INT`** (invoke pin = `INT`,
+  level low, ~2.2 MΩ pull-down), which is fully remote but reopens E17's margins
+  (`INT` idles ~2.8–2.95 V against `VIH` 0.7 × `VDD` = 2.31 V) and needs a NONMAIN
+  write per chip. `NRST`/`BSL_invoke` wires to the hub are impossible, since a
+  USB 2.0 cable has no spare conductor.
 
 `INT` is asserted while the FIFO is non-empty or a flag is set, and released when
 the hub has read everything. **The hub never polls the matrix**: one `INT`, one
@@ -1046,17 +1207,40 @@ In scope, co-gated with Phase 1.
   (display…) on top, the core layer, the connector layer, then battery modules or
   a Qi2 board. Each layer is its own enclosure section; the stacking headers carry
   the signals but are not a mechanical joint, so layers latch or screw to each
-  other. **The core layer's MCU board stands on one wall** with the antenna at its
-  free edge, facing the room, and Raytac's keepout honoured on that board; the
-  layers above and below are perpendicular to it. The host USB port board, the
-  expansion board's SH socket, the slide switch, reset and bootloader buttons face
-  the core layer's walls through openings. **A future radio connector layer puts
+  other. **Footprint ~90 × 90 mm outside** (2026-09-29): 2 mm resin walls, boards
+  ~84 × 84 mm. **The core layer is one ESQ joint tall**: the MCU sits on the base
+  board (2026-09-29), so nothing in the core is taller than the joint gap.
+  **Every joint's gap is 17.5 mm (ESQ `-24`), so every layer is 19.1 mm board
+  pitch**; a two-pack tower is ~88 mm tall (9.5 mm tail skirt, four boards, four
+  17.5 mm gaps, a 2 mm lid roof; 87.9 mm in the v0 model). **The hub antenna is an adhesive flex antenna on the inside of a
+  core-section wall**, fed from the module's u.FL, placed clear of the base board's
+  copper, the layer above and the cells (distances from the antenna's datasheet,
+  checked by the RSSI test); the same wall carries a **blanked RP-SMA knock-out**
+  for an external antenna on a u.FL-to-RP-SMA pigtail. **Walls (2026-09-29)**, front = the wall facing the keyboard, sides as seen from
+  the keyboard: **front**: the connector layer's three slot USB-C sockets, and the
+  slide switch, reset and bootloader buttons on the core's front wall above them;
+  **rear**, right to left: host USB-C (USB port board), the expansion board's SH
+  socket, then the flex antenna and the blanked RP-SMA knock-out in the remaining
+  ~40 mm at the left end (all cables leave the back; the antenna sits ~20–40 mm from
+  the SH cable and the USB shell, RSSI risk accepted, checked in §16; **the flex
+  antenna must be ≤~40 mm long**); **left** and **right**: nothing.
+  **Joints (2026-09-29)**: the core and the connector layer are joined by **M2
+  screws** into heat-set inserts (the 44-contact joint cannot be pulled apart by
+  accident; swapping the connector layer takes the one driver); **battery modules
+  and the lid join magnetically**: each section's bottom edge nests in a lip on the
+  section below (takes sideways cable pulls), an asymmetric key in the lip stops a
+  90°/180° misfit, and disc magnets in the walls hold it, kept away from the
+  antenna corner. Cell access is tool-less: lift everything above a module off
+  (the cells sit 2.5 mm under the next board). Magnet part and holding force vs the
+  ESQ withdrawal force are open. **Optional layers join the core's top (and each
+  other) the same magnetic way**; the lid sits on the topmost section. **A future radio connector layer puts
   its radio on the wall facing the keyboard**, and on the opposite side from the
-  core's antenna, so the two 2.4 GHz radios sit apart (coexistence is a future
+  core's antenna wall, so the two 2.4 GHz radios sit apart (coexistence is a future
   test).
 - **Battery modules (M10, decided 2026-09-26)**: each a closed 2×AA case with its
-  battery board, tool-less cell access, and a pass-through stacking header (pins
-  up, socket down, or the reverse) so modules **stack under the hub**; the case
+  battery board, tool-less cell access, and a pass-through stacking header (Samtec
+  ESQ, socket up, tails down, 2026-09-29, §6) so modules **stack under the hub**; the
+  bottom module's case shrouds its live tails; the case
   keys the join and the pinout is reversal-safe (§4). A future Qi board plugs into
   the hub instead of the stack, so the pad sits under the hub. Side by side is a future
   option.
@@ -1101,7 +1285,8 @@ In scope, co-gated with Phase 1.
   strategy, min trace/space (JLCPCB 4-layer economy is 0.127 mm), min via.
 - **Hub core stackup**: 4 layers as the rev 7 core, which had a 32 × 90 mm outline
   forced by fitting inside a key module. **The hub core is not size-constrained**:
-  its outline is set by the hub enclosure (M11), and the rev 7 fan-out congestion
+  its outline is set by the hub enclosure (M11: ~84 × 84 mm, 2026-09-29, with the
+  MDBT50Q-U1MV2 on it and no antenna keepout), and the rev 7 fan-out congestion
   around the MDBT50Q (7 nets left open after every scripted approach) is expected
   to disappear with room to spread the power path. The rev 7 placement, rules
   (`U401_ESCAPE`), and routing notes stay in `0b22b91` for reference.
@@ -1124,11 +1309,11 @@ In scope, co-gated with Phase 1.
 - **RGB rotation** is a common JLC defect. Explicit CPL rotation per LED,
   first-article check on one board before the run.
 - **FR4 plates**: three extra boards per build, no copper, outline + cutouts only.
-- **Board designs and counts per keyboard** (§2a): hub base board, hub MCU board,
-  1 wired connector carrier, 3 key boards, 6 comms boards (3 hub-side socket boards
+- **Board designs and counts per keyboard** (§2a): hub base board (MCU on it since
+  2026-09-29), 1 wired connector carrier, 3 key boards, 6 comms boards (3 hub-side socket boards
   + 3 module side), 1 USB port board, 2 battery modules (more by chaining), 1 dial
-  board, 1 expansion board, 3 plates. That is **11 PCB designs**: hub base, hub
-  MCU, connector carrier, 3 key boards, comms, USB port, battery, dial, expansion,
+  board, 1 expansion board, 3 plates. That is **10 PCB designs**: hub base,
+  connector carrier, 3 key boards, comms, USB port, battery, dial, expansion,
   with the comms board in two BOMs; optional top layers come on top.
 - **Assembly split.** Key boards, the hub core, comms boards, the USB port board and
   the expansion board need assembly-house placement (module controller, WLCSP,
@@ -1148,13 +1333,18 @@ In scope, co-gated with Phase 1.
   off and `AIN0` never sits above `VDD` + 0.3 V. Reading, `AIN0` is ≤1.9 V and the
   divider draws ~38 µA. Host CC sense reads 0.25–2.04 V through a 100 kΩ series
   resistor into an `AINx` pad.
-- **Antenna**: the hub holds the only radio, on the desk, away from the palms and
-  the key field, on a **vertical MCU board at the core layer's wall** (2026-09-26),
-  so the antenna's plane faces the room and the stacked layers (display above,
-  connector layer and AA cells below) are perpendicular to it, not over it.
-  Raytac's keepout is honoured on the MCU board; the distance to the other layers'
-  copper and the steel cells is set by the RSSI test. The MCU board is laid out for
-  both the MDBT50Q-1MV2 and -U1MV2 keepouts, each RSSI-checked (§16).
+- **Antenna** (2026-09-29): the hub holds the only radio, on the desk, away from
+  the palms and the key field. The **MDBT50Q-U1MV2** has no antenna of its own; its
+  u.FL feeds an **adhesive flex antenna on the inside of a core-section wall**, so
+  the antenna's position is chosen in the enclosure, not dictated by the module's
+  board edge. **A blanked RP-SMA knock-out** in the same wall takes an external
+  antenna on a u.FL-to-RP-SMA pigtail if the RSSI test (§16) is poor. The u.FL is
+  mated at assembly, not by the user. **Open**: the antenna part and its clearance
+  to metal and ground (from its datasheet); SLA resin loading the antenna
+  (datasheets tune for a stated plastic and thickness); which antenna type and gain
+  Raytac's MDBT50Q-U approval covers (the SGS RED report E2/2018/50088-02 lists the
+  -U model, the datasheet does not name its antenna). The rev 8 vertical MCU board
+  (2026-09-26) is dropped: the u.FL module needs no free board edge.
 - **ESD**: entry points are the host USB-C port (USB port board), every link socket
   at both ends (comms boards, TPD6E05U06 on the six CC/D± pins, SMF6.0A on VBUS),
   the expansion connector (expansion board), the key matrix (finger → keycap →
@@ -1179,13 +1369,17 @@ docs/       architecture + decision record, power budget, build guide,
             repair guide (symptom -> board), spares list
 layout/     k860.yaml, generator + render scripts
 mech/       joining, palm rest, plate, case, hub enclosure, battery modules, cable routing
+  hub/      hub tower (M11, 2026-09-29): a Python script owns the FreeCAD model (run
+            through the FreeCAD MCP; the .FCStd is a build output); exports a STEP per
+            layer + the assembly and an STL per printed part; board outlines, holes
+            and header positions flow FreeCAD → KiCad (DXF or a pcbnew script), the
+            boards' STEP comes back for clearance checks
 hardware/
   lib/      vendored kiswitch footprints, custom MX socket + RGB combo footprint,
             interconnect footprints and the cable drawing
   common/   shared sheets: key-board LED matrix + module controller block
   keys-right/ keys-left/ keys-numpad/   one KiCad project per key board
-  hub-base/ hub base board (power path etc., from the rev 7 core)
-  hub-mcu/  vertical MCU board (MDBT50Q, from the rev 7 core)
+  hub-base/ hub base board (MDBT50Q-U1MV2, power path etc., from the rev 7 core)
   connector-wired/  wired connector layer carrier
   comms/    cable comms board, hub (socket board) + module populations (from the rev 7 link board)
   usb-port/ battery/ dial/ expansion/   one KiCad project each
@@ -1231,7 +1425,7 @@ between media itself; the hub and key board see only the register map. Nothing
 beyond the reservation is designed in rev 8.
 
 **Li-ion.** Rev 7 reserved a Li-ion path on the core (`VDDH` on its own solder
-jumper, DNP REG0 inductor). With the cells now off the MCU board and chained, a
+jumper, DNP REG0 inductor). With the cells now off the hub core and chained, a
 Li-ion build would be a different battery module with its own charger and
 protection delivering 2S-AA-like voltage on `VBAT`, or feeding `AUX_5V`; the hub
 keeps the `VDDH` jumper and DNP REG0 footprints in case it is needed.
@@ -1324,9 +1518,13 @@ keeps the `VDDH` jumper and DNP REG0 footprints in case it is needed.
 - [ ] A battery module stacked straight under the core (no connector layer): the hub
       powers up, no slot exists, nothing is damaged
 - [ ] Two optional layers on the expansion header with different chip selects both
-      work; two on the same chip select are flagged, nothing is damaged
-- [ ] Hub antenna keepout clear of all copper; compare BLE RSSI against a dev kit in
-      the open, **once with MDBT50Q-1MV2 and once with MDBT50Q-U1MV2**
+      work; two on the same chip select are flagged (ID EEPROM read at 0x50–0x53),
+      nothing is damaged
+- [ ] A layer fitted rotated 180° on the expansion header: nothing is damaged, the
+      layer works again once refitted
+- [ ] Hub BLE RSSI against a dev kit in the open, **once with the internal flex
+      antenna and once with an external antenna on the RP-SMA knock-out**, with the
+      stack as above
 - [ ] Canary CI against ZMK `main` runs weekly and reports breakage
 - [ ] Dial spun fast both ways: no missed or doubled steps; a turn without a press
       never changes the live profile
@@ -1357,10 +1555,11 @@ Decided 2026-09-26 in a design review with the user; the rev 7 state is commit
 | Battery lighting cap 250 mA per module | **250 mA for the whole keyboard**; more battery modules add runtime only |
 | Link VBUS switch on the downstream link boards, gated by handshakes | **Slot switch per hub slot**, on while its module answers |
 | Module ID: resistor on the key board, ratiometric ADC read on the core, safe mode on mismatch | **Strap read by the module controller**, reported in the register map; any module in any slot |
-| Core PCB 32 × 90 mm, 7 nets unrouted after every scripted approach | **Hub core = horizontal base board + vertical MCU board**, sizes set by the hub enclosure; rev 7 core PCB kept in git for reference |
-| Every board inside a module case | **The hub is a stack of layers**: optional layers (display…) / core / swappable connector layer / battery modules 1…N or a Qi2 board; 2×10 expansion, 2×16 slot and 2×6 chain stacking headers |
+| Core PCB 32 × 90 mm, 7 nets unrouted after every scripted approach | **Hub core = one base board, ~84 × 84 mm, in a ~90 × 90 mm tower** (2026-09-29; a vertical MCU board 2026-09-26 → 29); rev 7 core PCB kept in git for reference |
+| Every board inside a module case | **The hub is a stack of layers**: optional layers (display…) / core / swappable connector layer / battery modules 1…N or a Qi2 board; 2×10 expansion (reversal-safe, CS0–CS3 by jumper, an ID EEPROM per layer; X1, 2026-09-28), 2×16 slot and 2×6 chain stacking headers |
 | Qi2: keepouts, DNP footprints, a future Li-ion battery board | **Qi board on the hub's chain header, instead of the battery stack**, `AUX_5V`, never charging cells |
 | — | **Reserved for future comms boards**: spare pins and `VSYS` on `J_SLOT`, spare pins on `J_COMM`, `VIN` accepts power from the module side |
+| MDBT50Q-1MV2 with "-U1MV2 (chip antenna)" as second source, both keepouts on the core | **MDBT50Q-U1MV2 only** (u.FL; Raytac ver L: 1MV2 is the chip-antenna part, U1MV2 the u.FL part), on the base board; adhesive flex antenna inside the case wall, blanked RP-SMA knock-out for an external antenna (2026-09-29) |
 | `CONFIG_BT_MAX_PAIRED=11` | 9 |
 | Untethered use: modules work apart on BLE | **Modules need their hub cable**; accepted |
 | Untethered deep sleep: a sleeping satellite cannot wake the central | Any module's keypress wakes the hub |
@@ -1560,11 +1759,17 @@ datasheet queue in [`docs/02-parts-shortlist.md`](../docs/02-parts-shortlist.md)
 Rev 8 opens:
 
 - **P19** closed 2026-09-26: MSPM0G3505 LQFP-48. **F7** its firmware framework,
-  register map, and the BSL-over-link update flow.
+  register map, and the BSL-over-link update flow (hardware side decided
+  2026-09-29: software entry, vector table written last, PA18 rescue pad; §9).
+- Pin orders decided 2026-09-29: `J_COMM`, `J_SLOT`, the 2×16 slot header (§6).
 - **E16** I2C through a USB 2.0 cable's D± pair; **E17** CC as `INT` (closed 2026-09-26: 220 kΩ pull-ups); **E18** slot power policy (closed 2026-09-26: answer window ~200 ms, ~100 ms re-probe every ~2 s awake, none asleep);
   **E20** closed 2026-09-26 (LM66200 per pack, 2×6 header, ~296 + 10·n mΩ).
 - **M10** battery-module mechanics (contacts decided: 2×6 stacking header, stack only, any number of modules);
-  **M11** the hub enclosure.
+  **M11** the hub enclosure (2026-09-29: ~90 × 90 mm tower, MCU on the base board,
+  core one joint tall; workflow in §14). **P20** the hub antenna parts (flex
+  antenna, RP-SMA pigtail) and Raytac's -U antenna approval.
+- **X1** closed 2026-09-28: top expansion header 2×10, reversal-safe, CS0–CS3 by
+  jumper, an ID EEPROM per layer at 0x50 + CS number (§6).
 - **F9** Zephyr/ZMK support for the TCA9548A and a custom `kscan` at the pinned
   version.
 

@@ -46,8 +46,8 @@ and the firmware are concerned; the key modules are I2C targets.
   carries it on copper: SDA/SCL on a USB 2.0 cable's D± pair, `INT` on CC, the
   switched LED rail on VBUS. A radio, optical or mixed pair can carry the same map
   later by forwarding events and frames; neither the hub nor the key board changes.
-- **The hub is a stack of layers**: optional layers (display…) / core (base board
-  + vertical MCU board) / swappable connector layer / battery modules 1…N or a Qi2
+- **The hub is a stack of layers**: optional layers (display…) / core (one base
+  board with the MCU on it) / swappable connector layer / battery modules 1…N or a Qi2
   board. The connector layer chooses the medium for all three modules.
 - **The hub owns the power.** Cells, host USB and a future Qi board feed one power
   path; each slot gets the LED rail through its own latch-off switch; each key board
@@ -64,8 +64,8 @@ and the firmware are concerned; the key modules are I2C targets.
 ```
   HUB STACK (top to bottom)
     [optional layers: display, ...] --expansion header 2x10 (pass-through)--+
-    [CORE LAYER]  base board: power path, LED rail, TCA9548A, buttons, headers
-                  + vertical MCU board (MDBT50Q, crystal, SWD) on the wall, J_MCU 2x25 right angle
+    [CORE LAYER]  base board: MDBT50Q-U1MV2, power path, LED rail, TCA9548A, buttons, headers
+                  + flex antenna on the inside of the case wall (u.FL; RP-SMA knock-out, blanked)
                   + [USB port board] on J_USB (11)      USB-C, CC, KTS1693, USBLC6
                   + [expansion board] on J_EXP (15)     JST-SH 12, ESD (cabled accessories)
         --slot header 2x16--   --chain header 2x6--
@@ -481,17 +481,90 @@ sockets on the layer PCB**: simplest, but a worn socket would take the other two
 and the slot switches with it. The socket boards are the hub-population comms
 boards on `J_SLOT`, so wear still lands on the smallest board.
 
+**Pin orders (2026-09-29): every header in the slot path is reversal-safe** (spec
+§6). `J_SLOT` and `J_COMM` follow the rule of the other GH headers: power meets its
+own net, open-drain meets open-drain, spares meet spares, and the odd GND faces the
+one signal that is harmless from both ends (`INT_A` on `J_SLOT`, `INT` on
+`J_COMM`; `SLOT_EN` facing GND would short a hub output). On `J_SLOT`, GND beside
+SDA and SCL was preferred over GND beside the LED rail. **The 2×16 slot header is
+also reversal-safe**, although the chain header already keys the joint (the user's
+choice, over per-slot blocks keyed only by the second header): slot 0 and slot 2
+are mirror images, so a rotated layer swaps them and still works (keys map by
+module ID), and slot 1 folds onto itself with its `SLOT_EN` facing the global
+`SPARE`, so it stays off. Cost: the three slot blocks are not identical on the
+carrier. The spares on `J_SLOT`/`J_COMM` cannot reach the far end of a USB 2.0
+C-to-C cable (five conductors), so they stay reserved for other media.
+
+**Stacking headers: Samtec ESQ, socket up, tails down (M10, 2026-09-29).** A
+battery module is a board plus a 15.0 mm AA holder, so a joint must span ~17 mm,
+beyond an Arduino-style long-tail socket (~11 mm). One ESQ joint spans ~15.3–18.0
+mm (A + B = 23.24 mm for every lead style). The user chose the PC/104 orientation,
+socket on each board's top face, over socket down / tails up, which would have left
+only a recessed female socket at the bottom of the stack; the cost is live `VBAT`
+tails under the bottom module, which its case must shroud. Rejected **two parts
+(extra-long pins + socket)**: easier to second-source, but two parts per header per
+board and ~20 mm pins. **Lead style `-24`, standard force, gap 17.5 mm on every joint
+(2026-09-29)**: 2.5 mm over the AA holder and 4.14 mm insertion, for 8.05 mm tails
+under the bottom module (vs 5.5 mm with `-34` at 17.0 mm, which left 2.0 mm over
+the holder); low insertion force `-49` rejected for lower contact normal force
+against the E20 contact budget.
+
+**Key-board bootloader recovery (2026-09-29, F7's hardware side).** Chosen:
+software entry, the vector table written last (so an interrupted update boots
+into the ROM BSL by the blank-device rule), and TI's default `BSL_invoke` pin PA18
+with a pull-down and a rescue pad. Rejected **the hub forcing the BSL through
+`INT`** (remote, but reopens E17's margins and needs a NONMAIN write per chip) and
+**SWD only** (a probe and an open case for any rescue; PA18 needs its pull-down
+anyway).
+
 **Optional layers stack on top; the expansion board's JST-SH socket stays.**
 Rejected **top header only** (no cabled accessories, ESD moves to every layer) and
 **SH socket only** (add-ons dangle on cables). The shared bus costs one chip select
-per SPI layer, so the number of CS lines caps how many SPI layers stack (X1).
+per SPI layer, so the number of CS lines caps how many SPI layers stack.
 
-**Core layer: horizontal base board + vertical MCU board on the wall** (the user's
-idea). Rejected **a horizontal core with an antenna tab**: one board, but the
-antenna's plane would be parallel to the metal layers right beside it and the
-stack gets a tab; rejected **the whole core vertical**: the tallest layer and the
-widest join, with the power path's heat rising past the MCU. Cost accepted: a
-2.54 mm right-angle 2×25 join carrying ~40 MCU signals and USB D±.
+**Top header (X1, 2026-09-28): 2×10, four chip selects picked by a jumper on each
+layer, an ID EEPROM per layer, a reversal-safe pin order** (spec §6). A layer keeps
+its CS whatever the stack order, which is what ZMK's fixed devicetree needs; the
+cost is 4 full-function pads (18 of 24 in use) and a jumper the builder sets.
+Rejected **rotated CS lines** (each layer takes the bottom line and shifts the rest
+up; no jumper, no clash, but a layer's CS then depends on its position, so
+reordering breaks a static devicetree), **two CS lines on a 2×8** (frees 2 pads,
+caps SPI layers at two, a new core to grow) and **CS from an I2C expander** (every
+CS edge an I2C transaction, fragile as Zephyr `cs-gpios`, one more part on the
+core). The ID EEPROM (24xx02 class, address 0x50 + CS number by jumpers next to
+the CS jumper) tells the hub which layers are fitted, on which CS, of what type and
+revision, and catches two layers on one CS; it does not auto-configure drivers.
+Rejected **no ID** (a write-only SPI display on the wrong CS is just blank, and
+adding an ID later changes every layer) and **presence by a pull-up on CS** (the
+nRF52840's ~13 kΩ pull-down against a 10 kΩ pull-up reads ~1.9 V, under `VIH`;
+gives no type, and two layers on one CS read as one). The pin order puts power on
+power, hub outputs on hub outputs and layer-driven lines on hub inputs when a
+layer is fitted 180°; offset-by-one is left to the enclosure (M11).
+
+**Core layer: one base board with the MCU on it, antenna in the case wall
+(2026-09-29).** Rev 8 first (2026-09-26) put the MCU on a vertical board standing
+on the core's wall, so an on-module antenna had a free edge facing the room, joined
+to the base board by a 2.54 mm right-angle 2×30 (`J_MCU`). Laying out the tower
+showed that board is ~27–32 mm tall (socket, two header rows, the 15.5 mm module
+with its antenna up) against one ESQ joint's 15.3–18.0 mm gap, so the core needed
+a riser (a passive board carrying the expansion bus up a second joint). Raytac's
+datasheet (ver L) also showed the spec's second source was wrong: **1MV2 is the
+chip-antenna part, P1MV2 the PCB antenna, U1MV2 the u.FL part**, all on one land
+pattern. The user asked for a detachable antenna, then an antenna inside the case:
+**chosen, the MDBT50Q-U1MV2 on the base board, its u.FL to an adhesive flex
+antenna on the inside of a core-section wall, and a blanked RP-SMA knock-out in
+that wall** so an external antenna on a pigtail is a swap, not a respin. That drops
+the MCU board, `J_MCU`, the wall's keying slot and the riser; the core is one joint
+tall and the tower ~17–20 mm lower. Costs accepted: **a single-source module**
+(no other u.FL module on these pads), an MCU fault costs the whole base board (the
+module's bottom pads need hot air), the antenna part and its Raytac approval still
+to settle (P20), and RSSI now depends on where the antenna sits in the case.
+Rejected: **1MV2 with P1MV2 as second source** (integral, both in Raytac's reports,
+but RF tied to the tower and nothing to fall back on); **the U1MV2 with only an
+external antenna** (a stick on the desk); **keeping the vertical MCU board** with
+the u.FL module (a 60-pin joint, a riser and a taller tower for an on-board antenna
+no longer used); earlier, **a horizontal core with an antenna tab** and **the whole
+core vertical**. The pad assignment (spec §5) stays.
 
 ### Battery — chainable 2×AA modules on the hub (rev 8)
 
@@ -619,9 +692,10 @@ about 12 mm overall, accepted as a known deviation.
 ### MCU — pre-certified module, on the hub only (rev 8)
 
 Rejected **bare nRF52840 with a PCB antenna** and **socketed nice!nano**. The hub
-carries the MDBT50Q-1MV2 or -U1MV2 on one land pattern with both keepouts. Raytac
-restricts **21 of the 48 pads to low-frequency I/O**; the hub uses 37 of 47 pins
-with 14 of 24 full-function pads, far from rev 7's 45 / 22 (spec §5). The 32.768 kHz
+carries the **MDBT50Q-U1MV2** (u.FL) with a flex antenna in the case wall
+(2026-09-29, §1a above). Raytac restricts **21 of the 48 pads to low-frequency
+I/O**; the hub uses 42 of 47 GPIOs with 19 of 24 full-function pads (spec §5,
+2026-09-29). The 32.768 kHz
 crystal is **not** inside the module. The nRF52840's TWIM tops out at **400 kHz**,
 not the 1 MHz rev 2 assumed.
 
@@ -636,9 +710,21 @@ the joining hardware in ~6 mm.
 first) on top, the core layer, the swappable connector layer, then battery modules
 (any number, M10) or a Qi2 board in their place. Each layer is its own enclosure
 section, latched or screwed to the next; the stacking headers carry signals only.
-The core layer's MCU board stands on a wall with its antenna facing the room; a
-future radio connector layer puts its antenna on the opposite wall, facing the
-keyboard.
+The tower is ~90 × 90 mm (2026-09-29); the core is one base board with the MCU on
+it and one joint tall; the hub antenna is a flex antenna inside a core-section wall
+with a blanked RP-SMA knock-out beside it. Walls (2026-09-29): slot sockets
+and the controls on the front (facing the keyboard); on the rear, right to left,
+host USB-C, SH socket and the antenna (the user wanted every cable at the back;
+rejected, the antenna alone on the left wall, better RF margin but off §11's
+opposite-wall rule; accepted, the antenna ~20–40 mm from two cables and a USB
+shell, and a flex antenna ≤~40 mm long). Joints: core ↔ connector layer on M2
+screws (a 44-contact joint should not come apart by accident); battery modules and
+the lid on magnets with a keyed nesting lip, so cell access stays tool-less;
+optional layers join the same way (a display swaps without tools).
+Rejected: magnets everywhere (the core joint could be pulled apart by a cable),
+printed snap latches (SLA resin is brittle). A future radio connector layer puts
+its antenna on the front wall, opposite the core's. The model is a script in
+`mech/hub/` driving FreeCAD; outlines flow from it to KiCad.
 
 The **palm rest** keeps the K860 silhouette but no longer houses cells, so its
 height floor is no longer the AA holder. The **plate** is FR4, no copper.
@@ -668,8 +754,9 @@ resolution and phase.
   stacking header's exact part and the stack's mechanical joint (M10); the per-hop
   resistance is accepted at ~10 mΩ (E20).
 - **Idle current** of the hub asleep with three key boards in scan-wait (E7).
-- **The hub tower**: layer enclosures, latching, the MCU board's distance from the
-  other layers' metal (RSSI), the top expansion header's CS count (M11, X1).
+- **The hub tower**: layer enclosures, latching, the flex antenna's distance from
+  the other layers' metal (RSSI), keying the top header against offset-by-one (M11);
+  the antenna parts and Raytac's -U approval (P20).
 - **KTS1693 supply** for the one host port.
 - Whether a hotswap socket, a reverse-mount LED window, a diode and stabiliser
   clearance coexist in one 19.05 mm cell, and whether glow through an opaque cap is

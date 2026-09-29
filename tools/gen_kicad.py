@@ -132,8 +132,8 @@ def symbol(name, ref, fp, datasheet, descr, keywords, left, right, bottom=(), to
     for pinset, y, rot in ((bottom, bot_y - 2.54, 90), (top, top_y + 2.54, 270)):
         order, groups = column(pinset)
         for i, nm in enumerate(order):
-            x = (i - (len(order) - 1) / 2) * 2.54
-            x = round(x / 2.54) * 2.54
+            # 5.08 mm apart, centred on the grid (2.54 mm spacing rounded an even count onto one point)
+            x = (2 * i - (len(order) - 1)) * 2.54
             emit(x, y, rot, nm, groups[nm])
     out.append(f"\t\t(symbol {q(name + '_1_1')}")
     out.extend(pins)
@@ -237,6 +237,17 @@ SYMBOLS = [
         right=[("5", "OUT", "power_out"), ("4", "NC", "no_connect")],
         bottom=[("2", "GND", "power_in")],
     ),
+    # TI TPS7A02 SBVS277C, Table 5-1 (DBV column); same pinout and DBV0005A drawing (4214839/K) as the
+    # TLV75733P, which stays its drop-in second source on the key boards (2026-09-29). Not in stock KiCad.
+    symbol(
+        "TPS7A0233PDBV", "U", f"{LIBNAME}:TI_SOT-23-5_DBV0005A",
+        "https://www.ti.com/lit/ds/symlink/tps7a02.pdf",
+        "200 mA nanopower LDO, 3.3 V fixed, 25 nA IQ, 1.5-6.0 V in, 6.5 V abs-max, active discharge, SOT-23-5",
+        "LDO regulator linear nanopower TI",
+        left=[("1", "IN", "power_in"), ("3", "EN", "input")],
+        right=[("5", "OUT", "power_out"), ("4", "NC", "no_connect")],
+        bottom=[("2", "GND", "power_in")],
+    ),
     # TI TPD4E1U06 SLVSBQ9D, "Pin Functions" (DBV): four independent I/O channels, NC may float
     symbol(
         "TPD4E1U06DBV", "U", f"{LIBNAME}:TI_SOT-23-6_DBV0006A",
@@ -246,6 +257,33 @@ SYMBOLS = [
         left=[("1", "D1+", "passive"), ("3", "D2+", "passive"), ("5", "NC", "passive")],
         right=[("6", "D1-", "passive"), ("4", "D2-", "passive")],
         bottom=[("2", "GND", "passive")],
+    ),
+    # TI MSPM0G350x SLASEX6C (rev C, Oct 2025), Table 6-2 "48 LQFP, VQFN" column, checked
+    # against Figure 6-3 (48-pin PT): 44 GPIOs, NRST 4, VDD 6, VSS 7, VCORE 48 (core regulator
+    # output, capacitor only), no exposed pad. Names carry the one function the key board relies
+    # on: default BSL I2C (PA0/PA1, 5 V-tolerant open-drain), BSL UART (PA10/PA11), BSL_invoke
+    # (PA18), SWD (PA19/PA20), crystal pins, ROSC and VREF.
+    symbol(
+        "MSPM0G3505SPT", "U", f"{LIBNAME}:TI_LQFP-48_7x7mm_P0.5mm_PT0048A",
+        "https://www.ti.com/lit/ds/symlink/mspm0g3505.pdf",
+        "Arm Cortex-M0+ MCU, 80 MHz, 32 KB flash, 16 KB SRAM, 1.62-3.6 V, 2x I2C, QEI, ROM I2C/UART bootloader, LQFP-48 (PT)",
+        "MSPM0 MSPM0G3505 TI microcontroller ARM Cortex-M0+",
+        left=[("4", "NRST", "input")] + [
+            (num, nm, "bidirectional") for num, nm in (
+                ("1", "PA0/BSLSDA"), ("2", "PA1/BSLSCL"), ("8", "PA2/ROSC"), ("9", "PA3/LFXIN"),
+                ("10", "PA4/LFXOUT"), ("11", "PA5/HFXIN"), ("12", "PA6/HFXOUT"), ("13", "PA7"),
+                ("16", "PA8"), ("17", "PA9"), ("18", "PA10/BSLTX"), ("19", "PA11/BSLRX"),
+                ("27", "PA12"), ("28", "PA13"), ("29", "PA14"), ("30", "PA15"), ("31", "PA16"),
+                ("32", "PA17"), ("33", "PA18/BSL_INVOKE"), ("34", "PA19/SWDIO"), ("35", "PA20/SWCLK"),
+                ("39", "PA21/VREF-"))],
+        right=[(num, nm, "bidirectional") for num, nm in (
+            ("40", "PA22"), ("43", "PA23/VREF+"), ("44", "PA24"), ("45", "PA25"), ("46", "PA26"),
+            ("47", "PA27"), ("3", "PA28"), ("5", "PA31"), ("14", "PB2"), ("15", "PB3"), ("20", "PB6"),
+            ("21", "PB7"), ("22", "PB8"), ("23", "PB9"), ("24", "PB14"), ("25", "PB15"), ("26", "PB16"),
+            ("36", "PB17"), ("37", "PB18"), ("38", "PB19"), ("41", "PB20"), ("42", "PB24"))],
+        top=[("6", "VDD", "power_in"), ("48", "VCORE", "power_out")],
+        bottom=[("7", "VSS", "power_in")],
+        width=30.48,
     ),
 ]
 
@@ -581,7 +619,64 @@ def we_lqs_2512():
                      "inductor Wuerth WE-LQS 2512", "smd", body, -2.0, 2.0)
 
 
+def lqfp48_pt():
+    """TI PT0048A (LQFP-48 7 x 7 mm, 0.5 mm pitch): MSPM0G350x SLASEX6C, drawing 4215159/B example board layout.
+
+    48 pads 1.6 x 0.3 mm, R0.05, 0.5 mm pitch, opposite pad centres 8.2 mm apart (+/-4.1 mm).
+    Pins 1-12 down the left (1 at top), 13-24 left to right along the bottom, 25-36 up the
+    right, 37-48 right to left along the top. Mask 0.05 mm around (NSMD, TI 0.05 mm max).
+    Body 6.8-7.2 mm, lead tips 8.8-9.2 mm. The stock Package_QFP:LQFP-48_7x7mm_P0.5mm has
+    1.475 x 0.3 mm pads at +/-4.1625 mm (same toe, 0.125 mm shorter heel).
+    """
+    body = ""
+    for i in range(48):
+        side, k = divmod(i, 12)
+        off = -2.75 + 0.5 * k
+        x, y, w, h = ((-4.1, off, 1.6, 0.3), (off, 4.1, 0.3, 1.6), (4.1, -off, 1.6, 0.3), (-off, -4.1, 0.3, 1.6))[side]
+        body += (f'\t(pad "{i + 1}" smd roundrect (at {n(x)} {n(y)}) (size {n(w)} {n(h)}) (roundrect_rratio 0.1667)'
+                 f' (layers "F.Cu" "F.Paste" "F.Mask") (solder_mask_margin 0.05))\n')
+    body += (f'\t(fp_poly (pts (xy -2.5 -3.5) (xy 3.5 -3.5) (xy 3.5 3.5) (xy -3.5 3.5) (xy -3.5 -2.5))'
+             f' (stroke (width 0.1) (type solid)) (fill no) (layer "F.Fab"))\n')
+    # silk corner marks on the body outline, stopping 0.2 mm short of the outer pads
+    for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+        body += (f'\t(fp_line (start {n(sx * 3.61)} {n(sy * 3.1)}) (end {n(sx * 3.61)} {n(sy * 3.61)})'
+                 f' (stroke (width 0.12) (type solid)) (layer "F.SilkS"))\n'
+                 f'\t(fp_line (start {n(sx * 3.61)} {n(sy * 3.61)}) (end {n(sx * 3.1)} {n(sy * 3.61)})'
+                 f' (stroke (width 0.12) (type solid)) (layer "F.SilkS"))\n')
+    body += circle("F.SilkS", -4.6, -3.35, 0.08, 0.1, fill=True)
+    body += rect("F.CrtYd", -5.15, -5.15, 5.15, 5.15, 0.05)
+    return footprint("TI_LQFP-48_7x7mm_P0.5mm_PT0048A",
+                     "TI PT0048A LQFP-48 7 x 7 mm, 0.5 mm pitch, example board layout (drawing 4215159/B): 1.6 x 0.3 mm pads, 8.2 mm row centres",
+                     "LQFP-48 PT TI MSPM0", "smd", body, -6.0, 6.0)
+
+
+def tssop24_pw():
+    """TI PW0024A (TSSOP-24 4.4 x 7.8 mm, 0.65 mm pitch): TCA9548A SCPS207H, drawing 4220208/A example board layout.
+
+    24 pads 1.5 x 0.45 mm, R0.05, 0.65 mm pitch, column centres 5.8 mm apart (+/-2.9 mm).
+    Pins 1-12 down the left (1 at top), 13-24 up the right. Mask 0.05 mm around (NSMD,
+    TI 0.05 mm max). Body 4.3-4.5 x 7.7-7.9 mm. The stock Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm
+    has 1.475 x 0.4 mm pads at +/-2.8625 mm.
+    """
+    body = ""
+    for i in range(24):
+        x, y = (-2.9, -3.575 + 0.65 * i) if i < 12 else (2.9, 3.575 - 0.65 * (i - 12))
+        body += (f'\t(pad "{i + 1}" smd roundrect (at {n(x)} {n(y)}) (size 1.5 0.45) (roundrect_rratio 0.1111)'
+                 f' (layers "F.Cu" "F.Paste" "F.Mask") (solder_mask_margin 0.05))\n')
+    body += (f'\t(fp_poly (pts (xy -1.2 -3.9) (xy 2.2 -3.9) (xy 2.2 3.9) (xy -2.2 3.9) (xy -2.2 -2.9))'
+             f' (stroke (width 0.1) (type solid)) (fill no) (layer "F.Fab"))\n')
+    for y in (-4.01, 4.01):
+        body += f'\t(fp_line (start -2.0 {n(y)}) (end 2.0 {n(y)}) (stroke (width 0.12) (type solid)) (layer "F.SilkS"))\n'
+    body += circle("F.SilkS", -3.4, -4.05, 0.08, 0.1, fill=True)
+    body += rect("F.CrtYd", -3.9, -4.2, 3.9, 4.2, 0.05)
+    return footprint("TI_TSSOP-24_4.4x7.8mm_P0.65mm_PW0024A",
+                     "TI PW0024A TSSOP-24 4.4 x 7.8 mm, 0.65 mm pitch, example board layout (drawing 4220208/A): 1.5 x 0.45 mm pads, 5.8 mm column centres",
+                     "TSSOP-24 PW TI TCA9548A", "smd", body, -5.0, 5.0)
+
+
 FOOTPRINTS = {
+    "TI_LQFP-48_7x7mm_P0.5mm_PT0048A": lqfp48_pt(),
+    "TI_TSSOP-24_4.4x7.8mm_P0.65mm_PW0024A": tssop24_pw(),
     "TI_SOT-23-5_DBV0005A": sot23_5_dbv(),
     "TI_SOT-563_DRL0006A": sot563_drl(),
     "L_Wuerth_WE-LQS-2512": we_lqs_2512(),

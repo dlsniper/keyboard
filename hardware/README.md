@@ -15,11 +15,11 @@ the next step after the rev 8 docs are reviewed (`next.md`). Planned disposition
 
 | Project | Refs | Thickness | Rev 7 state | Rev 8 plan |
 | --- | --- | --- | --- | --- |
-| `keys-right/` `keys-left/` `keys-numpad/` | 1xx / 2xx / 3xx | 1.6 mm | empty | new design: sockets, LEDs, IS31FL3733, module controller (P19), LDO, `J_COMM`, `J_DIAL` on `right` |
-| `core/` | 4xx | 1.6 mm, 4 layers | schematic ERC 0; PCB 32 × 90 mm placed and routed except 7 nets (details below) | splits into **`hub-base/`** (horizontal: power path, TCA9548A, buttons, stacking headers) and **`hub-mcu/`** (vertical MCU board on the core layer's wall: MDBT50Q, crystal, SWD, USB ESD; `J_MCU` 2×25 right angle), 2026-09-26. From `sch_core.py`: keep the power path, MCU support and expansion LDO in `sch_core.py`; drop the matrix, UART, link, module-ID and `J_ROW`/`J_COL`/`J_LED`/`J_LINK`/`J_BAT` parts; add the TCA9548A, the slot 2×16, chain 2×6 and expansion 2×10 headers, `PACK_EN`/`PACK_SENSE`, the `AUX_5V` OR input; both PCBs new, outlines from the hub tower (M11) |
+| `keys-right/` `keys-left/` `keys-numpad/` | 1xx / 2xx / 3xx | 1.6 mm | empty | new design: sockets, LEDs, IS31FL3733, module controller (P19; `MSPM0G3505SPT`, link on PA0/PA1, PA18 `BSL_invoke` pull-down + rescue pad), LDO TPS7A0233PDBVR, `J_COMM` (order in spec §6, 2026-09-29), `J_DIAL` on `right` |
+| `core/` | 4xx | 1.6 mm, 4 layers | schematic ERC 0; PCB 32 × 90 mm placed and routed except 7 nets (details below) | becomes **`hub-base/`**, one board (2026-09-29; the 2026-09-26 split into `hub-base/` + a vertical `hub-mcu/` board with `J_MCU` 2×30 is dropped): **MDBT50Q-U1MV2** (u.FL to a flex antenna in the case wall), crystal, SWD, USB ESD, power path, TCA9548A, buttons, stacking headers; outline ~84 × 84 mm (M11). The stock `RF_Module:Raytac_MDBT50Q` carries the antenna keepout zone, which the u.FL part does not need: whether to use a `keyboard:` copy without it is decided at capture. From `sch_core.py`: keep the power path, MCU support and expansion LDO in `sch_core.py`; drop the matrix, UART, link, module-ID and `J_ROW`/`J_COL`/`J_LED`/`J_LINK`/`J_BAT` parts; add the TCA9548A, the slot 2×16, chain 2×6 and expansion 2×10 headers (expansion pinout and CS0–CS3 with a 3V3 pull-up each per spec §6, X1), `PACK_EN`/`PACK_SENSE`, the `AUX_5V` OR input; new PCB, outline from the hub tower (M11) |
 | `usb-port/` | 5xx | 1.6 mm | ERC 0 | keep as the host port board |
-| (new) `connector-wired/` | 12xx | 1.6 mm | — | wired connector layer carrier: slot 2×16 + chain 2×6 on top, chain 2×6 underneath, 3 × `J_SLOT` (2026-09-26) |
-| `link/` | 6xx | 1.6 mm | ERC 0, variants `upstream`/`downstream` | becomes **`comms/`** (hub population = the wired connector layer's socket boards): drop the KTS1693 population; variants `hub` (TPS22950L, `J_SLOT` 14) and `module` (BAT54C, `J_COMM` 10); CC1/CC2 in place of SBU |
+| (new) `connector-wired/` | 12xx | 1.6 mm | — | wired connector layer carrier: slot 2×16 + chain 2×6 on top, chain 2×6 underneath, 3 × `J_SLOT` (2026-09-26); slot header order in spec §6 (reversal-safe, slots 0/2 mirrored, 2026-09-29) |
+| `link/` | 6xx | 1.6 mm | ERC 0, variants `upstream`/`downstream` | becomes **`comms/`** (hub population = the wired connector layer's socket boards): drop the KTS1693 population; variants `hub` (TPS22950L, `J_SLOT` 14) and `module` (BAT54C, `J_COMM` 10); CC1/CC2 in place of SBU; `J_SLOT`/`J_COMM` orders in spec §6 (2026-09-29), spares NC |
 | `seam/` | 7xx | 1.2 mm | ERC 0, 4 variants | **retire** (seams are mechanical only); 7xx stays unused |
 | `battery/` | 8xx | 1.6 mm | ERC 0 | revise: add the per-pack ideal diode, the `PACK_SENSE` BAT54, chain contacts in and through (E20, M10) |
 | `dial/` | 9xx | 1.6 mm | ERC 0, PCB DRC + parity 0 | keep; recheck the A/B filter against the module controller (P19) |
@@ -134,7 +134,7 @@ still empty.
 ## Library `keyboard`
 
 Each project's `sym-lib-table` and `fp-lib-table` point at `lib/`. Stock KiCad
-libraries already cover the MDBT50Q-1MV2/U1MV2 (`RF_Module`, `Raytac_MDBT50Q`),
+libraries already cover the MDBT50Q-U1MV2 (`RF_Module`, `Raytac_MDBT50Q`; one land pattern for every variant),
 TPS2116DRL, TPS61099DRV, IS31FL3733, USBLC6-2SC6, TPD6E05U06/TPD4E05U06,
 TLV757P, BAT54C, JST GH side-entry headers (`Connector_JST:JST_GH_SMxxB-GHS-TB`),
 Tag-Connect TC2030-NL, USB-C receptacles, SOT-23/SOT-563/SOT-583 packages and
@@ -156,11 +156,15 @@ Tag-Connect TC2030-NL, USB-C receptacles, SOT-23/SOT-563/SOT-583 packages and
 | `TI_SOT-23-5_DBV0005A` | footprint (core TLV75733P, TPS3840PH18; battery TPS3840PL35) | TI drawing 4214839/K example layout: 1.1 × 0.6 mm pads, 2.6 mm centres (same drawing in TLV757P SBVS320 and TPS3840 SNVSB03E); stock `SOT-23-5` differs |
 | `TI_SOT-563_DRL0006A` | footprint (TPS61023) | TI SLVSF14B example layout: 0.67 × 0.3 mm pads, 1.48 mm centres; stock `SOT-563` differs (stock `SOT-583-8` matches DRL0008A) |
 | `L_Wuerth_WE-LQS-2512` | footprint (Würth 74404024022, core L402/L403) | Würth datasheet rev 003.001 land pattern: 1.1 × 2.0 mm pads, 0.8 mm gap; stock `L_1008_2520Metric` differs |
+| `TPS7A0233PDBV` | symbol (library `TI_SOT-23-5_DBV0005A`) | TI SBVS277C Table 5-1 (DBV); key-board LDO, 2026-09-29; not in stock KiCad |
 | `TPD4E1U06DBV` + `TI_SOT-23-6_DBV0006A` | symbol, footprint | TI SLVSBQ9D pin functions; DBV0006A drawing 4214840/G land pattern (1.1 × 0.6 mm pads, 2.6 mm centres); stock `SOT-23-6` differs |
 | `TI_WSON-6-1EP_2x2mm_P0.65mm_DRV0006A_TVS2200` | footprint (use `Power_Protection:TVS2200DRV`; also the core's TPS61099DRV, same drawing 4222173/C in SLVSD88M) | TI TVS2200 drawing 4222173/C land pattern; stock WSON-6 footprint differs |
 | `D_SOD-123FL_Littelfuse_SMF` | footprint, pin 1 cathode | Littelfuse SMF series case 498D recommended footprint (SMF6.0A) |
 | `Fuse_1206_Eaton_PTSLR1206` | footprint | Eaton PTSLR1206 datasheet 11048 p. 3 pad layout |
 | `D_SOD-123FL_Littelfuse` | footprint | Littelfuse SMF4L (SMF4L9.0CA) datasheet p. 5 mounting pad layout (stock `D_SOD-123F` has smaller pads) |
+| `MSPM0G3505SPT` | symbol (library `TI_LQFP-48_7x7mm_P0.5mm_PT0048A`) | TI SLASEX6C rev C Table 6-2 (48 LQFP column), checked against Figure 6-3; not in stock KiCad 10.0.6 (2026-09-29) |
+| `TI_LQFP-48_7x7mm_P0.5mm_PT0048A` | footprint (key-board MSPM0G3505) | TI drawing 4215159/B example board layout: 1.6 × 0.3 mm pads, 8.2 mm row centres; stock `LQFP-48_7x7mm_P0.5mm` has 1.475 mm pads at ±4.1625 mm |
+| `TI_TSSOP-24_4.4x7.8mm_P0.65mm_PW0024A` | footprint (use stock `Interface_Expansion:TCA9548APWR`, pins checked) | TI TCA9548A SCPS207H, drawing 4220208/A: 1.5 × 0.45 mm pads, 5.8 mm column centres; stock `TSSOP-24_4.4x7.8mm_P0.65mm` has 1.475 × 0.4 mm at ±2.8625 mm |
 | `BatteryHolder_MPD_BC2AAPC_2xAA_RevP` | footprint (use `Device:Battery`, pad 1 = +) | MPD drawing BC2AAPC rev P; **don't use the stock `Battery:BatteryHolder_MPD_BC2AAPC_2xAA`**, which has the pre-2024 13.59 mm pin spacing (P15) |
 
 ## Vendored `lib/kiswitch/`
