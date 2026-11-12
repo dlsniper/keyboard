@@ -2,7 +2,7 @@
 """Board-to-board header audit (spec §6 "Board interconnect", §16 "every net matches end to end").
 
 Reads the PARTS tables of the sch_*.py scripts (the schematics' source of truth) and checks:
-  1. every JST GH header is either mated to its partner or listed as pending (keys-* boards not drawn yet);
+  1. every JST GH header is either mated to its partner or listed as pending (rev 9 key boards not drawn yet);
   2. mated headers agree pin for pin, through an explicit per-pair net alias table;
   3. mated headers share footprint pin count and MPN;
   4. end-reversal: pin k faces pin N+1-k. A power pin may only face its own net; GND facing a signal is an
@@ -20,45 +20,26 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-BOARDS = ["core", "battery", "usb_port", "expansion", "seam", "link", "dial"]
+# Rev 9: only the boards still in hardware/. Archived rev 8 boards (archive/rev8/) are not read.
+BOARDS = ["usb_port", "dial"]
 
 POWER = {
-    "core": {"PACK_A", "PACK_B", "VBUS_LOCAL", "EXP_3V3", "LED_RAIL", "VSYS", "VBUS_LINK_IN", "VBUS_IN"},
-    "battery": {"PACK+"},
     "usb_port": {"VBUS_LOCAL"},
-    "expansion": {"5V", "3V3"},
-    "seam": {"VBUS"},
-    "link": {"VBUS_CONN", "VBUS_LINK", "VBUS_LBD"},
     "dial": set(),
 }
 
 # (board, ref), (board, ref), {net on the second board: net on the first}
-MATES = [
-    (("core", "J402"), ("battery", "J801"), {"PACK+": "PACK_A"}),
-    (("core", "J403"), ("battery", "J801"), {"PACK+": "PACK_B"}),
-    (("core", "J405"), ("usb_port", "J502"), {"ACOK": "ACOK_LOCAL"}),
-    (("core", "J404"), ("expansion", "J1002"),
-     {"5V": "VBUS_LOCAL", "3V3": "EXP_3V3", "SCL": "EXP_SCL", "SDA": "EXP_SDA", "RST": "EXP_RST", "DC": "EXP_DC",
-      "CS": "EXP_CS", "MOSI": "EXP_MOSI", "INT": "EXP_INT", "SCK": "EXP_SCK"}),
-    (("link", "J602"), ("seam", "J703"), {"VBUS": "VBUS_CONN"}),
-]
+MATES = []
 
-# mate lives on a keys-* board that has no schematic yet
+# mate lives on a rev 9 key board that has no schematic yet (roadmap M1)
 PENDING = {
-    ("core", "J406"): "keys-* J_LED",
-    ("core", "J407"): "keys-* J_ROW",
-    ("core", "J408"): "keys-* J_COL",
-    ("core", "J409"): "keys-* J_LINK",
-    ("link", "J603"): "keys-* J_LB",
-    ("link", "J604"): "keys-* J_LBD",
-    ("dial", "J901"): "keys-* J_DIAL",
+    ("usb_port", "J502"): "right key board, host port header",
+    ("dial", "J901"): "right key board J_DIAL",
 }
 
 # (board, ref, net that faces GND when reversed): why it is harmless
 GND_SIGNAL_OK = {
-    ("core", "J405", "ACOK_LOCAL"): "R412 100k pull-up into GND; the port board's ACOK is open-drain",
     ("usb_port", "J502", "ACOK"): "open-drain KTS1693 ACOK into GND",
-    ("link", "J604", "LINK_SW_EN"): "core R411 10k limits the GPIO; TPS22950L stays off (spec §6 J_LBD)",
 }
 
 SHARED_COUNT = {"J_BAT_A", "J_BAT_B", "J_BAT"}

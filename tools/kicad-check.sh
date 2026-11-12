@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Normalise the custom library to the installed KiCad format, then run ERC and DRC
 # on every project under hardware/, then the board-to-board header audit. Reports land in build/kicad-check/.
+# archive/ (rev 8) is never checked.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

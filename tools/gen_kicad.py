@@ -21,30 +21,21 @@ LIB = HW / "lib"
 LIBNAME = "keyboard"
 
 # project dir (relative to hardware/), reference start, board thickness (mm)
+# Rev 9: only the boards still in hardware/. The rev 8 boards live under archive/rev8/ and
+# are not generated, checked or read by any tool; the rev 9 key boards are added at M1.
 PROJECTS = [
-    ("keys-right", 100, 1.6),
-    ("keys-left", 200, 1.6),
-    ("keys-numpad", 300, 1.6),
-    ("core", 400, 1.6),
     ("usb-port", 500, 1.6),
-    ("link", 600, 1.6),
-    ("seam", 700, 1.2),  # SAMZO spring-half tails are 1.50 mm (drawing GA0480)
-    ("battery", 800, 1.6),
     ("dial", 900, 1.6),
-    ("expansion", 1000, 1.6),  # 1xx-9xx taken (P17)
-    ("plate/plate-left", 0, 1.5),  # 1.5 mm FR4, no copper
-    ("plate/plate-right", 0, 1.5),
-    ("plate/plate-numpad", 0, 1.5),
 ]
 
 # Design-rule minimums from the spec (§12): JLCPCB economy 0.127 mm track/space,
 # 0.2 mm drill; the USB port and link boards carry the KTS1693 0.4 mm WLCSP and
 # are quoted with 0.15 mm vias.
-FINE_PITCH = {"usb-port", "link"}
+FINE_PITCH = {"usb-port"}
 
 # Four copper layers (2026-09-16): the core carries the MCU module, USB D+/D- and two boosts.
 # The dielectric split below is a placeholder until the fab stackup is chosen (spec §12, Phase 4).
-FOUR_LAYER = {"core"}
+FOUR_LAYER = set()
 
 
 # --------------------------------------------------------------------------
@@ -848,13 +839,6 @@ def write_projects():
             if not p.exists():
                 p.write_text(text)
         add_missing_libs(d / "fp-lib-table", fp_libs)
-    common = HW / "common"
-    common.mkdir(parents=True, exist_ok=True)
-    for sheet, title in (("key-led-matrix", "Key board LED matrix block"),
-                         ("key-link-routing", "Key board link routing block")):
-        p = common / f"{sheet}.kicad_sch"
-        if not p.exists():
-            p.write_text(sch_text(title))
 
 
 if __name__ == "__main__":
