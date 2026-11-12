@@ -14,7 +14,8 @@ Decisions go to the user as options with pros and cons.
 
 ## Working rules
 - One clean session per milestone, split at a task boundary if it grows. End every session by updating this file and
-  committing. Read only what the task needs; bulk work goes to cheaper models (table in the roadmap).
+  committing. Read only what the task needs; bulk work goes to cheaper models (table in the roadmap);
+  subagents may nest up to five levels, results are verified by whoever delegated.
 
 ## Tools
 - TinyGo 0.44.0 installed (`/opt/homebrew/bin/tinygo`; targets `pico`, `pico2`). KiCad 10.0.8, FreeCAD 1.1.4, both MCPs checked 2026-11-13.

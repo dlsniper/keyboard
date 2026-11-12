@@ -153,7 +153,9 @@ and charging design, which rev 9 does not have. Planned once M5 is done.
 
 ## Who does what
 
-Kept cheap without giving up checks:
+Kept cheap without giving up checks. Subagents may delegate further, up to five
+levels deep, to the cheapest model that does the task correctly (user, 2026-11-13);
+whoever delegates verifies what comes back.
 
 | Work | Model |
 | --- | --- |
