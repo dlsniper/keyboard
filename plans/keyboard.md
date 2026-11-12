@@ -44,18 +44,31 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 
 | | left | right | numpad |
 | --- | --- | --- | --- |
-| Keys (approx, firm after M0) | 40 | 52 | 17 |
-| Matrix (rows x cols) | 6 x 7 | 6 x 9 | 5 x 4 |
+| Keys (D1, 2026-11-13; final at D2) | 36 | 52 + dial push | 22 |
+| Matrix (rows x cols) | 6 x 7 | 6 x 9 | 6 x 4 |
 | Controller | Raspberry Pi Pico 2 W (RP2350 + CYW43439), socketed; the Pico 2 and Pico fit the same sockets | same | same |
-| LEDs | 40 x SK6812MINI-E | 52 | 17 |
+| LEDs | 36 x SK6812MINI-E | 52 (none under the dial) | 22 |
 | Dial | none | PEC11R, 24 detents, push switch in the matrix, on the separate dial board | none |
-| GPIO used / 26 | 13 matrix + 1 LED + 2 UART = 16 | 15 matrix + 2 dial + 1 LED + 4 UART = 22 | 9 + 1 + 2 = 12 |
+| GPIO used / 26 | 13 matrix + 1 LED + 2 UART = 16 | 15 matrix + 2 dial + 1 LED + 4 UART = 22 | 10 + 1 + 2 = 13 |
 
 - Switches: MX, Kailh hotswap sockets (CPG151101S11). One `1N4148W` per key.
 - **ANSI (US) layout.**
-- Pitch 19.05 mm, per-key rotation on the alpha rows, flat bottom row, number row
-  split 6/3. Geometry notes: `archive/rev8/plans/keyboard.md` §10. **No key-position
-  file exists yet**; producing one is M0.
+- **Key set (D1, user, 2026-11-13)**, K860 as the model, all alpha keys 1u (stepped
+  inner edge, standard caps):
+  - `left`: Esc F1-F6 / ` 1-6 / Tab Q-T / Caps A-G / Shift Z-B / Ctrl 1.5, Win 1.5,
+    Alt 1.5, Space 2.75.
+  - `right`: F7-F12 + 2 extra 1u keys / 7-= Backspace / Y-\ / H-Enter / N-Shift /
+    Space 2.75, Alt 1.75, Fn 1.75, Ctrl 1.5 (1.75u modifiers need blank or relegended
+    caps); TKL nav block (Ins Home PgUp / Del End PgDn, inverted-T arrows); above it
+    two keys and the dial in the rear outer corner.
+  - `numpad`: K860 copy, 4 keys level with the F-row, Clr / * -, tall +, 1u Enter,
+    2u 0, `.`, `=`.
+- **Positions: `layout/keys.json`**, written by `tools/gen_layout.py` (parameters at
+  the top; never edit the JSON by hand), drawn by `tools/render_layout.py`. Pitch
+  19.05 mm. Each alpha half: rows are concentric arcs (Shift row radius 790 mm), 0° at
+  the outer edge to about 10° at the split, constant pitch along each arc; the bottom
+  row is straight, on the 5° chord; F-row 0.25u behind the number row; nav block and
+  numpad square. To be checked against the K860 print (D2).
 - Stabilisers: Cherry MX plate/PCB 2U footprint from the vendored kiswitch subset.
 - **Antenna keep-out**: no copper, sockets or metal under and around the Pico 2 W antenna
   end, per the Raspberry Pi datasheet (dimensions taken from it at M1). The on-board LED
@@ -70,7 +83,7 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 - Rails: port board 5 V -> `right`'s LED rail and Pico; -> each link through a
   resettable fuse -> the satellite's LED rail, and its Pico's `VSYS` through a
   Schottky, so a satellite can be on its own USB and the link at once.
-- 109 LEDs at full white would draw several amps. **Firmware caps total LED
+- 110 LEDs at full white would draw several amps. **Firmware caps total LED
   current** from what the host offers: the port board reports 500 mA, 1.5 A or
   3 A from the CC pins. At 500 mA roughly 250-300 mA is left for light. Cap values
   per level are set by measurement (O3); link wire, connector and fuse are sized

@@ -1,0 +1,2 @@
+matplotlib==3.11.2
+pypdf==7.0.1  # only for verifying the PDF by hand
