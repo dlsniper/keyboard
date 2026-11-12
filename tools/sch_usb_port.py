@@ -47,7 +47,7 @@ PARTS = [
      {"MPN": "Kinetic KTS1693EVB-TR"}),
     ("R501", "Device:R", "100k", FP_R, (46, 48),
      {"1": "VBUS_CONN", "2": "OVLO"}, {"Tolerance": "0.1%"}),
-    ("R502", "Device:R", "26.4k", FP_R, (46, 58),
+    ("R502", "Device:R", "27.4k", FP_R, (46, 58),
      {"1": "OVLO", "2": "GND"}, {"Tolerance": "0.1%"}),
     ("R503", "Device:R", "4.99k", FP_R, (56, 56),
      {"1": "ISET", "2": "GND"}, {"Tolerance": "1%"}),
@@ -98,7 +98,7 @@ NETS = {
 }
 
 NOTES = [
-    ((4, 70), "Local USB-C port per spec §8. KTS1693: external OVLO 100k / 26.4k 0.1 % trips 5.55-5.95 V (internal 5.77-6.13 V exceeds 6.0 V);\n"
+    ((4, 70), "Local USB-C port per spec §8. KTS1693: external OVLO 100k / 27.4k 0.1 % trips 5.38-5.78 V, under the MDBT50Q VBUS pad 5.8 V abs-max (E22; internal 5.77-6.13 V);\n"
               "ISET 4.99k -> OCP 1.82-2.18 A (datasheet Table 1 at 5.00k, 0-70 C), under the LM66200's 2.5 A; EN tied low, OC_MODE low = latch off;\n"
               "ACOK is open-drain, pulled up on the core. CDET unused. D504 (TVS2200 on connector VBUS) is a DNP footprint.\n"
               "USBLC6-2SC6 VBUS (pin 5) is on VBUS_LOCAL, never on connector VBUS (5.5 V abs-max).\n"

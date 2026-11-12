@@ -6,7 +6,7 @@ modules carry no radio, battery or power path.** A single **hub** on the desk ho
 the radio, the host USB-C port, the cells, the power path and the expansion
 connector, and each key module plugs into it through a **swappable comms board
 pair**, a USB-C cable in rev A. BLE or USB to the host, per-key RGB, 9 host
-profiles, MX hotswap, AA cells in chainable 2-cell battery modules.
+profiles, MX hotswap, AA cells in up to 3 stacked 4-cell battery modules (NiMH; rev 8.1, 2026-09-30).
 
 Ends at gerbers + costed BOM + firmware that builds. Nothing ordered without
 sign-off.
@@ -29,20 +29,20 @@ power design looks the way it does.
    | OPTIONAL LAYERS (0..n), e.g. a display; stack on the core's top   |
    |   expansion header (2x10, pass-through)                           |
    +===================== expansion header 2x10 =======================+
-   | CORE LAYER   base board (one board, ~84 x 84 mm): MDBT50Q-U1MV2,  |<-- host USB-C (USB port board)
+   | CORE LAYER   base board (one board, ~94 x 94 mm): MDBT50Q-U1MV2,  |<-- host USB-C (USB port board)
    |              power path, LED rail, TCA9548A, buttons, all         |    expansion SH socket (expansion board)
-   |              stacking headers; u.FL -> flex antenna on the        |    antenna inside the case wall
-   |              inside of the case wall (RP-SMA knock-out, blanked)  |    (external RP-SMA optional)
+   |              stacking headers; u.FL -> Yageo PCB antenna on the   |    antenna inside the case wall
+   |              inside of the case wall (whip knock-out, blanked)    |    (external Yageo whip optional)
    +==== slot header 2x16 ==== chain header 2x6 ======================+
    | CONNECTOR LAYER (swappable: wired now; radio, optical, mixed      |
    |   later). Wired: carrier PCB + 3 socket boards (hub-side comms    |--> slot 1 --> USB-C cable --> [left]
    |   boards on J_SLOT), chain passed through                         |--> slot 2 --> USB-C cable --> [right] + dial
    +============================ chain header 2x6 =====================+--> slot 3 --> USB-C cable --> [numpad]
-   | BATTERY MODULE 1  (2xAA)   -- or instead: Qi2 board (ends the stack)
+   | BATTERY MODULE 1  (4xAA, passive; rev 8.1)   -- or instead: Qi2 board (ends the stack)
    +============================ chain header 2x6 =====================+
-   | BATTERY MODULE 2  (2xAA)
+   | BATTERY MODULE 2  (4xAA, passive)
    +===================================================================+
-   | ... BATTERY MODULE N (any number)
+   | BATTERY MODULE 3  (4xAA, passive; a 4th gets no chain line)
    +-------------------------------------------------------------------+
 
   Each key module: module-side comms board -> key board (module controller,
@@ -64,10 +64,11 @@ power design looks the way it does.
 - **The core layer is one board** (decided 2026-09-29; the vertical MCU board of
   2026-09-26 is dropped): the **base board** carries the **MDBT50Q-U1MV2** (u.FL,
   no on-module antenna), the power path, LED rail, TCA9548A, buttons and every
-  stacking header. The module's u.FL feeds an **adhesive flex antenna on the
-  inside of a core-section wall**; the wall also has a **blanked RP-SMA
-  knock-out**, so an external antenna (u.FL-to-RP-SMA pigtail) is a swap, not a
-  respin (§11, §13).
+  stacking header. The module's u.FL feeds an **adhesive PCB antenna (Yageo
+  ANTX100P011B24003, 2026-10-01) on the inside of a core-section wall**; the wall
+  also has a **blanked knock-out for Yageo's ANTX100ETHAB24553 whip**, so an
+  external antenna is a swap, not a respin. Both are on Raytac's approved antenna
+  list for the -U with CE (§11, §13).
 - **Each key module is a key board plus a module-side comms board.** The key board
   carries switches, diodes, RGB LEDs, the LED driver and a small **module
   controller** MCU (no radio) that scans the matrix and the dial, drives the LED
@@ -89,7 +90,7 @@ power design looks the way it does.
   or relays between media is the comms pair's business.
 - **Seams are mechanical only.** Joined modules align and retain with magnets or
   dovetails; no contacts cross a seam.
-- **Batteries chain.** Each battery module is one 2×AA pack with its own protection
+- **Batteries chain.** **Rev 8.1 (2026-09-30): up to 3 passive 4×AA (NiMH) modules, each pack on its own chain line (shifted by one per module), all protection and the OR on the hub (§4).** Rev 8 had: each battery module is one 2×AA pack with its own protection
   and ideal diode. Modules **stack under the hub** on a pass-through stacking
   header (decided 2026-09-26; side by side is kept as a future option). Rev A fits
   two. A future Qi board plugs into the same hub header **instead of** the battery
@@ -117,7 +118,7 @@ blocking are impossible regardless of how many keys are held.
 
 | | Hub |
 | --- | --- |
-| MCU | **MDBT50Q-U1MV2** (u.FL, 2026-09-29), on the base board; flex antenna inside the case wall, blanked RP-SMA knock-out for an external antenna |
+| MCU | **MDBT50Q-U1MV2** (u.FL, 2026-09-29), on the base board; Yageo ANTX100P011B24003 PCB antenna inside the case wall, blanked knock-out for the Yageo ANTX100ETHAB24553 whip (2026-10-01) |
 | Host | USB-C on the USB port board (KTS1693, CC sense); BLE |
 | Slots | 3, on the connector layer (rev A wired: a socket board per slot), each with a switched LED rail, one TCA9548A channel, `INT`; joined to the core by the 2×16 slot header |
 | Cells | battery chain, rev A 2 battery modules × 2 AA (alkaline or NiMH) |
@@ -130,20 +131,20 @@ blocking are impossible regardless of how many keys are held.
 
 **The principle is unchanged from rev 5: every event that damages or wears
 something happens on a small board you can swap.** Plug wear, surges, ESD,
-reversed or Li-ion cells and encoder wear land on boards that cost a few euros and
+reversed cells and encoder wear land on boards that cost a few euros and
 plug in with cables. The hub core and key boards sit behind that protection.
 
 | Board | Design | Per keyboard | Carries | Assembly | Replaced when |
 | --- | --- | --- | --- | --- | --- |
-| **Hub base board** (horizontal, ~84 × 84 mm; one board since 2026-09-29) | 1 | 1 | **MDBT50Q-U1MV2** with its u.FL to an adhesive flex antenna on the inside of the case wall (or a u.FL-to-RP-SMA pigtail to the blanked knock-out), 32.768 kHz crystal, `VDD`/`VBUS` decoupling, SWD pads + Tag-Connect TC2030-NL footprint, 27 Ω D+/D−, reset and bootloader tactiles, slide power switch and UVLO supervisor on the chain's `PACK_EN`, `VBUS_IN` OR (host USB + chain `AUX_5V`), logic LDO + logic boost (TPS61099DRV or MAX17222) + `VSYS` priority mux, LED boost + LED-rail mux, expansion LDO + `J_EXP`, **TCA9548A I2C switch**, 2×10 expansion header on top, 2×16 slot header and 2×6 chain header underneath, `J_USB`, `VBAT` sense, test points | assembler | power path or MCU fault |
+| **Hub base board** (horizontal, 94 × 77 mm since 2026-10-01: its front edge at y −30 leaves room for the panel buttons; one board since 2026-09-29) | 1 | 1 | **MDBT50Q-U1MV2** with its u.FL to the Yageo ANTX100P011B24003 PCB antenna on the inside of the case wall (or the Yageo ANTX100ETHAB24553 whip in the blanked knock-out), 32.768 kHz crystal, `VDD`/`VBUS` decoupling, SWD pads + Tag-Connect TC2030-NL footprint, 27 Ω D+/D−, connectors for the three front panel buttons (power, reset, boot; NKK UB, §11), and the rev 8.1 battery path (§4: 3 pack inputs with SMF4L9.0CA + LM74610-Q1 + CSD17313Q2, CSD25402Q3A battery and USB switches, TPS3840PL40 UVLO and PL43 USB detect, DMN63D8LDW drivers, battery sense on the PL40 node), `VBUS_IN` OR (host USB + chain `AUX_5V`), TPS70933 VSYS LDO, TPS630701 LED rail, expansion LDO + `J_EXP`, **TCA9548A I2C switch**, 2×10 expansion header on top, 2×16 slot header and 2×6 chain header underneath, `J_USB`, test points | assembler | power path or MCU fault |
 | **Connector layer, wired** (2026-09-26) | 1 carrier PCB | 1 | carrier PCB: 2×16 slot header and 2×6 chain header on top, 2×6 chain header underneath (chain passed through), 3 × 14-pin `J_SLOT` to the socket boards; no active parts planned | assembler (headers) or by hand | rarely; the socket boards take the wear |
 | **Key board** | 3, one per module | 3 | hotswap sockets, diodes, RGB LEDs, IS31FL3733, **module controller**, 3.3 V LDO (TPS7A0233PDBVR, TLV75733PDBVR second source on the same footprint), I2C pull-ups, module-ID strap, SWD pads, `BSL_invoke` rescue pad (PA18 + 3V3, §9), `J_COMM`, `J_DIAL` (`right`) | assembler | rarely; sockets and LEDs are hand-reworkable |
-| **Comms board, cable** | 1 PCB, 2 populations | 3 hub side (the wired connector layer's socket boards) + 3 module side | GCT USB4085 USB-C receptacle, TPD6E05U06 on A5, B5, A6, B6, A7, B7, SMF6.0A on VBUS. **Hub population:** TPS22950L slot switch + `ILIM` 624 Ω, CC pull-ups fed from `SLOT_EN`, **14-pin `J_SLOT`**. **Module population:** BAT54C joining CC1/CC2 into `INT`, **10-pin `J_COMM`**. KiCad design variants `hub` / `module`; the header pin counts differ so neither fits the other's position (repurposes the rev 7 link board) | assembler | socket worn, surge |
+| **Comms board, cable** | 1 PCB, 2 populations | 3 hub side (the wired connector layer's socket boards) + 3 module side | GCT USB4085 USB-C receptacle, TPD6E05U06 on A5, B5, A6, B6, A7, B7, **TVS0500** on VBUS (was SMF6.0A; 2026-10-01, E7). **Hub population:** TPS22950L slot switch + `ILIM` 624 Ω, CC pull-ups fed from `SLOT_EN`, **14-pin `J_SLOT`**. **Module population:** BAT54C joining CC1/CC2 into `INT`, **10-pin `J_COMM`**. KiCad design variants `hub` / `module`; the header pin counts differ so neither fits the other's position (repurposes the rev 7 link board) | assembler | socket worn, surge |
 | **USB port board** | 1 | 1 (host port, on the hub) | USB-C receptacle, 2 × 5.1 kΩ CC, KTS1693, OVLO divider, TVS2200 footprint, SMF6.0A, USBLC6-2SC6, TVS2200 on CC1/CC2; GCT USB4085 (unchanged from rev 7) | assembler | socket worn, surge, OVP latched and not recovering |
-| **Battery module** | 1 | 2 in rev A, more by chaining | one 2×AA holder and the rev 7 pack chain (SMF4L9.0CA, reverse-block and OVP AO3415A with gate clamps, TPS3840PL35 + RC, PTC, DNP OVP bypass, R806 bleeder), **plus its own ideal diode onto the chain's `VBAT`** (LM66200, one channel, decided 2026-09-26), a BAT54 onto `PACK_SENSE`, and chain-in / chain-through contacts | hand-solderable except the PTC and the LM66200 (0.5 mm-pitch SOT), both reflowed or hot-air soldered | reversed cells, 14500s, terminal ESD, corroded holder |
+| **Battery module** | 1 | up to 3 (rev 8.1) | **rev 8.1 (2026-09-30): passive**: a 4×AA holder (part open), one PTC in the pack lead, the pogo seam parts (Samtec DW-06-17-T-D-254 riser + cap board with the Mill-Max 827 strip on top, 12 Mill-Max 1578-0 discs underneath), and the chain's one-position line shift (own pack → `PACK_A`, `PACK_A`/`PACK_B` from below → `PACK_B`/`PACK_C`); the rev 7 pack chain, LM66200 and BAT54 move to the hub or go (§4) | hand-solderable except the discs and the PTC (reflow) | corroded holder, worn pogo parts |
 | **Dial board** | 1 | 1 (`right`) | unchanged from rev 7: PEC11R, push-switch diode, 1 kΩ + 10 nF on A and B, DNP TPD4E1U06DBV, 5-pin `J_DIAL`; the A/B filter re-checked against the MSPM0G3505's 40 kΩ pull-up and unchanged (2026-09-26) | hand-solderable | encoder worn |
 | **Expansion board** | 1 | 1 (on the hub) | unchanged from rev 7: JST SM12B-SRSS-TB, TPD4E05U06 + TPD6E05U06, 15-pin `J_EXP`; shares the expansion bus with the top header (kept 2026-09-26 for cabled accessories) | assembler (ESD arrays) | socket worn, ESD hit |
-| *Optional top layers* (display first, future) | per add-on | 0..n | stack on the core's 2×10 expansion header and pass it through; each takes one SPI chip select (CS0–CS3) by a jumper, carries a 24xx02-class ID EEPROM at 0x50 + its CS number (X1, §6) and needs distinct I2C addresses for anything else; ESD on anything user-touchable | — | — |
+| *Optional top layers* (display first, future) | per add-on | 0..n | stack on the core's 2×10 expansion header and pass it through; each takes one SPI chip select (CS0–CS3) by a jumper, carries a Microchip 24AA024 ID EEPROM at 0x50 + its CS number (X1, §6) and needs distinct I2C addresses for anything else; ESD on anything user-touchable | — | — |
 | *Qi board* (future) | 1 | 0–1 | Qi2 receiver, `AUX_5V` into the hub's chain header, used instead of the battery stack (§15) | — | — |
 | *Radio / optical / mixed connector layers and module-side boards* (future) | per medium | 1 layer + 3 module boards | the layer uses the same 2×16 slot header and 2×6 chain pass-through; the module side uses `J_COMM`; a module-side wireless board may bring its own battery chain (§15) | — | — |
 
@@ -163,12 +164,12 @@ Rules that fall out of the partition:
   link.** The hub never addresses the LED driver directly. That keeps the link at
   one I2C address per module and keeps the register map the only contract a
   comms pair must carry.
-- **Service rule: slide switch off and USB unplugged before unplugging any
+- **Service rule: power switch off and USB unplugged before unplugging any
   internal cable.** Advice, not the only protection: the key board limits current
   into its logic pins if a link is pulled live (§4), and link cables are
   user-pluggable by design (§6).
 - **Tool-less cell access.** Each battery module opens without tools. Every board
-  is fixed with M2 screws into heat-set inserts, so one driver services the whole
+  is fixed with M2 screws into captive M2 nuts (§11), so one driver services the whole
   keyboard.
 - **Fault reporting.** Firmware reads the host port's `ACOK`, each slot switch's
   state, and each module's presence and status. It reports faults as key-light
@@ -183,7 +184,7 @@ Rules that fall out of the partition:
 | Key board brain (rev 8) | **Module controller: TI MSPM0G3505 (LQFP-48)** per key board (P19, 2026-09-26), scanning at ~1 kHz, decoding the dial, owning the LED driver, serving one I2C register map | the TCA8418 keypad scanner adds 25–40 ms per press (TI SCPS215G p. 33); a hub-scanned expander (TCA6424A) needs register polling that a radio or optical comms pair cannot carry |
 | Comms (rev 8) | **Swappable connector layer** (hub side, all three links) **+ module-side comms boards**; rev A = wired layer with three socket boards and plain USB 2.0 C-to-C cables; the register map is the contract | start cheap, keep radio/optical/mixed media possible without touching the hub or key boards |
 | Link cable (rev 8) | USB-C both ends, **any passive USB 2.0 C-to-C cable**; VBUS = switched LED rail, D+ = SDA, D− = SCL, CC = `INT` | cheap, stocked everywhere, a cable is a spare part; the USB 2.0 cable has exactly five conductors, which is what the link needs |
-| Battery (rev 8) | **Chainable 2×AA battery modules**, rev A two, **stacked under the hub on a pass-through stacking header** (side by side: future option); alkaline and NiMH; per-pack ideal diode; **no charging** | runtime scales by adding modules; the rev 7 pack chain is reused per module |
+| Battery (rev 8.1, 2026-09-30) | **Up to 3 passive 4×AA battery modules** (NiMH; alkaline fits), stacked under the hub on pogo seams; each pack on its own chain line, protection + OR + UVLO on the hub; **no charging** | simplest modules; a hard cap of 3 lets each pack keep its own line (rev 8 had any number of active 2×AA modules) |
 | Qi2 (rev 8) | **Optional, later**: a Qi board on the hub's chain header feeds `AUX_5V`, **used instead of the battery stack**; it never charges cells | reserve the path now, design the board later |
 | Switches | Cherry MX, Kailh hotswap `CPG151101S11` | off-the-shelf caps |
 | Caps | widths 1U–2.75U inclusive, **any off-the-shelf set** | standard sets need 2.25U/2.75U; shine-through not required |
@@ -192,27 +193,29 @@ Rules that fall out of the partition:
 | Pitch | **19.05 mm throughout, pending Phase 1** | see §10 |
 | Width | **~468 mm accepted** | 456 mm key field + two ~6 mm seams; known deviation from the K860 |
 | Layout | K860 arc via per-key rotation, alpha rows only | the arc is the K860 look |
+| Size (2026-10-01) | **not a goal**: easy repair and user-friendliness win over the smallest or thinnest hub, boards and enclosure (user) | bigger controls, roomier boards and hand-reworkable parts are worth more than a compact tower; compactness-driven choices get revisited |
 | Board partition | **by failure mode** (§2a): hub core, key, comms, USB port, battery, dial, expansion | a worn or abused part costs a small plug-in board, not an assembled board |
 | Interconnect | **several small locking wire-to-board connectors, split by function**, JST GH family (1.25 mm, positive lock) proposed, **any fallback must also lock**; ≥2 contacts per power net; unique pin counts | hand-solderable, premade cables, a cable is a spare part |
 | Module ID | strap on the key board, read by the module controller, reported in the register map | identical module-controller firmware on every key board; the hub maps keys by ID, not by slot |
-| Service | slide switch off and USB unplugged before unplugging an internal cable, **backed by series R into the key board's logic pins**; tool-less cell access; M2 screws throughout; every external connector is user-replaceable by swapping the small board it sits on | builders will pull cables live anyway; plugs wear and take the surges |
-| MCU (hub) | **Raytac MDBT50Q-U1MV2** (u.FL connector, no on-module antenna; 2026-09-29), **single source accepted**; on the base board; antenna: adhesive flex antenna on the inside of a core-section wall, **blanked RP-SMA knock-out** for an external antenna on a u.FL-to-RP-SMA pigtail | pre-certified module, antenna placed away from the stack's copper and cells; Raytac datasheet ver L: 1MV2 = chip antenna, P1MV2 = PCB antenna, U1MV2 = u.FL (the spec called U1MV2 the chip variant until 2026-09-29); all three share one land pattern; Fanstel BT840 is a different pad layout and **not** a drop-in |
-| LFCLK | external 32.768 kHz crystal | **not** on-module; internal RC is ±250 ppm |
+| Service | power switch off and USB unplugged before unplugging an internal cable, **backed by series R into the key board's logic pins**; tool-less cell access; M2 screws throughout; every external connector is user-replaceable by swapping the small board it sits on | builders will pull cables live anyway; plugs wear and take the surges |
+| MCU (hub) | **Raytac MDBT50Q-U1MV2** (u.FL connector, no on-module antenna; 2026-09-29), **single source accepted**; on the base board; antenna (2026-10-01): **Yageo ANTX100P011B24003** adhesive PCB dipole (2.2 dBi) on the inside of a core-section wall, **blanked knock-out for the Yageo ANTX100ETHAB24553 whip** (2.0 dBi, integral cable); no RP-SMA | pre-certified module; both antennas are on Raytac's -U approved list with CE (-U datasheet ver L, ch. 7; an RP-SMA antenna is not), antenna placed away from the stack's copper and cells; Raytac datasheet ver L: 1MV2 = chip antenna, P1MV2 = PCB antenna, U1MV2 = u.FL (the spec called U1MV2 the chip variant until 2026-09-29); all three share one land pattern; Fanstel BT840 is a different pad layout and **not** a drop-in |
+| LFCLK | external 32.768 kHz crystal: **Epson FC-135R, CL 9 pF, ±20 ppm** (ESR 50 kΩ max), **12 pF C0G** load caps (2026-10-01) | **not** on-module; internal RC is ±250 ppm; nRF52840 PS v1.11 §5.4.4.3 wants CL ≤12.5 pF, C0 ≤2 pF, ESR ≤100 kΩ |
 | Seams | numpad = digits+operators only; arrows+nav on `right`; **mechanical join only** (rev 8) | detaching numpad loses only digits; nothing electrical crosses a seam |
 | Lighting | IS31FL3733, common-anode RGB, 1 CS + 3 SW per LED | per-key independent colour, 8-bit PWM per channel; serial-chain parts cost 0.6 mA/LED idle |
 | LED current | **~20 mA peak per die**, `RSET` ≈ 42.2 kΩ | safe for any reverse-mount RGB part at 1/12 duty; halves driver heat |
-| LED rail | **~5.0 V boost on battery (E19, 2026-09-26; was 4.7 V); VBUS (~5 V) on USB**, priority-muxed; carried to every slot through a latch-off switch | USB lighting skips the LDO and boost; 5.0 V leaves ≥0.3 V of LED headroom after a 1 m cable |
+| LED rail | **~5.0 V from a TPS630701 buck-boost on `SYS`, on USB and on battery** (rev 8.1; 4.95–5.15 V; rev 8 had a 5.0 V boost on battery and VBUS on USB); carried to every slot through a latch-off switch | the rail does not move with the source; ≥0.35 V of LED headroom after a 1 m cable (E19) |
 | Driver idle | `SDB` + software shutdown, rail stays up | power-gating VCC violates abs-max on `VIO`/SDA/SCL |
-| Cells | **alkaline and NiMH only**, 1.9–3.3 V per 2-cell pack. Low-self-discharge NiMH recommended | lithium primaries (L91) reach 3.66 V fresh, over nRF52840 `VDD` recommended max |
-| Overvoltage | per pack, unchanged from rev 7: TPS3840PL35 + series AO3415A, off by default, τ ≥ 25 ms, R806 bleeder, ≤1 µF on each pack node | a 14500 pair is 8.4 V; see §4 |
-| Undervoltage | firmware system-off at ~2.05 V; **the hub's TPS3840PH18 drives the chain's `PACK_EN` at ~1.9 V**, fed from `PACK_SENSE` (a diode-OR of every pack node) | every pack's ideal diode is the cutoff; the supervisor survives its own cutoff |
-| Pack series resistance | ≤300 mΩ max per path (~170 mΩ typical) | two FETs at 1.85 V gate drive cannot meet 150 mΩ |
-| Host USB input | **KTS1693** on the host port's USB port board, external divider for a 5.55–5.95 V trip, `ISET` 4.99 kΩ (1.82–2.18 A latch) | everything behind it is 6.0 V abs-max; 100 ns turn-off |
+| Cells | **alkaline and NiMH AA only; no Li-ion support (2026-09-30)**. Rev 8.1: 4×AA packs, NiMH intended (~4.0–5.8 V), alkaline fits (~6.4 V fresh); rev 8 was 1.9–3.3 V per 2-cell pack. Low-self-discharge NiMH recommended | rev 8's reason (an L91 lithium-primary pair at 3.66 V, over `VDD`'s recommended max) is gone with the LDO; 4 × L91 (~7.2 V at the usual ~1.8 V/cell, unverified) is not checked against rev 8.1 and stays unsupported |
+| Overvoltage | **rev 8.1: none (2026-09-30)**: Li-ion is not supported, the worst pack is ~6.4 V and everything on `SYS` is rated ≥16 V; rev 8 had the rev 7 TPS3840PL35 + AO3415A chain per module | reverse polarity and OR stay (LM74610-Q1 per input) |
+| Undervoltage | firmware system-off at 4.12 V on the PL40 node (§9); **the hub's TPS3840PL40 turns the battery switch off at 4.0 V on its node** (~4.16 V at the hub input), fed from the pack inputs through Schottkys (rev 8.1) | the supervisor survives its own cut and does not oscillate |
+| Battery path | per pack input an LM74610-Q1 + CSD17313Q2 ideal diode, OR-ed into one CSD25402Q3A battery switch onto `SYS`; USB into `SYS` through a second CSD25402Q3A, with priority (rev 8.1, §4) | zero Iq, reverse blocking to −45 V, packs isolated on USB |
+| Pack series resistance | ~291 mΩ worst case (pack C, three pogo hops), ≤0.13 V at 0.45 A (rev 8.1) | holder, PTC and contacts dominate; the FETs add ≤41 mΩ |
+| Host USB input | **KTS1693** on the host port's USB port board, external divider for a 5.38–5.78 V trip (E22, 2026-10-01), `ISET` 4.99 kΩ (1.82–2.18 A latch) | the LM66200 behind it is 6.0 V abs-max and the MDBT50Q `VBUS` pad 5.8 V; 100 ns turn-off |
 | Slot power | **TPS22950L latch-off switch per slot on the hub-side comms board**, `ILIM` 624 Ω (`IHCD` 1.2–1.9 A); on only while its slot holds a module that answers (§6) | a short or a foreign sink costs one latch, not the rail |
-| Logic rail | **regulated 3.3 V always**: VBUS → 3.3 V LDO on the priority mux's IN1; VBAT → logic boost (TPS61099DRV, 576 kΩ / 249 kΩ) on IN2 | 5 V never reaches `VDD` |
-| Enable defaults | LED boost `EN` pulled up to `VSYS`; logic LDO and logic boost `EN` tied on; only the expansion LDO is GPIO-gated | on USB with no cells nothing could enable a GPIO-gated LDO |
-| Boost | TPS61023, single source accepted | no pin-compatible alternative exists |
-| Pack ESD | **bidirectional** 9 V-standoff TVS per pack (SMF4L9.0CA), RC into supervisor `VDD` | doesn't crowbar a 14500 pair |
+| Logic rail | **regulated 3.3 V always**: TPS70933 LDO from `SYS` (rev 8.1) | 5 V never reaches `VDD` |
+| Enable defaults | TPS630701 and TPS70933 enabled by wiring; only the expansion LDO is GPIO-gated | on USB with no cells nothing could enable a GPIO-gated regulator |
+| LED converter | TPS630701 (fixed 5.0 V) + Coilcraft XFL4020-152ME (rev 8.1) | second source not looked for |
+| Pack ESD | **bidirectional** 9 V-standoff TVS per pack (SMF4L9.0CA; rev 8.1: per pack input on the hub, E21) | above a fresh 4×alkaline pack (~6.4 V) |
 | D+/D− ESD (host) | USBLC6-2SC6 with its `VBUS` pin on the KTS1693's **protected** side (or NC) | the pin's abs-max is 5.5 V |
 | USB CC sense | host port CC1/CC2 to the hub's `AINx` | sets the whole-keyboard LED budget |
 | Dial | on `right`'s key board, read by its module controller; behaviors run on the hub | the dial stays where the K860's host keys were |
@@ -225,7 +228,7 @@ Rules that fall out of the partition:
 | Deep sleep | stock ZMK sleep on the hub; **a keypress on any module wakes it** through that module's `INT` (rev 8) | rev 7's untethered-sleep limitation is gone with the split |
 | Rollover | full NKRO, every key independent | diode per key; `CONFIG_ZMK_HID_REPORT_TYPE_NKRO=y` |
 | Mechanical | in scope, palm rest and hub enclosure included | it defines the K860 silhouette |
-| Case | 3D printed resin/SLA, ~1.5 mm seam walls, heat-set inserts; **one piece per module from a large-plate print service** | resin is brittle; a 233 mm deep module does not fit a desktop SLA plate |
+| Case | **FDM, ASA** (2026-09-29), printed on the user's Bambu Lab H2S (340 × 320 × 340 mm) or Prusa CORE One (250 × 220 × 270 mm), one piece per module; ~1.6 mm seam walls, 2 mm hub walls; **M2 heat-set brass inserts** | both printers are enclosed with a heated chamber (ASA warps without one); a 233 mm deep module fits either bed; no carbon-fibre or metal-filled filament near the hub antenna |
 | Plate | **1.5 mm FR4, no copper**, plate-mount stabilisers | same fab as the PCB |
 | Row dish | flat boards; dish from per-module tilt + sculpted keycap rows | a stepped plate needs a stepped PCB, see §11 |
 | Distribution | open source, others may build | second sources throughout, build guide with a repair section (symptom → board) and a spares list, no panelisation |
@@ -253,226 +256,369 @@ Board in brackets: `[BAT]` battery module, `[USB]` USB port board, `[HUB]` hub
 core, `[COM-H]` hub-side comms board, `[COM-M]` module-side comms board, `[KEY]`
 key board.
 
+**Battery architecture, rev 8.1 (decided 2026-09-30; parts and values closed
+2026-10-01, E21).**
+- **Up to 3 battery modules, each 4×AA** in series, meant for **NiMH** (1.2 V nominal:
+  4.8 V pack, ~5.6–5.8 V fresh off the charger, ~4.0 V empty at 1.0 V/cell;
+  typical chemistry figures, no cell datasheet read). Alkalines still fit (~6.4 V
+  fresh), so every pack input tolerates ≥6.5 V. **No Li-ion support (2026-09-30)**:
+  Li-ion AA-size cells (14500) are neither supported nor designed against. Cells are
+  charged outside the keyboard.
+- **Battery modules are passive**: a 4×AA holder (**MPD BC4AAPC**, decided 2026-09-30: MPD drawing rev F, 57.2 × 61.3 × 15.5 mm, 2 PC pins Ø0.50 26.1 mm apart, polypropylene UL94-HB, nickel-plated spring-steel contacts, **<50 mΩ** +/− per EIA-540J000, −10…+100 °C; cells along x, centred at (−5, −15): 1.35 mm clear of the magnet shelves, 3.9 mm of the cap board, 2.0 mm under the board above; rejected BH4AAPC (UL94V-0 nylon, 15.88 mm, no contact resistance stated) and BK-1279-PC8 (8 pins, 16.7 mm); EU stock unchecked), **one PTC** in the pack lead (a
+  lifted module's pins, ~6 mm proud, carry its raw pack, PTC-limited), the chain line
+  shift and the pogo seam parts (riser, strip, target discs). No active parts.
+- **Each pack has its own chain line to the hub.** Chain pinout (reversal-safe, pin
+  k meets 13−k): **1 `PACK_A`, 2 GND, 3 `PACK_B`, 4 GND, 5 `PACK_C`, 6 `AUX_5V`, 7
+  `AUX_5V`, 8 `PACK_C`, 9 GND, 10 `PACK_B`, 11 GND, 12 `PACK_A`**. Every module
+  **shifts the lines by one**: its own pack drives its pins' `PACK_A`; the `PACK_A`
+  and `PACK_B` arriving on its discs from below leave on its pins as `PACK_B` and
+  `PACK_C`; the `PACK_C` from below ends there. So identical modules land on hub
+  inputs A, B, C by position, and a 4th module is simply unconnected.
+- **The hub does the rest** on one `SYS` rail (below): per pack input ESD, reverse
+  blocking and an ideal-diode OR; one UVLO; USB priority; a buck-boost for the ~5.0 V
+  LED rail (the pack spans ~4.0–6.4 V around it) and an LDO for VSYS 3.3 V.
+- **Hub topology (decided 2026-09-30): one `SYS` rail.** Per pack input (A, B, C):
+  a TVS, then a **TI LM74610-Q1** zero-Iq ideal-diode controller with one N-FET
+  (SNOSCZ1B, `build/ds/lm74610-q1.pdf`: not ground-referenced, **zero Iq**, reverse
+  polarity to −45 V, 2 µs reverse response, "can be used in OR-ing", VSSOP-8; its
+  charge pump needs the FET body diode's forward drop ≥0.48 V). The three outputs OR
+  into `VBAT`. **One shared high-side P-FET switch** takes `VBAT` to `SYS`, on only
+  when the power switch is on AND the UVLO supervisor (powered from the pack inputs
+  through a Schottky OR, so it stays alive after the cut and `PACK_SENSE` goes; first
+  on `VBAT`, moved 2026-10-01 after the E21 sim) reads OK AND `VBUS_IN` is absent:
+  **USB has priority**, and a second P-FET (below) feeds `VBUS_IN` into `SYS`; on USB the P-FET's body diode
+  is reverse-biased by any pack above `SYS`, and the ideal diodes block the other
+  direction. **No overvoltage cut**: with Li-ion unsupported the worst pack is a
+  fresh 4×alkaline at ~6.4 V, and everything on `SYS` is rated far above it. From
+  `SYS`: a **TI TPS63070** buck-boost makes the ~5.0 V LED rail on USB and on battery
+  (SLVSC58B: 2–16 V in, 20 V abs max, 2 A out at 4 V → 5 V, 54/103 µA PFM
+  quiescent) and a **TI TPS70933** LDO makes VSYS 3.3 V (SBVS186H: 2.7–30 V in,
+  150 mA, 1.3/2.05 µA ground current, dropout 295/650 mV at 50 mA). **Removed**: the
+  TPS61099 / MAX17222 logic boost, the TLV75733P USB LDO, both TPS2116 muxes, the
+  TPS61023 LED boost and its PR1 threshold divider (E3), `PACK_EN`/`PACK_SENSE`.
+  Rejected: the **LM74720-Q1** per input (first chosen the same day: 3–65 V, OV cut,
+  ≤35 µA, but an internal boost needing an inductor and a 1 µF cap per channel plus
+  2 FETs), a **Schottky OR** (~0.3–0.4 V at 0.45 A, generic figure: ~7–9 % of runtime
+  and ~0.3 V LDO headroom at the cutoff), rev 8's split rails re-parted (a TPS2121
+  priority mux draws 300 µA typ from its active input, a third of E7's ~0.9 mA, and
+  has no reverse protection) and rev 7-style discrete protection per input. The
+  LM7480-Q1 was passed over for ~400 µA; ADI's LTC4417 could not be read.
+- **Hub power parts (decided 2026-09-30, all TI datasheets in `build/ds/`):**
+  - Pack inputs ×3: **SMF4L9.0CA** TVS (carried over from rev 8's pack ESD: 9 V
+    standoff, above a fresh 4×alkaline's ~6.4 V) → **LM74610-Q1** + **TI CSD17313Q2**
+    N-FET (30 V, VGS +10/−8 V, Vth 0.9/1.3/1.8 V, 26/32 mΩ at 4.5 V, body diode
+    0.65 V at 125 °C per TI's LM74610 table, SON 2 × 2 mm) + a **1 µF X7R ≥16 V**
+    charge-pump cap (decided 2026-10-01; the datasheet's 220 nF–4.7 µF range, timing
+    scales with C, duty ~98 % for any value: 1.2 s on / 25 ms body diode; first charge
+    from empty ~45–60 ms vs ~100–155 ms with TI's 2.2 µF example; rejected 2.2 µF (the
+    longest dropout windows) and 0.47 µF (2.1× the minimum before X7R derating, dips
+    twice as often)). Below ~1 mA (idle) the FET acts as a plain diode.
+  - Battery switch `VBAT` → `SYS`: **TI CSD25402Q3A** P-FET (−20 V, VGS ±12 V, Vth
+    −0.65/−0.90/−1.15 V, 13.3 mΩ at −2.5 V, 7.7/8.9 mΩ at −4.5 V, SON 3.3 × 3.3 mm),
+    gate pulled up to `VBAT` through **1 MΩ** (decided 2026-10-01: 4.4–6.4 µA from the
+    packs while Qb is on; 470 kΩ would double that), pulled down through **two series
+    N-FETs**: N1 from the UVLO output through the **power switch** (**4.7 MΩ pull-down**,
+    decided 2026-10-01: the PL40 output feeds it through the sense Schottkys whenever the
+    switch is on, 0.9–1.3 µA, cut +~22 mV; 1 MΩ: 4–6 µA, +~52 mV; 10 MΩ left 0.57 V on
+    the gate with an assumed 100 MΩ leak across the open switch, unverified), N2 from
+    NOT-VBUS (**R2 = 1 MΩ pull-up to `VBAT`**, decided 2026-10-01; grounded by N3 when
+    USB is present, so the packs feed 4–6.4 µA into R2 while USB is in).
+  - UVLO: **TPS3840PL40** (SNVSB03E: 1.5–10 V, 300/700 nA, VIT− 4.0 V
+    ±1.5 %, hysteresis 175/200/225 mV → back on at ~4.2 V, push-pull active-low,
+    SOT-23-5): cut at ~1.0 V/cell. **`VDD` = the pack inputs through one Schottky each
+    (decided 2026-10-01)**: a **Diodes BAT54C-7-F** (common cathode = the sense node) for
+    inputs A and B, a **BAT54** for C, then **10 kΩ to `VDD` with 1 µF on `VDD`**
+    (decided 2026-10-01, E21 1b). The 10 kΩ protects the 12 V abs max `VDD` from the
+    SMF4L9.0CA clamp (VC 15.4 V at 26.4 A): straight onto 100 nF, `VDD` reached 10.6 V
+    for a 0.1 µs clamp and 15.0 V for 1 µs; through 10 kΩ into 1 µF it stays ≤6.30 V for
+    20 µs and ≤7.1 V for 1 ms (sim `tvs`); it adds ~1.6 µA × 10 kΩ = +16 mV to the cut
+    and limits `VDD` slew at a pack insert to ≤0.6 mV/µs (EC conditions ≤100 mV/µs).
+    The 1 µF holds the sense node at the packs' recent peak, decaying at ~1.6 V/s, which
+    sets the firmware's lighting-cut window below (~166 ms); a genuine cut under a
+    sudden heavy load comes up to ~0.17 s late (harmless for NiMH). Rejected 100 nF
+    (~15 ms window) and 470 nF (~75 ms), and 1 kΩ (τ 1 ms: a 1 ms clamp reaches ~12 V).
+    Rev 8.1 first put `VDD` on
+    `VBAT`, after the LM74610s; the switchover sim showed it trips whenever an LM74610
+    runs on its body diode (below). The Schottky adds its drop at 0.3–0.7 µA
+    (~0.12 V at 25 °C, ~0.2 V at −20 °C; e14 BAT54 model fitted to DS11005 Fig. 1), so
+    the cut sits at ~4.12 V at the hub input (~1.03 V/cell plus the series-path IR) and
+    re-arms at ~4.32 V. On USB it reads the real packs (`VBAT` is pulled up from `SYS`
+    through Qb's body diode there). Rejected: an RC filter (47 kΩ + 22 µF) on a `VBAT`
+    sense (`VBAT` rests ~0.42 V under the pack below ~1 mA, so a switch-on needs a
+    ≥4.62 V pack: the sim's 4.4 V switch-on never starts), replacing the LM74610 (the
+    ≥6.5 V candidates read draw 80–400 µA). `MR` unused (its internal 100 kΩ pull-up would
+    draw 40–64 µA if held low). **Firmware first stage (decided 2026-10-01, E21 1c):**
+    the SAADC reads **the PL40's own `VDD` node** (after the 10 kΩ, on the 1 µF), so it
+    compares against exactly what the hardware cut compares, on USB too and outside the
+    LM74610 windows (rejected: `VBAT`, which reads `SYS` through Qb's body diode on USB
+    and ~0.77 V low in every body-diode window; the Schottky cathode, whose reading
+    depends on load history; per-pack dividers, which need 2 more AIN pads). Divider
+    **200 kΩ / 100 kΩ 1 %** (1/3: 4.0 V → 1.33 V, 8.9 V → 2.97 V, under `VDD`; source
+    66.7 kΩ → TACQ 10 µs), switched on the high side by a **TI CSD25483F4** P-FET (−20 V,
+    VGS −12 V, Vth −0.70/−0.95/−1.20 V, IDSS ≤100 nA at −16 V, IGSS ≤50 nA, LGA
+    1.0 × 0.6 mm, reflow) with a **470 kΩ** gate pull-up to the node, pulled down by half
+    of a third **DMN63D8LDW** from `BAT_DIV_EN`; a switch is needed because nRF52840
+    I/O ≤ `VDD` + 0.3 V (PS v1.11 §9) and the node stays up with the hub off. Rejected
+    rev 7's AO3415A: IDSS ≤1 µA at 25 °C / ≤5 µA at 55 °C would load the PL40 pin (window
+    ~166 → ~40 ms, cut +~90 mV). A read (divider on ≤100 µs) drains the 1 µF by ~2 mV.
+    **Bring-up calibration**: bench supply on one pack input, DMM on the node, firmware
+    stores the SAADC gain factor (SAADC gain error ±3 % at 1/6 uncalibrated, +0.02 %/°C,
+    offset ±2 LSB10 after offset calibration; divider error absorbed). Residual ±0.7 % +
+    21 mV, so the thresholds sit on the node: **system-off 4.12 V** (fires 4.09–4.17 V,
+    above the 3.94–4.06 V cut; pack ~4.3 V ≈ 1.07 V/cell), **lighting off 4.25 V**,
+    **lighting scale-down start 4.40 V** (loaded; tuned on hardware, §9). Uncalibrated
+    with 0.1 % parts the system-off would need 4.24 V and fire up to ~4.43 V. Rejected: PL38 (0.5 V over the LDO's
+    worst dropout, cell-reversal risk), PL42 (runtime).
+  - USB into `SYS`: a second **CSD25402Q3A** "Qu", source on `SYS`, drain on `VBUS_IN`
+    (body diode VBUS→SYS, blocking SYS→VBUS), turned on by N4 when USB is present;
+    off-state leak = its IDSS (≤1 µA at 25 °C; no hot limit given); a **100 kΩ
+    bleeder** on `VBUS_IN` (decided 2026-10-01) holds `VBUS_IN` under the PL43's
+    re-detect level (worst ~4.41 V) for up to 44 µA of leak, where 1 MΩ allowed only
+    4.4 µA (a phantom USB detect turns Qb off and oscillates); costs 50 µA from USB only. **Sequencing (decided 2026-10-01):** Qu's gate pull-up
+    is **10 kΩ to `SYS`** (off in ~25 µs at unplug; ~0.5 mA from USB while on), and
+    **N4's gate is fed from the PL43 output through 2.2 MΩ with 22 nF to GND and a
+    BAT54 back to the PL43 output** (Qu turns on ~9–22 ms after USB appears, once Qb is
+    off; off again within ~5 µs at unplug). The cap was 10 nF until the 2026-10-01
+    corner sim: with N4 Vth 0.8 V, Qb Vth −0.65 V, Qb Ciss 1790 pF (all datasheet
+    limits) and 10 nF −10 %, Qu turned on 0.84 ms before Qb was off and a 6.4 V
+    alkaline drove `VBUS_IN` to 6.1 V; with 22 nF the worst corner keeps 3.4 ms of margin
+    (Qb off 5.5 ms, Qu on 8.9 ms). While Qu waits, `SYS` runs on Qu's body
+    diode (sim: ≥4.34 V). Rejected: the 10 kΩ alone (a fresh 4×alkaline still drives
+    `VBUS_IN` to ~6.2 V for ~3 ms at plug-in), an active P-FET pull-up on Qb's gate
+    (shortens, does not remove, the plug-in overlap). Rejected for Qu itself: a Schottky
+    (drop, and reverse leakage of tens of µA from the packs), a second LM74610 (≥1 mA
+    needed to pump).
+  - **`SYS` bulk: 100 µF effective at 5 V** (decided 2026-10-01; ceramic parts at
+    capture).
+  - USB detect: **TPS3840PL43** on `VBUS_IN`, powered by it (zero pack drain):
+    absent below 4.3 V, present above ~4.5 V; drives N3 and N4. Covers USB and the
+    future Qi `AUX_5V`. Rejected: KTS1693 `ACOK` (misses `AUX_5V`, threshold unread),
+    PL45 (rejects weak USB ports).
+  - N1–N4: **2 × Diodes DMN63D8LDW** dual N-FET (SOT-363: 30 V, VGS ±20 V, Vth 0.8/
+    1.5 V max, IDSS ≤1 µA). Rejected: 4 × 2N7002 (Vth up to 2.5 V).
+  - LED rail: **TPS630701** (fixed 5.0 V: ±1 % PWM, +3/−1 % PFM, internal 1.5 MΩ
+    feedback, discharge off; **`PS/SYNC` tied high = power save**, decided 2026-10-01:
+    the E7 idle figure needs PFM, forced PWM is ~1–5 % efficient at 0.1–1 mA (Fig. 39)
+    and its negative current limit runs current from a back-fed rail into `SYS`;
+    rejected a GPIO-controlled mode, nothing needs PWM ripple under lighting) with a **Coilcraft XFL4020-152ME** (1.5 µH, 4 × 4 × 2.1 mm,
+    Isat 4.6 A, 14.4 mΩ, from TI's Table 5: Coilcraft blocks curl). Load ≤0.35 A at
+    5 V: ~0.54 A average / ~0.72 A peak at 3.6 V in; Isat clears the 3.6 A switch limit.
+  - VSYS: **TPS70933DBVR** (SOT-23-5).
+  - **Series path, worst case (pack C, 3 pogo hops):** holder <50 + PTC ≤140 + pogo
+    3 × (10 line + 5 GND) + core↔connector ESQ ~15 + CSD17313Q2 ≤32 + CSD25402Q3A
+    ≤8.9 ≈ **~291 mΩ** (pogo 20 mΩ max per pin, 2 per pack line, 4 GND; ESQ assumed
+    20 mΩ per contact as in E20): ≤0.13 V at 0.45 A.
+  - **Idle current, estimate (E7, 2026-10-01; datasheets only, the §16 µA trace
+    replaces it).** Hub in System OFF (ZMK sleep), three key boards powered with the
+    module controllers in STANDBY, no lighting, power switch on, typ / worst:
+    - LED rail (5.0 V): **TPS22950L 44 / 60 µA per slot while on** (SLVSFJ2B §7.5;
+      ×3 = 132 / 180 µA, ~88 % of the idle), IS31FL3733 shutdown 2 / 5 µA each (Rev. G,
+      at 3.6 V; 5 V not given), MSPM0G3505 STANDBY1 1.5 / 4 µA each (SLASEX6C §7.5.2,
+      25 °C, "GPIOA enabled": the matrix wake pins must work in STANDBY, checked at
+      key-board capture), TPS7A0233 25 / 46 nA each, slot TVS0500 ≤5.5 nA each (below):
+      **~143 / ~207 µA**. From `SYS` through the TPS630701: ~250 µA typ (Fig. 38, PFM,
+      25 °C: ~60–65 % at 0.1–0.2 mA out, VIN 4.2–5 V; IQ 54 µA into VIN + 5 µA into
+      VOUT); worst ~440 µA (IQ 103 + 9 µA, 5.15 V, `SYS` 3.9 V at the end of a pack,
+      85 % switching efficiency assumed).
+    - VSYS 3.3 V: nRF52840 System OFF 0.40 µA (PS v1.11, typ only, 3 V), TCA9548A
+      standby 0.1 / 2 µA, TPS70933 IGND 1.3 / 2.05 µA: **~1.8 / ~4.5 µA**. An e-marked
+      cable adds ≤~15 µA per slot (220 kΩ `INT` pull-up into its Ra; most USB 2.0
+      cables carry none).
+    - Battery path: Qb pull-up 4.4–6.4 µA, N1 pull-down 0.9–1.3 µA, PL40 0.3 / 0.7 µA,
+      CSD25483F4 ≤0.1 µA, LM74610 0, the off DMN63D8LDW halves (N3, N4, divider) and
+      Qu ≤1 µA each (max at 16–30 V, typ not given), SMF4L9.0CA ≤5 µA each at 9 V:
+      **~6.5 / ~28 µA**.
+    - **Total ~0.26 mA typ, ~0.47 mA worst.** Per 4×AA LSD NiMH pack (no cell
+      datasheet read: ~1900 mAh minimum / 2000 typical is the usual LSD AA rating, and
+      ~1700 mAh usable to the 1.03 V/cell cut after 6 months of self-discharge, both
+      unverified): **~9 months typ / ~5 months worst on one pack**, ~18 / ~10 on two,
+      ~27 / ~15 on three (packs in OR add). The ≥6-month idle target is 0.39 mA per
+      pack: met typically on one pack, in the worst case from two.
+    - At idle (<1 mA) the LM74610 FET is a plain diode (`SYS` ~0.42–0.6 V under the
+      pack): current-neutral, it only lowers the converter's VIN. Under load the 25 ms
+      body-diode phase every ~1.2 s (~2 % of the time, ~0.77 V) raises the converter's
+      input current ~17 % in those windows: ~0.35 % of runtime, negligible.
+    - Power switch off (storage): PL40 + its Schottky, the SMF4L9.0CA and Qb/`SYS`
+      leakage: ~1 µA typ, ≤~17 µA max: years.
+    - Not estimated: the hub awake and idle with BLE connected before ZMK's sleep
+      timeout (firmware, measured in 7a), and 85 °C (MSPM0 STANDBY up to 40 µA each,
+      TPS22950L off-state up to 9 µA).
+    - **Slot VBUS TVS → TI TVS0500 (decided 2026-10-01).** The six slot-VBUS TVS (both
+      comms-board populations) sit on the LED rail, which stays live on battery and in
+      sleep; the SMF6.0A's IR is given only at 6 V (≤400 µA) with no 5 V figure (up to
+      ~2.4 mA for six). TVS0500 (SLVSED2C): ILEAK ≤5.5 nA at 5 V 27 °C, ≤220 nA at
+      85 °C, VBR 7.5–8.4 V, clamp 9.2 V at 43 A 8/20 µs (SMF6.0A 10.3 V at 19.4 A), IEC
+      61000-4-2 ±24 kV contact, DC breakdown current ≤50 mA, WSON-6 2 × 2 mm (DRV, stock
+      `Power_Protection:TVS0500DRV` + `Package_SON:WSON-6-1EP_2x2mm_P0.65mm_EP1x1.6mm`,
+      land pattern checked against TI's DRV0006A at capture). Its 5 V VRWM is under the
+      rail's 5.15 V PFM maximum, but VBR min is 7.5 V. Rising edges faster than 2.5 V/µs
+      (a cable plugged onto a live slot) clamp for a few µs, harmless (§8.5.3); the
+      TPS22950L's soft start is far slower. The SMF6.0A stays on the host USB port
+      board (behind the KTS1693, where sources reach 5.78 V; 5.95 V before E22). Rejected: TVS0701 (VBR
+      ≥9.3 V, clamp 11–11.7 V, IEC ±8 kV), keeping the SMF6.0A and measuring.
+  - **Switchover sim (E21, 2026-10-01; `tools/sim/e21_switchover.py`, case set `fix3`
+    = the values above; per-case data and every model number in `build/sim/e21/`,
+    `notes.md`).** ngspice; behavioural LM74610 (Vcap 6.3/5.15 V, Fig. 8 charge
+    current × 40/46, 0.95 µA, ~2 ms gate slew, 2 µs reverse turn-off) and TPS3840s
+    (tP_HL 30 µs, tD 50 µs, tSTRT 350 µs), level-1 FETs from the datasheet Vth/RDS/C,
+    LED rail as constant power (rail × 5 V / 0.9), TPS70933 26 mA with a 13 Ω dropout,
+    packs as V + R (0.35 Ω NiMH, 0.6 Ω alkaline incl. holder, PTC, pogo, ESQ). Results:
+    - Whenever a pack takes over (unplug, switch-on, pack swap) its LM74610 starts with
+      Vcap empty (it drains in ~7 s idle) and runs on the CSD17313Q2's body diode for
+      **~45–60 ms**, then 25 ms every ~1.2 s, at ~0.77 V drop (0.45 A, 25 °C).
+    - Unplug at the 250 mA cap, 4.4–6.4 V packs: 1 detector edge, no UVLO trip,
+      `VBUS_IN` ≤4.98 V, Qb on in 110–200 µs; `SYS` ≥3.39 V and VSYS ≥3.06 V at 4.4 V
+      (under 3.64 V for 59 ms), `SYS` ≥3.93 V from 4.9 V up.
+    - Unplug at the ~0.8 A USB rail: no trip for packs ≥4.7 V (`SYS` ≥3.39 V); lower
+      packs need the firmware lighting cut (below).
+    - Plug-in, 4.4–6.4 V, including the N4/Qb datasheet corners: no Qb/Qu overlap
+      (≥3.4 ms margin), `VBUS_IN` ≤5.0 V even with fresh alkalines, `SYS` ≥4.21 V.
+    - Pack swap 4.9 → 4.4 V, pack insert, switch-on from 4.4 / 4.7 V, 60 °C at 4.4 V:
+      fine. A 4.2 V pack does not start (below the ~4.32 V re-arm), as intended. At
+      −20 °C a 4.4 V pack cuts once at 11 ms (the Schottky's ~0.2 V cold drop puts the
+      cut at ~4.2 V at the hub input and the 0.61 A draw pulls it there); 4.5 V runs.
+    - **Firmware requirement:** at the ~0.8 A USB rail with a low pack (≤4.6 V), the IR
+      under ~1.5 A puts the input below the cut and the UVLO cycles (4.4 V: 76 edges
+      in 0.6 s, `SYS` down to 1.8 V). Firmware drops the lighting to the 250 mA battery
+      cap as soon as the PL43 output falls (a GPIO). It has as long as the PL40's 1 µF
+      holds the sense node against the PL40's IDD and its output current into N1's
+      pull-down: **~166 ms** (4.4 V pack). With the lighting dropped 100 ms after
+      unplug: no cut, `SYS` ≥3.02 V, VSYS ≥2.69 V (above the key boards' 2.31 V VIH).
+    - **Accepted:** `SYS` sits ~0.8 V under the pack during every LM74610 body-diode
+      window, so near the cut the TPS70933 drops out briefly (VSYS ≥~3.0 V at the
+      250 mA cap; nRF52840 runs to 1.7 V; key boards' I2C VIH 0.7 × 3.3 = 2.31 V).
+    - The first drawing failed three ways, which set the values above: the UVLO on
+      `VBAT` tripped in every body-diode window (unplug at 4.9 V: 77 cut-offs, `SYS`
+      1.8 V); a pack back-fed `VBUS_IN` through a slow-off Qu (1 MΩ pull-up) and the
+      PL43 re-detected USB (`VBUS_IN` 6.18 V with alkalines); plug-in overlapped Qb
+      and Qu for ~3 ms (`VBUS_IN` 6.18 V).
+    - Not modelled: layout inductance, cell chemistry dynamics, the KTS1693, `AUX_5V`,
+      the LM66200 beyond an ideal diode (its "IRCB 1.4/4 A activation current" row in
+      SLVSG04 is unexplained).
+- **Module PTC (decided 2026-09-30): Bourns MF-MSMF125/16X** (1812; Bourns MF-MSMF
+  datasheet, `build/ds/bourns_mf-msmf.pdf`): 16 V max, hold 1.25 A at 23 °C / 0.95 A
+  at 50 °C, trip 2.50 A, 0.4 s max at 8 A, R 0.04 min / 0.14 Ω R1max (≤63 mV at the
+  ≤0.45 A pack load), AEC-Q200. Replaces the 6 V PTSLR12066V175. Rejected:
+  MF-MSMF110/16X (0.20 Ω), MF-MSMF150/16X (3.0 A trip).
+- Chosen over **active 4×AA modules** (per-module protection and a ≥6.5 V ideal
+  diode, any number of modules: more parts per module) and **staying at 2×AA** (no
+  change). Rejected earlier the same day: board-less modules (the pogo strip, riser
+  and discs need a PCB) and paralleling packs directly (packs charge each other;
+  lifted pins live without a limit).
+
 ```
-  [BAT] pack 1, 2xAA -[TVS 9V]-[rev FET]-[OVP FET <- TPS3840PL35]-[PTC]-[ideal diode, ~ON <- PACK_EN]--+
-  [BAT] pack 2, 2xAA -[TVS 9V]-[rev FET]-[OVP FET <- TPS3840PL35]-[PTC]-[ideal diode, ~ON <- PACK_EN]--+-- VBAT (chain)
-  [BAT] pack n ...                                                                                   |
-        each pack node -[BAT54]-> PACK_SENSE (chain) -> [HUB] TPS3840PH18 -> slide switch -> PACK_EN   |
-                                                                                                     |
-  [USB] host USB VBUS -[KTS1693 OVP 5.55-5.95 V]-[TVS]--> [HUB] LM66200 IN1 --+                        |
-  [Qi, later] AUX_5V (chain) ---------------------------> [HUB] LM66200 IN2 --+-- VBUS_IN              |
-                                                                              |                      |
-                            +------[LDO 3.3 V]--IN1 [priority mux] IN2 <--[logic boost 3.3 V]<-------+ VBAT
-                            |                          |
-                            |                 VSYS (3.3 V) -> MDBT50Q VDD, TCA9548A, expansion I/O
-                            |
-          VBUS_IN ----------+--> TPS2116 IN1 (priority)
-          VBAT --[LED boost 5.0 V]--> TPS2116 IN2
-                                          |
-                                     LED RAIL (4.7-5.0 V) ---> [HUB] expansion LDO (gated) -> J_EXP 3V3
-                                          |
-                     +--------------------+--------------------+
-               [COM-H] TPS22950L    [COM-H] TPS22950L    [COM-H] TPS22950L     (EN per slot)
-                     |                    |                    |
-               cable VBUS            cable VBUS            cable VBUS
-                     |                    |                    |
-               [COM-M] TVS           [COM-M] TVS           [COM-M] TVS
-                     |                    |                    |
-               [KEY] IS31FL3733 VCC + LED anodes; TPS7A0233P LDO -> module controller, driver VIO, pull-ups
+  [BAT] module 1: 4xAA -[PTC]--> own pins PACK_A ; discs PACK_A, PACK_B --> pins PACK_B, PACK_C
+  [BAT] module 2, 3: same (line shift); a 4th module's pack reaches nothing
+                                                                                    chain PACK_A/B/C
+  [HUB] per input A, B, C: -[SMF4L9.0CA]-[LM74610-Q1 + CSD17313Q2]--+--> VBAT -[Qb CSD25402Q3A]--+--> SYS (100 uF)
+        per input: -[BAT54C / BAT54]--+                             |                          |
+                                      +-[10k]-+- 1 uF, PL40 node -> TPS3840PL40 -> power sw -> N1 \
+                                              |                                      N2 <- NOT USB -> Qb gate
+                                              +-[CSD25483F4]-[200k/100k]-> AIN0 (battery reading)
+  [USB] host VBUS -[KTS1693 OVP]-[SMF6.0A]--> [HUB] LM66200 IN1 --+
+  [Qi, later] AUX_5V (chain) ---------------> [HUB] LM66200 IN2 --+--> VBUS_IN -[Qu CSD25402Q3A]--> SYS
+                                    VBUS_IN -> TPS3840PL43 -> N3 (Qb off), N4 (Qu on after ~9-22 ms), GPIO
+
+  SYS -[TPS70933]--> VSYS 3.3 V -> MDBT50Q VDD, TCA9548A, hub pull-ups
+  SYS -[TPS630701, 5.0 V]--> LED RAIL ---> [HUB] expansion LDO TLV75733P (gated) -> J_EXP 3V3
+                                |
+           +--------------------+--------------------+
+     [COM-H] TPS22950L    [COM-H] TPS22950L    [COM-H] TPS22950L     (ON = SLOT_EN per slot)
+           |                    |                    |
+     cable VBUS (TVS0500 at both ends)
+           |                    |                    |
+     [KEY] IS31FL3733 VCC + LED anodes; TPS7A0233P LDO -> module controller, driver VIO, pull-ups
 ```
 
-The pack chain sits on each battery module, so a reversed cell, a 14500 pair or a
-terminal ESD strike damages at most one small, mostly hand-solderable board. The
-KTS1693 sits on the host port's USB port board, so a surge damages at most a small
-board. A slot short or a foreign load latches its own slot switch on a small
-comms board.
+The battery modules carry no active parts, so a reversed cell or a terminal ESD
+strike meets the hub's input stage (TVS, LM74610) on the hub base board. The KTS1693
+sits on the host port's USB port board, so a surge damages at most a small board. A
+slot short or a foreign load latches its own slot switch on a small comms board.
 
 Rules:
 
-- **5 V never reaches VSYS.** VBUS enters VSYS only through the 3.3 V LDO and the
-  priority mux. **Rev 2 OR-ed VBUS straight onto VSYS, which feeds `VDD` (3.6 V
-  max, 3.9 V abs-max): the first USB plug-in would have destroyed the MCU.**
-- **The logic rail is regulated, 3.3 V always (rev 6).** On battery a dedicated
-  boost (TPS61099DRV, ~1 µA quiescent, 0.7 V minimum input)
-  takes VBAT to 3.3 V on the priority mux's IN2; on USB the LDO on IN1 wins. The
-  hub's `VDD`, its I2C levels toward the slots and every `AINx` reading are
-  therefore independent of which cells are fitted or how flat they are. (Rev 5
-  ran `VSYS` unregulated at 1.85–3.3 V, which broke the inter-module UART levels
-  of the rev 5–7 split; rev 6 regulated it.) With
-  its input above its output (fresh alkaline, ~3.36 V) the TPS61099 stays in
-  **down mode and keeps regulating**; it only passes the input through above
-  `VOUT` + 0.5 V = 3.8 V, which the pack OVP (≤3.81 V) keeps out of reach. Logic
-  current through the boost is a few mA at ~85 %; the idle cost is the boost's
-  own quiescent current, on the order of 1 µA.
-  **Part choice (rev 7).** The fixed 3.3 V TPS610994 is sold only as a 6-ball
-  0.4 mm WCSP, which would put a non-reworkable part on the hub core. The adjustable
-  TPS61099DRV (WSON-6, 2 × 2 mm) takes a feedback divider instead: `VREF`
-  0.98–1.02 V, FB leakage ≤50 nA (SLVSD88M §6.5). **Divider 576 kΩ / 249 kΩ 1 %
-  (Phase 3, 2026-09-15)**: 4 µA, leakage error ≤29 mV, PWM 3.20–3.46 V worst case,
-  and PFM (+3 % typical, no maximum published) ~3.56 V, under the nRF52840's
-  3.6 V recommended `VDD` maximum (product spec v1.9 Table 100). **Rev 7's
-  ~2.3 MΩ / 1 MΩ 0.1 % claimed a leakage error under ~2 %; at the 50 nA maximum it
-  is +116 mV (3.5 %)**, which puts PWM at 3.51 V and PFM at ~3.61 V.
-  **Second source: dual footprint (2026-09-14).** The hub core carries a second 2 × 2 mm
-  land pattern for the **ADI MAX17222ELT+** (µDFN-6, different pinout), with its
-  own RSEL resistor (80.6 kΩ 1 % → 3.3 V) and inductor pads; one of the two is
-  fitted. The MAX17222 draws 300 nA into OUT, starts at 0.88 V and regulates
-  buck-like while `VIN` < `VOUT` + ~0.7 V, so the 3.81 V OVP ceiling stays
-  regulated. **Load check (Phase 3, 2026-09-15):** at `IPEAK` 0.40 A minimum and
-  `tON` 330 ns maximum, the datasheet's own method (p. 14) gives ~124 mA out at
-  1.85 V in with 2.2 µH (~147 mA with 3.3 µH), against a `VSYS` peak of ~26 mA
-  (nRF52840 TX +8 dBm 16.4 mA, CPU 3.3 mA, SAADC 1.24 mA, pull-ups, held keys),
-  about 4.8× margin. Its ultra-low-power mode biases the output +1 to +4 % (3.43 V
-  maximum), still under 3.6 V; its "high output-voltage ripple" while `VIN` is
-  within ~0.7 V above `VOUT` is not quantified and is scoped on the bench.
-- **Priority mux isolates the packs on USB.** With VBUS present the packs supply
-  nothing, even a fresh alkaline pack near 3.3 V that would win an ideal-diode OR.
-  **`VSYS` mux `PR1` (rev 7 core capture, 2026-09-15): its own 301 kΩ / 100 kΩ 1 %
-  divider from `VBUS_IN`**, no hysteresis resistor, `MODE` tied to IN1. It hands
-  over to the boost at 3.63–4.40 V, while the LDO on IN1 still regulates. A divider
-  from the LDO output would only fall to IN2 once `VSYS` had sagged to ~2.75 V
-  (`VREF` 0.92 V); sharing the LED mux's node would couple an LED-mux thermal
-  shutdown (`ST` low) into the `VSYS` threshold.
-- **Enable pins default on in hardware.** LED boost `EN` has a pull-up to `VSYS`;
-  the logic LDO and logic boost are enabled by wiring; only the expansion LDO is
-  GPIO-gated. A GPIO may pull an enable low, never be required to pull one high.
-  On USB with no cells the MCU has no supply until the LDO runs, so a GPIO-gated
-  logic LDO could never start; on battery a GPIO-gated LED boost would leave
-  `VCC` at 0 V while `VIO`, SDA and SCL sit at `VSYS`, the same abs-max violation
-  the hot-unplug rule below guards against, at every boot.
-- **The LED rail takes VBUS directly on USB.** A TPS2116 in priority mode selects
-  VBUS_IN on IN1 whenever it is above its `PR1` threshold, even when the boost on
-  IN2 is higher. **Rev 3 used an LM66200 auto-OR and claimed VBUS always wins over
-  4.7 V; it does not.** USB allows 4.75 V at the receptacle, and cable, OVP FET and
-  switch drops take VBUS_IN below 4.7 V under load, at which point an auto-OR hands
-  LED current to the boost. **The boost is fed from `VBAT`, so on USB that load
-  lands on the cells** (rev 7 and earlier said "the 3.3 V LDO", which the topology
-  does not do; with no cells IN2 sits under 1.6 V, a case the TPS2116 truth table,
-  SLVSFG1A §7.3.1, does not define). The
-  boost stays enabled and idles on IN2, so hand-over in either direction lands on a
-  running source. The LDO carries logic current only.
-  **`PR1` threshold (E3, 2026-09-15): 301 kΩ / 100 kΩ 1 % from `VBUS_IN`, plus
-  1 MΩ from `PR1` to `ST`.** `VREF` is 0.92–1.08 V (SLVSFG1A §6.5), so rev 7's
-  ~4.3 V nominal spread to 3.90–4.72 V and could hand a compliant but weak port's
-  LED load to the cells; 301k/100k falls to IN2 below 3.63–4.40 V. The datasheet
-  gives `PR1` no hysteresis; `ST` is open-drain and low while IN1 is not in use
-  (Table 5-1), so the 1 MΩ loads `PR1` only then and VBUS_IN must recover ~0.3 V
-  (4.31 V nominal) before the rail returns to IN1. No GPIO. Below ~4.5 V the LEDs
-  dim rather than draining cells (E6). Confirmed on the bench (E3).
-- **Bulk capacitance carries the mux switchover (rev 7).** The TPS2116's
-  break-before-make switchover is **8 µs typical at 5 V** (6.2 µs at 3.3 V; RL
-  10 Ω, CL 10 µF; no maximum given). Its 1.3–1.7 ms figure is the power-up soft
-  start, which the part skips on a switchover while `VOUT` > 1 V. At 250 mA and
-  0.7 V of allowed droop, 8 µs needs ~3 µF; the LED rail gets **~10 µF** to cover
-  the missing maximum, well inside USB's inrush allowance. `VSYS` needs far less
-  at ~10 mA and gets the same part count for margin. **Rev 5 read 1.3 ms as the
-  switchover and needed ~460 µF; rev 6 added an `SDB` blanking ISR on VBUS
-  events to avoid that. Both are gone.** Two datasheet conditions still apply: the
-  new channel only turns on once `VOUT` has fallen to the new input + ~40 mV
-  (both hand-overs here land on a higher or equal input), and if the powering
-  input collapses faster than 1 V / 10 µs the other input must be ≥2.5 V (the
-  4.7 V boost and the 3.3 V logic boost both are).
+- **5 V never reaches VSYS.** VSYS is only the TPS70933's output (2.7–30 V in), so
+  `SYS` at a fresh alkaline's ~6.4 V or at USB's ~5 V never reaches `VDD` (3.6 V max,
+  3.9 V abs-max). **Rev 2 OR-ed VBUS straight onto VSYS, which feeds `VDD`: the first
+  USB plug-in would have destroyed the MCU.**
+- **The logic rail is regulated, 3.3 V always (rev 6; rev 8.1 part: TPS70933).** The
+  hub's `VDD`, its I2C levels toward the slots and every `AINx` reading are therefore
+  independent of which cells are fitted or how flat they are. Dropout is 295/650 mV
+  at 50 mA, so VSYS only follows `SYS` down inside the LM74610 body-diode windows near
+  the cut (accepted, above).
+- **USB has priority and isolates the packs.** With `VBUS_IN` present the PL43 turns
+  N3 on, which turns N2 and so Qb off; N4 then turns Qu on after its delay. Every
+  LM74610 blocks `SYS`/`VBAT` → pack, and a pack above `SYS` (fresh alkalines over a
+  5 V port) cannot pass the off Qb (its body diode points `SYS` → `VBAT`). Zero pack
+  current on USB; the PL40 node still reads the packs.
+- **Enable pins default on in hardware.** The TPS630701 and the TPS70933 are enabled
+  by wiring; only the expansion LDO is GPIO-gated. A GPIO may pull an enable low,
+  never be required to pull one high. On USB with no cells the MCU has no supply
+  until VSYS runs, so a GPIO-gated logic regulator could never start; a GPIO-gated
+  LED rail would leave `VCC` at 0 V while `VIO`, SDA and SCL sit at 3.3 V, the same
+  abs-max violation the hot-unplug rule below guards against, at every boot.
+- **The LED rail is the TPS630701's output on USB and on battery.** Fixed 5.0 V (±1 %
+  PWM, +3/−1 % PFM: 4.95–5.15 V), buck or boost as `SYS` requires, so the rail does
+  not move with the source. Rev 8's TPS2116 priority mux, its `PR1` divider (E3) and
+  the switchover bulk are gone.
 - **`VIO` of the LED driver ties to the key board's 3.3 V** (rev 8; was `VSYS` on
   the core side of a cable). No I2C level translator: pin 39 is an input-logic
   reference and the datasheet's own app circuit does exactly this.
 - **The driver's VCC rails are never power-gated in normal operation.** Abs-max is
   "voltage at any input pin, VCC + 0.3 V", so collapsing VCC while `VIO`/SDA/SCL sit
   at 3.3 V is a violation on every transition. Idle is `SDB` low plus software
-  shutdown, which is µA-class. Boost quiescent is then always paid, tens of µA.
-- **Undervoltage, two stages.** Firmware reads VBAT on the SAADC and at ~2.05 V
-  drives `SDB` low, drops BLE cleanly, and enters system-off. As a backstop, a
-  TPS3840PH18 on the hub drives `PACK_EN` high at **~1.9 V at the pack**, which
-  disables every battery module's ideal diode (active-low `~ON`), so the ideal
-  diodes are also the cutoff switch (rev 8; rev 7 had one dual LM66200 on the
-  core). The supervisor is powered from `PACK_SENSE`, a BAT54 from each pack node,
-  so it survives its own cutoff; the ~0.1 V diode drop is why the 1.8 V part gives
-  a ~1.9 V pack threshold (about 1.87–1.93 V over temperature). On battery that is
-  all of the hub's `VSYS` and every key board's supply, so MCU, module controllers
-  and boost inputs die together; on each key board `VIO` is an LDO output from
-  `VCC`'s own net, so `VCC` never falls below `VIO`. On USB the packs are already
-  isolated and nothing changes. **Rev 2 put UVLO on boost EN alone, which collapsed
-  driver VCC under a live `VIO` and left the MCU draining the cells.**
-- **Reverse-polarity protection is mandatory.** A plain high-side ideal diode's
-  body diode conducts with a reversed pack and drags VSYS to about −2.4 V into
-  pins rated −0.3 V. Series reverse-blocking P-FET (AO3415A, <75 mΩ at −1.8 V)
-  before the OR-ing.
-- **Overvoltage protection per pack.** 14500 Li-ion cells fit AA holders; a pair in
-  a 2S holder is 8.4 V. No integrated OVP switch found goes below 4 V, so each pack
-  gets a TPS3840PL35 (10 V recommended maximum, 12 V abs-max, 300 nA) driving a
-  second series AO3415A gate.
-  The TPS3840's rated threshold is its *falling* edge, with +200 mV hysteresis, so
-  the PL35 trips **rising at ~3.65–3.75 V** and releases falling at ~3.45–3.55 V:
-  inside the 3.59–3.81 V window, under `VDD`'s 3.9 V abs-max, above the freshest
-  alkaline pack at ~3.36 V. A fresh L91 pack (~3.66 V) may or may not trip; they
-  are unsupported either way. DNP bypass footprint for the Li-ion build of §15.
-  **The OVP FET is off by default and slow to turn on (rev 6).** A supervisor
-  *detects* over-voltage; its below-threshold state, including during its own
-  start-up, is "reset asserted", which for the PL35 is output low, which is
-  "FET on". Inserting a 14500 pair therefore passed 8.4 V through the
-  reverse-block FET, the OVP FET, the PTC and the LM66200 (6.0 V abs-max) onto
-  `VBAT` and, via the mux path, toward the MCU, for the supervisor's start-up plus
-  its 1 kΩ / 100 nF filter (τ = 100 µs) plus its release delay `tD`, hundreds of
-  µs at least. Now the OVP FET's gate is pulled up to its source (pack side), the
-  supervisor pulls it down through a series resistor into a gate RC, and a diode
-  from the supervisor output to the gate makes turn-off immediate.
-  **Sizing (rev 7, datasheet-checked).** The window to cover is insertion to
-  supervisor release: the 1 kΩ / 100 nF filter reaches `VIT+` (≤3.81 V) in
-  ≤~110 µs for any pack ≥6 V, then `tSTRT` is 350 µs max with CT open (it
-  includes the no-cap `tD`), so **~460 µs**. The AO3415A's `VGS(th)` is −0.3 V
-  min, and the gate must stay above that for the whole window. With ~10 MΩ
-  pull-up and ~470 kΩ series (divider ≈0.95), a τ of 10 ms reaches −0.3 V at
-  8.4 V in ~380 µs, short of the window; **τ ≥ 25 ms** (e.g. 56 nF) reaches it in
-  ~960 µs, about 2× margin. AA cells then pass `VGS(th)` max after ~17 ms at a
-  1.9 V pack, and the 0.95 divider gives −1.8 V of gate drive there, which the
-  RDS(on) budget assumes. Layout rules: **the capacitor goes gate-to-source**
-  (gate-to-GND starts the gate at 0 V on insertion, which is "FET on"), and it
-  stays ≥10 nF so the FET's `Crss` cannot pull the gate below −0.1 V on an 8.4 V
-  step. The 10 MΩ node needs clean, residue-free assembly. PL35 output
-  behaviour below `VPOR` is only defined for `VDD` slew ≤100 mV/µs; the filter
-  gives ≤~93 mV/µs at 8.4 V with a −10 % capacitor, and the gate RC rides over
-  anything shorter anyway. **The OVP supervisor senses after the reverse-block
-  FET**, so a reversed pack (−3 V) never reaches its `VDD` (abs-max −0.3 V).
-  **Hot swap (Phase 3 ngspice, 2026-09-15; E14 closed).** The gate RC protects only
-  a *discharged* board. With a pack running, C801 holds VGS ≈ −2.6 V, and nothing
-  discharges the pack node quickly after the cells come out: 1 µF of LM66200 `CIN`
-  against ~1 µA of supervisor, gate-divider and UVLO current (the LM66200 leaks only
-  nA back out of an input, Fig. 6-8). Inserting a 14500 pair within **2.3–3.8 s**
-  put **8.3 V on `VBAT`**; swapping one AA for one 14500 (5.6 V) put **5.5 V** there,
-  which the logic boost passes through to `VDD`. Cold insertion stays blocked
-  (6 mV). **Fix: a 330 kΩ bleeder from `CELL+` to GND on the battery board (R806)**,
-  8.5 µA per pack at 2.8 V: the window falls to **0.46–0.50 s** and the one-cell swap
-  after 1 s stays at 2.6 V. **The window scales with the pack node's capacitance:
-  with 10 µF it is 3.4–3.7 s even with the bleeder, so each battery module keeps
-  its ideal diode's input at 1 µF and bulk capacitance sits on `VBAT` at the
-  hub** (rev 7: on the core's LM66200 pack inputs). E14's original worry,
-  D804's forward drop leaving the FET partly on after a trip, did not appear: the
-  BAT54 keeps discharging C801 down to sub-µA currents, so VGS reaches ≈0 within
-  milliseconds rather than following R803 × C801. The models (AO3415A subthreshold
-  slope n = 1.5 and −2.5 mV/K threshold tempco) are assumptions, not datasheet
-  numbers; deck in `tools/sim/e14_pack_swap.py`.
-- **FET gate clamps.** AO3415A is rated ±8 V VGS and a 14500 pair is 8.4 V, so every
-  series P-FET gets a gate resistor and a ~6.2 V zener clamp.
-- **Pack-terminal ESD.** A **bidirectional** 9 V-standoff TVS at each pack
+  shutdown, which is µA-class. The TPS630701's quiescent current and the slot
+  switches' are then always paid (E7 estimate: ~0.26 mA typ for the keyboard).
+- **Undervoltage, two stages (rev 8.1).** Firmware reads the PL40 node on the SAADC:
+  lighting scale-down from 4.40 V, lighting off at 4.25 V, **system-off at 4.12 V**
+  (drives `SDB` low, drops BLE cleanly; thresholds and calibration in §9 and the UVLO
+  bullet above). As a backstop the **TPS3840PL40 turns Qb off at 4.0 V ±1.5 % on its
+  node** (~4.16 V at the hub input, ~1.03 V/cell plus the path IR) and re-arms ~200 mV
+  higher. It is fed from the pack inputs ahead of the OR, so it survives its own cut
+  and does not oscillate. On battery the cut removes `SYS`: hub, LED rail and every
+  key board die together, and on each key board `VIO` is an LDO output from `VCC`'s
+  own net, so `VCC` never falls below `VIO`. On USB nothing changes. **Rev 2 put UVLO
+  on boost EN alone, which collapsed driver VCC under a live `VIO` and left the MCU
+  draining the cells.**
+- **Reverse polarity: blocked per pack input on the hub** (rev 8.1). The LM74610-Q1
+  turns its FET off within 2 µs of reverse voltage and blocks to −45 V; a reversed
+  pack also reverse-biases its sense Schottky, so the PL40 node never goes negative.
+  A single reversed cell only lowers its pack.
+- **No overvoltage cut and no gate clamps (rev 8.1).** With Li-ion unsupported the
+  worst input is a fresh 4×alkaline pack at ~6.4 V: CSD17313Q2 30 V (VGS +10/−8 V),
+  CSD25402Q3A −20 V (VGS ±12 V), TPS630701 2–16 V in (20 V abs-max), TPS70933 30 V,
+  TPS3840 10 V recommended; no gate sees more than the pack. Rev 7/8's per-pack
+  TPS3840PL35 + AO3415A OVP, its gate RC and the 6.2 V gate zeners are gone.
+- **Pack-input ESD: a bidirectional 9 V-standoff TVS per pack input on the hub**
   (Littelfuse SMF4L9.0CA: VBR 10.0–11.1 V, IR ≤5 µA at 9 V, VC 15.4 V at 26.4 A,
-  400 W at 10/1000 µs, SOD-123FL), which does not
-  conduct at 8.4 V; its 15.4 V clamp exceeds the TPS3840's 12 V abs-max, so
-  supervisor `VDD` takes 1 kΩ series + 100 nF, which also keeps it inside the 10 V
-  recommended range. The AO3415A's 20 V VDS covers the clamp. **It must be
-  bidirectional**: the TVS sits across the pack terminals, ahead of the
-  reverse-blocking FET and the PTC, so a unidirectional part forward-conducts into a
-  reversed pack with nothing to limit the current.
+  400 W at 10/1000 µs, SOD-123FL), which does not conduct at a fresh alkaline's
+  ~6.4 V. Its 15.4 V clamp exceeds the TPS3840's 12 V abs-max, so the PL40's `VDD`
+  takes the 10 kΩ + 1 µF above (≤7.1 V for a 1 ms clamp). **It must be
+  bidirectional**: it sits ahead of the LM74610's reverse block, so a unidirectional
+  part forward-conducts into a reversed pack with only the PTC to limit it.
 - **Host USB input OVP.** The host USB-C socket's VBUS goes through a **Kinetic
   KTS1693** integrated OVP switch on the USB port board, unchanged from rev 7.
-  Everything behind it is **6.0 V abs-max** (TPS2116, LM66200, TPS22950, TLV757P,
-  all datasheet-verified). The numbers that shape the circuit:
+  Behind it the LM66200 is **6.0 V abs-max** and the MDBT50Q's `VBUS` pad 5.8 V
+  (nRF52840 PS v1.11 §9; 5.5 V recommended); everything after `VBUS_IN` is rated ≥12 V. The numbers that shape the circuit:
   - **Ratings.** IN 30 V abs-max, internal clamp 32 V, IEC 61000-4-5 ±110 V surge
     and IEC 61000-4-2 ±8 kV contact on IN, 9 mΩ typ / 13 mΩ max, 8 A continuous.
     Turn-off **100 ns** after VIN crosses OVLO. Turn-on only after a **0.7 ms
     debounce**, then a ~2 ms soft start.
-  - **Trip point: external divider.** The internal OVLO (5.77–6.13 V) can exceed
-    6.0 V. With **R1 = 100 kΩ, R2 = 26.4 kΩ (0.1 %)** against the 1.162–1.238 V
-    reference and ±100 nA leakage, the trip is **5.55–5.95 V**, above vSafe5V's
-    5.5 V.
+  - **Trip point: external divider (E22, decided 2026-10-01).** The internal OVLO
+    (5.77–6.13 V) can exceed 6.0 V. With **R1 = 100 kΩ, R2 = 27.4 kΩ (0.1 %)** against
+    the 1.162–1.238 V reference (±3.2 %), ±0.16 % from the resistor ratio and ±100 nA
+    pin leakage (±10 mV), the trip is **5.38–5.78 V (5.58 V typ)**: under the MDBT50Q
+    `VBUS` pad's 5.8 V abs-max in every corner, at the cost of refusing a compliant PD
+    source at the top of vSafe5V (5.38–5.5 V) on a unit at the low reference corner
+    (it then runs on battery); USB 2.0 ports (≤5.25 V) and typical chargers are
+    unaffected. The reference spread alone is 6.5 %, so no divider fits between 5.5 and
+    5.8 V. Was 26.4 kΩ (5.55–5.95 V, rev 7): it passed 5.80–5.95 V onto the pad.
+    OVLO pin 4.30 V at 20 V in (20 V abs-max), 39 µA at 5 V. Rejected: accepting the
+    band (the risk lands on the hub's MCU module), the TI TPS25947 (OVLO ±1.7 %: 5.54–
+    5.77 V with 100 k / 27.0 k, but 1.2 µs turn-off against the KTS1693's 100 ns, a
+    USB port board redesign and 430–610 µA on USB; stays the P7 second-source
+    candidate), a series Schottky to the pad (the nRF52840 allows ≤6 Ω on `VBUS`,
+    PS §5.3.8.6, and the pad needs ≥4.35 V).
   - **`ISET` 4.99 kΩ 1 %: 1.82–2.18 A latch** (Table 1, 0–70 °C), under the
     LM66200's 2.5 A abs-max behind it. With `OC_MODE` low the switch stays fully on
     for the 5–10 ms `tOCP_DEB` before it latches (p. 11): one ≤10 ms pulse passes,
@@ -488,108 +634,86 @@ Rules:
   - **Rejected: discrete TLV6713 + AO3401A** (simulated: a 5 → 20 V step while
     connected reached 16.8 V at the output), NCP361, TPD1S514, LM74502, MAX4987AE
     (reasons in the parts list).
-- **PTC in each pack lead, hold ≥1 A.** 2×NiMH will deliver amps into a short and
-  there is a boost inductor downstream. **Eaton PTSLR12066V175**: 1.75 A hold,
-  3.5 A trip, 0.4 s max at 8 A, 50 A Imax, **Ri min 5 mΩ, R1 max 45 mΩ**, 1206.
-  Hold derates to ~88 % at 40 °C, ~1.5 A against the ~0.8 A worst case (rev 8, 5.0 V LED rail; 730 mA at rev 7's 4.7 V). Chosen over
-  PTSLR12066V150 (R1 max 80 mΩ, 3.0 A trip), which puts the path over budget once
-  the LM66200's maximum rather than typical on-resistance is used (below). The
-  whole family is rated 6 V.
-  That is enough: the PTC sits after the OVP FET, so a 14500 pair never appears
-  across it, and an alkaline or NiMH pack is ≤3.4 V. Rev 3's "Vmax ≥9 V" is
-  withdrawn.
-  **Fault band accepted (E9, 2026-09-15).** The PTC may never trip between 2.5 A
-  and its 3.5 A `Itrip` (~3.1 A at 40 °C), and Eaton publishes no trip curve, only
-  0.4 s at 8 A. A partial short on `VBAT`, or an LED-rail overload that holds the
-  TPS61023 output above 1.8 V (3.7 A typical valley limit; below 1.8 V its
-  short-circuit protection folds back to ~350 mA, SLVSF14B §7.3.7), can hold an
-  LM66200 channel above its 2.5 A abs-max until the pack node sags below the
-  ~1.9 V UVLO (roughly 4–6 A with fresh NiMH) or the LM66200 reaches thermal
-  shutdown (~1.5 W at 5 A × 61 mΩ, RθJA 111.5 °C/W). Hard shorts pull the node
-  under the UVLO at once. The part at risk is the battery module's ideal diode,
-  and only under an internal fault; PTSLR12066V110/V150 would close or narrow the band at 381/331 mΩ of path
-  resistance and were not adopted. §16 runs a partial-short test.
-- **Packs are never directly paralleled.** Each battery module has its own
-  reverse-blocking FET, OVP, PTC and ideal diode into `VBAT`. **OR-ing does not share
-  load:** the higher pack carries all of it until the packs equalise, then they
-  alternate. The keyboard runs correctly on one pack alone, and every per-pack
-  part is sized for the whole keyboard's battery load (rev 8; was one module's). **Rev 2 claimed two packs halve the
+- **Packs are never directly paralleled.** Each pack has its own chain line and its
+  own LM74610 into `VBAT`. **OR-ing does not share load:** the highest pack carries
+  all of it until the packs equalise, then they alternate. The keyboard runs
+  correctly on one pack alone, and every per-pack part is sized for the whole
+  keyboard's battery load. More modules add runtime, not current, and the 250 mA
+  lighting cap holds however many are fitted. **Rev 2 claimed two packs halve the
   C-rate; they do not.**
-- **Series resistance budget ≤300 mΩ max per pack path**: rev FET ≤75 + OVP FET
-  ≤75 + PTC ≤45 (R1 max) + LM66200 ≤51 (max at 1.8 V, 25 °C; 61 mΩ at 85 °C) +
-  holder <50 mΩ (MPD BC2AAPC datasheet; ~30 mΩ was assumed before the holder was
-  chosen, P15) = **~296 mΩ**, about 170 mΩ typical. Rev 4 counted the LM66200 at its
-  40 mΩ typical; at its maximum the 80 mΩ PTSLR12066V150 would have made it 311 mΩ.
-  At the worst-case ~0.8 A the path drops ≤0.24 V, so full brightness ends slightly early on a
-  nearly flat pack; firmware already scales lighting with VBAT.
-  **Rev 8: the budget becomes ~296 mΩ + ~10 mΩ per hop (E20, decided
-  2026-09-26).** Rev 7 did not count connector contacts. On the 2×6 chain header
-  (4 `VBAT` + 4 GND contacts, an **assumed** ~20 mΩ per 2.54 mm contact, to be
-  confirmed on the chosen part) each hop adds ~10 mΩ round trip, so the pack in
-  the n-th module sees ~296 + 10·n mΩ: ~316 mΩ for the far pack in rev A, ~396 mΩ
-  at 10 modules. Accepted: at the ~0.8 A worst case that is ≤~80 mV more drop on the
-  farthest pack, and the bus resistance makes nearer packs carry more of the load,
-  so far packs simply drain later.
-- **Battery chain (rev 8).** Battery modules connect to the hub's `J_CHAIN` and to
-  each other through a chain bus that every module passes through:
-
-  | Chain net | Contacts | Carries |
-  | --- | --- | --- |
-  | `VBAT` | 4 | every pack's ideal-diode output, OR-ed; the whole battery load passes through the modules nearer the hub |
-  | GND | 4 | return |
-  | `AUX_5V` | 2 | the Qi board's input to the hub; battery modules pass it through as plain copper (§15) |
-  | `PACK_EN` | 1 | the hub's cutoff: the old `~ON` net, now distributed to every pack's ideal diode |
-  | `PACK_SENSE` | 1 | diode-OR (one BAT54 per module) of every pack node, µA-level: the UVLO supervisor's supply and sense |
-
-  **Header (decided 2026-09-26): 2×6, 2.54 mm pass-through stacking header**,
-  pinout **1 `VBAT`, 2 GND, 3 `VBAT`, 4 GND, 5 `AUX_5V`, 6 `PACK_EN`, 7
-  `PACK_SENSE`, 8 `AUX_5V`, 9 GND, 10 `VBAT`, 11 GND, 12 `VBAT`**. Turned 180°, pin
-  k meets pin 13−k, so power meets its own net and only `PACK_EN` and
-  `PACK_SENSE` swap, which leaves every pack off. **Part family (M10, decided
+- **Battery chain.** Pinout and line shift at the top of this section; series path
+  ~291 mΩ worst case (above). **Part family (M10, decided
   2026-09-29): Samtec ESQ elevated socket with square stack-through tails, socket
   on each board's top face, tails down** into the socket of the layer below (§11).
-
-  **Why `PACK_SENSE` exists.** The UVLO supervisor must survive its own cutoff.
-  Rev 7 fed it from both packs ahead of the OR through a BAT54C. With the OR moved
-  onto the battery modules, the hub no longer sees the pack nodes, and a
-  supervisor on `VBAT` would lose its supply the moment it cut the packs off,
-  release, and oscillate. **Per-pack ideal diode (decided 2026-09-26): an LM66200
-  with one channel used**, `VIN1` = pack, `VIN2` tied to GND, `~ON` = `PACK_EN`,
-  `ST` unused. It keeps the ≤51 mΩ the series budget assumes (41 typ / 51 max at
-  1.8 V and 25 °C, 61 mΩ max from −40 to 85 °C, SLVSG04), blocks reverse current,
-  draws 1.32 µA typ, and `ON` high turns the output off (Hi-Z). **Its two channels
-  cannot be paralleled to halve RON**: only the higher input conducts (truth table
-  §7.3.1). Rejected: the **LM66100** (210 mΩ max at 1.8 V, SLVSEZ8A, path ~455 mΩ);
-  a discrete P-FET + comparator (hand-solderable, but 65–75 mΩ and a new circuit to
-  simulate against hot swap); a Schottky (~0.3–0.4 V at 0.8 A, no enable). The ≤1 µF rule on the pack node
-  (hot-swap window) applies on each battery module. **Chain contacts (M10, decided
-  2026-09-26): a 2.54 mm pass-through stacking header**, pins on the top face and a
-  socket on the bottom face of each module (or the reverse), modules stacked under
-  the hub. Rules: **the pinout is reversal-safe** (a 2×N header turned 180° puts
-  pin k on pin N·2+1−k: `VBAT` faces `VBAT`, GND faces GND, `AUX_5V` faces
-  `AUX_5V`, `PACK_EN` faces `PACK_SENSE`), and the case keys the join as well;
-  **a detached module switches itself off**: a pull-up from its `~ON` to its own
-  pack node holds the LM66200 off unless the hub pulls `PACK_EN` low, so the
-  exposed contacts of a loose module are dead. The swapped `PACK_EN`/`PACK_SENSE`
-  of a reversed join therefore also leaves every module off. Rev A fits two
-  modules. Side by side is a future option (it needs a right-angle part or a
-  different join).
-  **Any number of modules (2026-09-26).** Builders will stack as many as they like,
-  so nothing may depend on the count. What holds at any N: the load is set by the
-  firmware cap, so the current through the first hop never exceeds ~0.8 A; each
-  ideal diode keeps packs from charging each other; the supervisor watches the
-  highest pack, so a pack already below 1.9 V stays blocked and is never
-  discharged further; a module added to a running stack joins the OR (a lower pack
-  waits, a higher one takes over). What scales: resistance to the far packs
-  (~10 mΩ per hop, above), each pack's own standby drain (~10 µA, mostly R806;
-  per pack, so shelf life does not change), and the `~ON` pull-ups in parallel on
-  `PACK_EN`: **~10 MΩ each**, so ten modules cost ~2.5 µA while the keyboard is on.
-  The battery reading is the highest pack; the hub does not know how many modules
-  are fitted. A tall stack needs a mechanical joint to the hub; the header is not
-  one (M10).
-  **More modules add runtime, not current**: OR-ing does not share load, so every
-  per-pack part stays sized for the whole keyboard's battery load, and the 250 mA
-  lighting cap holds however many modules are fitted.
+  **Battery seams on pogo pins (decided 2026-09-29, M10)**: every seam below the
+  connector layer (connector ↔ battery module ↔ battery module …) opens on each cell
+  swap, and ESQ is rated only **100 mating cycles with 10 µ″ gold** (catalog page;
+  no figure for `-G`); spring pins are rated **100 000–1 000 000 cycles**. So the
+  chain crosses those seams on **12 pogo pins in the same 2×6, 2.54 mm order**
+  (reversal-safe as before). **Part (decided 2026-09-30): Mill-Max
+  827-22-012-10-004101**, a through-hole 2×6 spring-loaded strip (Mill-Max drawing
+  827-22-0XX-10-004101 and part data; spring guide MM-ISSPG rev 3.0): 9.96 mm above
+  its board free, tails 2.92 mm (Ø0.64) below, insulator 15.24 × 5.08 × 2.79 mm,
+  plunger Ø1.07, barrel Ø1.5; **stroke 2.29 mm (mid 1.14 mm)**, spring #77 (BeCu):
+  5 g preload, **60 g at mid-stroke**; 7 A at 30 °C rise (5.6 A derated), **20 mΩ
+  max**; 100 000–1 000 000 cycles; plating `-22` (20 µ″ gold plunger and body).
+  Working height 8.81 mm, so the strip's board sits ~8.7 mm over the battery board
+  (riser below). Twelve pins push
+  ~7.1 N at mid-stroke. Chosen over the 1.4 mm-stroke strips (818 through-hole /
+  814 SMT, spring #75, 60 g mid, 10 g preload) for about twice the window for FDM
+  seam stack-up at the same force, over its SMT twin 820-22-012-30-001191 (7.32 mm,
+  the solder pads alone take the side load of seating a module), over the 3 mm 839
+  (spring #89, 100 g mid: ~11.8 N against an unmeasured magnet pull), and over
+  loose 0906 pins (12 parts aligned only by their holes). EU stock not checked. The
+  strip stands **pins up** on a riser on each battery board, landing on **gold target
+  discs on the underside of the board above** (the next battery board, or the
+  connector layer's carrier). **Targets (decided 2026-09-30): Mill-Max
+  1578-0-57-15-00-00-03-0**, 12 per pad field, reflowed onto ENIG pads (Mill-Max PR663
+  rev D): solid brass, Ø1.98 mm, 0.63 mm tall ±0.05, **10 µ″ hard gold over nickel**,
+  tape and reel; suggested pad Ø2.24 mm (0.30 mm apart at 2.54 mm). Plain ENIG is
+  2–5 µ″ soft gold and wears through (rev 7 review, §17a); hard-gold fingers are
+  electroplated only at a board edge in one row (JLCPCB gold-finger rules), which a
+  mid-board 2×6 field cannot be; JLCPCB offers no full-board hard gold (HASL, ENIG,
+  OSP). Rejected: edge fingers with the single-row 825-22-012-10-004101 (moves the
+  field to a wall, loses the 2×6 reversal-safe order), full-board hard gold at PCBWay
+  (1–10 µ″ standard, second fab, solderability unchecked), plain ENIG. The taller
+  1578-1/-3 (0.89/1.40 mm) were rejected for a more exposed live contact under a
+  lifted stack and more leverage on the joint. **Riser (decided 2026-09-30): Samtec
+  DW-06-17-T-D-254**, a 2×6 "low-cost board spacer" soldered through both the
+  battery board and a 1.6 mm cap board (Samtec print XW rev BD): two PBT insulators
+  2.54 mm each, **board spacing 0.254″ = 6.45 mm ±0.20** (pins within 0.25 mm of each
+  other), 0.64 mm square phosphor-bronze posts, tail 2.79 mm (1.19 mm past the battery
+  board), overall 12.19 mm (lead style `-17`, post 2.95 mm above the top insulator,
+  1.35 mm past the cap), matte tin (`-T`: both ends soldered). Cap top at 8.05 mm puts
+  the strip at mid-stroke on the discs. No mated contact is added, so E20's per-hop
+  resistance holds. Through-hole, wave or hand soldering only (not lead-free
+  reflow); non-standard, non-returnable, likely bought from Samtec directly
+  (sourcing exception, EU stock unknown); current rating not on the catalog page (we
+  carry <1 A). Rejected: a pluggable Samtec BCS-106-L-D-TE socket (7.37 mm) + pins in
+  a 0.8 mm cap (a mated contact per pin per hop, about doubling E20's per-hop
+  figure), an SMT socket + header pair (same cost, parts unread). The old "SMT base
+  so the underside stays free" premise was dropped: the tails at (25, 20) end 6.9 mm
+  clear of the module below, away from the discs at (25, 28). **The riser stands at the
+  chain position (25, 20)**, and its cap board carries the pins to **(25, 28)** [approx], clear of the connector
+  layer's through-hole ESQ chain socket at (25, 20), whose cut tails sit under its
+  carrier; every board's pads sit at (25, 28). **Pogo seams sit 5 mm under the
+  upper board** (2026-09-29), so the upper section's magnet shelf and lip fit under
+  its board with no notch; rejected a ~2.5 mm skirt (pins ~3.5 mm proud, but a
+  10.5 × 24 mm notch at each magnet in every board). The pins cannot sit recessed:
+  mated, their tips touch a board that sits above the seam, so **a lifted-off
+  module shows its pins ~6 mm above its rim**; they carry the module's own pack
+  (PTC-limited; the module is passive since rev 8.1) and are spring-loaded. The lifted stack shows its target
+  discs (0.63 mm) in a 5 mm skirt. Twelve
+  pins push ~7.1 N apart at mid-stroke; the magnets' pull through the skins is
+  not measured yet (seam test print). The riser base and the pad
+  field on one board must not overlap (identical modules: the pins of one meet the
+  pads of the next). The core ↔ connector joint (screwed, 44 contacts, rarely
+  opened) and the expansion header keep ESQ; the connector layer's ESQ tails are
+  cut flush under its carrier (its skirt is ~2 mm now). Per hop: ~10 mΩ per pack
+  line (2 pins of ≤20 mΩ) + ~5 mΩ of GND (4 pins), counted in the ~291 mΩ series path. Rejected: keeping
+  ESQ on every seam (cycle rating), pogo everywhere (the screwed 44-contact joint
+  gains nothing), pins facing down (a tall riser hanging ~6 mm out of a lifted
+  section, live when packs in the lifted stack are on).
 - **Slot power (rev 8).** Each slot's hub-side comms board takes the LED rail over
   `J_SLOT` and feeds its cable's VBUS through a **TPS22950L** (latch-off, no
   reverse current blocking, `ON` from `SLOT_EN` on `J_SLOT`; its smart pull-down
@@ -619,32 +743,34 @@ Rules:
   stay at the driver: **1 kΩ on `VIO` and `SDB`, 470 Ω on SDA and SCL (E11)**. The
   link's SDA, SCL and `INT` come from the hub, so a link pulled live can also drive
   them into an unpowered key board (below).
-- **LED headroom after the cable (E19, decided 2026-09-26): LED boost raised to
-  ~5.0 V.** A max-bin die needs ~4.5 V at the driver (Vf max 4.1 V green + ~0.4 V
-  driver). The slot switch (≤41 mΩ), two GH contacts, the comms boards and ~1 m of
-  cable (VBUS and GND, ~0.4 Ω round trip on 28 AWG) drop ~0.1 V at `right`'s
-  0.28 A, so rev 7's 4.7 V setpoint (4.63–4.87 V) left ~0.03 V worst case. **The
-  TPS61023 divider goes from 698 kΩ / 100 kΩ to 750 kΩ / 100 kΩ**: `VREF` 580–610 mV
-  (PWM) gives **4.93–5.19 V**, 5.06 V nominal, ≥0.33 V of headroom after the cable;
-  under the TPS61023's output OVP (5.5 V min) and the IS31FL3733's 5.5 V maximum.
-  Costs: ~7 % more cell power at the same brightness (the extra volts burn in the
-  driver's current sources) and ~0.8 A from one pack at the battery cap (below).
-  **Open check:** the TPS61023's PFM output offset at light load is not published;
-  measure the rail at idle on the bench (§16). Rejected: requiring a heavier or
-  shorter cable (not enforceable), Vf-binned LEDs only (narrows sourcing), and
-  relying on lower peak current on battery (no verified Vf-vs-current curve).
+- **LED headroom after the cable (E19, 2026-09-26; rev 8.1 part 2026-09-30).** A
+  max-bin die needs ~4.5 V at the driver (Vf max 4.1 V green + ~0.4 V driver). The
+  slot switch (≤41 mΩ), two GH contacts, the comms boards and ~1 m of cable (VBUS
+  and GND, ~0.4 Ω round trip on 28 AWG) drop ~0.1 V at `right`'s 0.28 A. The
+  TPS630701's fixed 5.0 V (4.95–5.15 V; SLVSC58B Fig. 40 shows ~5.02–5.04 V in PFM at
+  25 °C) leaves **≥0.35 V of headroom** after the cable, under the IS31FL3733's 5.5 V
+  maximum. Rev 8's TPS61023 at 750 kΩ / 100 kΩ (4.93–5.19 V) and its unpublished PFM
+  offset are gone. Rejected (E19): requiring a heavier or shorter cable (not
+  enforceable), Vf-binned LEDs only (narrows sourcing), relying on lower peak current
+  on battery (no verified Vf-vs-current curve).
 - **`VBUS` must reach the MDBT50Q's `VBUS` pad directly**, not only through the
   power path, or USB and DFU are dead. It arrives from the USB port board on its
   own contacts of the hub core's `J_USB`.
 - Set `DCDCEN`. The REG1 inductor and the 32 MHz crystal are inside the module.
-- On the hub core: slide power switch, reset tactile, bootloader tactile, reachable
-  through the hub enclosure (Alps SKRTLAE010 side-push tactiles, C&K PCM12SMTR
-  side-actuated slide; land patterns not yet checked, P18). **The slide switch is an
-  SPDT on `PACK_EN`**, as rev 7 had it on the pack LM66200's `~ON`: common on
-  `PACK_EN`, one throw on the TPS3840PH18 output (on, UVLO in control), the other on
-  `PACK_SENSE` (off: holds every pack's `~ON` high). Off costs nothing and USB still
-  runs the keyboard, so DFU works with the switch off. A 10 MΩ from `PACK_EN` to GND
-  holds "on" across the break-before-make gap.
+- Hub controls: power switch, reset and bootloader buttons are **NKK UB** snap-in panel pushbuttons (2026-10-01, user: easy to press, not minimal): power
+  **UB16KKG01N-F** (latching ON-ON, green cap, COM + NO), reset **UB15KKG01N-C** (momentary,
+  red), boot **UB15KKG01N-A** (momentary, black); gold contacts 0.1 mA–0.1 A at 20 mV–28 V,
+  100 mΩ max, 1.9 N, 2.3 mm travel (1.0 mm proud when latched down), 1M momentary / 200k
+  gold electrical; solder lugs, wired to connectors on the core board (part chosen at
+  capture), so a button is unplugged and snapped out to replace it (NKK UB catalogue
+  D80–D83, `build/ds/buttons/nkk_ub_illum.pdf`; non-illuminated, an LED would cost battery
+  current). The power contact carries ~1 µA (4.7 MΩ), under NKK's 0.1 mA gold minimum; gold
+  does not oxidise and ~100 mΩ is nothing against 4.7 MΩ, so this is accepted and checked in
+  §16. Superseded the same day: Alps SKRTLBE010 tactiles behind pinholes and a C&K PCM12SMTR
+  slide in a fingernail pocket (§11). **The power switch sits
+  between the PL40 output and N1's gate** (rev 8.1), whose 4.7 MΩ pull-down holds N1
+  off when it is open, so off turns Qb off whatever the packs read. Off costs ~1 µA
+  (E7) and USB still runs the keyboard, so DFU works with the switch off.
 - **Link hot-unplug (rev 8).** Pulling a link cable, or unplugging a comms board,
   powered can leave SDA, SCL or `INT` at 3.3 V while the key board's rails fall.
   **Series resistors where the link enters the key board** (470 Ω on SDA and SCL,
@@ -655,30 +781,33 @@ Rules:
   transaction. **The hub-side `INT` pull-ups are fed from `SLOT_EN`**, so they are
   off whenever the slot's power is off (§6). The §16 unplug test is the proof.
 
-**Pack current.** Worst case is the whole keyboard at the battery cap near UVLO:
-250 mA × 5.06 V / (1.9 V × 0.85) ≈ **~0.78 A from one pack** (≤0.8 A at the
-5.19 V setpoint maximum), inside the PTC's ~1.5 A hold at 40 °C. Rev 7 had 730 mA
-at a 4.7 V rail, for one module's cap.
+**Pack current.** Worst case is the whole keyboard at the battery cap near the cut:
+250 mA × 5.0 V / 0.9 ≈ 1.39 W into the TPS630701 plus VSYS (~26 mA peak): **~0.37 A
+from one pack** at a 4.0 V `SYS`, ~0.45 A while an LM74610 runs on its body diode
+(`SYS` ~0.8 V lower); the series path above uses 0.45 A. Inside the MF-MSMF125/16X's
+1.25 A hold at 23 °C (0.95 A at 50 °C). At the ~0.8 A USB rail an unplug briefly
+draws ~1.5 A until firmware drops the lighting (switchover sim, above).
 
-Budget, whole keyboard, 4000 mAh NiMH (two 2000 mAh battery modules). `IOUT` ≈
+Budget, whole keyboard, per 4×AA NiMH pack (~2000 mAh, the usual LSD AA rating; no
+cell datasheet read). Two packs double the runtime, three triple it. `IOUT` ≈
 19.8 mA peak at `RSET = 42.2 kΩ`, `GCC = 255`; `ILED = IOUT/12.75 ≈ 1.55 mA` average
 per die at `PWM = 255`; 109 keys × 3 dice = **507 mA at the rail**, over the
-250 mA battery cap, so battery lighting tops out near 49 %. Cell current = rail
-current × 5.06 V / (2.4 V × 0.85) ≈ 2.5 × rail. Radio, hub MCU and module
-controllers excluded.
+250 mA battery cap, so battery lighting tops out near 49 %. Pack current = rail
+current × 5.0 V / (4.8 V × 0.9) ≈ 1.16 × rail (TPS630701 Fig. 38: ~89–93 % from 10
+to 250 mA out at 4.2–5 V in). Radio, hub MCU and module controllers excluded,
+except in the idle row.
 
-| Condition | At rail | From cells | Runtime |
+| Condition | At rail | From the pack | Runtime per pack |
 | --- | --- | --- | --- |
-| Idle, no lighting | — | **unproven, see §16** | target ≥6 months |
-| 10 keys dim (24 %) | 11 mA | 27 mA | ~146 h |
-| All 109 at 3 % | 15 mA | 37 mA | ~108 h |
-| All 109 at 24 % | 122 mA | 302 mA | ~13 h |
-| All 109 at the 250 mA cap (~49 %) | 250 mA | 620 mA | ~6.5 h |
+| Idle, no lighting (E7 estimate, §4 power parts) | ~143 µA | ~0.26 mA typ / ~0.47 mA worst | ~9 / ~5 months (~1700 mAh usable after 6 months of self-discharge, unverified); unproven until the §16 trace |
+| 10 keys dim (24 %) | 11 mA | 13 mA | ~155 h |
+| All 109 at 3 % | 15 mA | 17 mA | ~115 h |
+| All 109 at 24 % | 122 mA | 141 mA | ~14 h |
+| All 109 at the 250 mA cap (~49 %) | 250 mA | 290 mA | ~6.9 h |
 
-Rev 7 had each module on its own two packs, so the keyboard carried three times
-the cells; the rev 8 rows are for the whole keyboard on two battery modules.
-Adding modules scales runtime linearly and leaves the cap unchanged. A 6-month idle
-target on NiMH requires low-self-discharge cells.
+Rev 8 counted two 2×AA modules (4000 mAh at 2.4 V); one 4×AA pack holds the same
+four cells, so the runtimes barely moved. A 6-month idle target on NiMH requires
+low-self-discharge cells.
 
 On USB the LED budget follows the host port's CC reading (§6). Full white is
 ~0.51 A at the rail, plus the key boards' logic, plus up to 150 mA of expansion
@@ -731,11 +860,15 @@ Dedicated: 17/18 XL1/XL2 (LFXO), 34/35 D−/D+, 32 `VBUS`, 28 `VDD`, 30 `VDDH`,
 
 - **Totals:** 19 full-function signals on 24 full-function pads (5 free: P0.11,
   P0.12, P1.00, P0.24, P0.25); 21 LF signals exactly fill the 21 LF-only pads;
-  42 of 47 GPIOs plus nRESET. The CC and VBAT sense pads are rev 7's.
+  42 of 47 GPIOs plus nRESET. The CC sense pads are rev 7's; the battery-sense pad now reads
+  the PL40 node (rev 8.1, AIN0), and the table still lists rev 8 power signals (re-checked at
+  hub-base capture).
 - The NFC pads carry two outputs (`EXP_RST`, `EXP_LDO_EN`), which needs
-  `CONFIG_NFCT_PINS_AS_GPIOS=y` (UICR). Leakage between the NFC pads at different
-  levels is **not verified** (the nRF52840 product specification cannot be
-  downloaded here); both nets have ≤100 kΩ loads.
+  `CONFIG_NFCT_PINS_AS_GPIOS=y` (UICR). Leakage between the NFC pads when driven to
+  different states: **INFC_LEAK 1 µA typ / 10 µA max** (nRF52840 PS v1.11 §6.9.3.2,
+  read 2026-10-01; §6.14 asks for both pads at the same level in power-saving modes).
+  Firmware keeps `EXP_RST` and `EXP_LDO_EN` at the same level except during a reset
+  pulse (both low with the expansion rail off, both high while it runs).
 - The hub keeps every `SPARE` pad hi-Z until a connector layer defines it (§6).
 - The module sits on the base board with everything it drives (2026-09-29; the
   `J_MCU` join is dropped, §6).
@@ -817,7 +950,7 @@ five nets:
 
 | Receptacle pins | Hub side | Module side |
 | --- | --- | --- |
-| A4 A9 B4 B9 (VBUS) | slot switch output (TPS22950L), SMF6.0A | `VIN`, SMF6.0A |
+| A4 A9 B4 B9 (VBUS) | slot switch output (TPS22950L), TVS0500 | `VIN`, TVS0500 |
 | A1 A12 B1 B12 | GND | GND |
 | A6 **tied to** B6 (D+) | SDA | SDA |
 | A7 **tied to** B7 (D−) | SCL | SCL |
@@ -895,7 +1028,7 @@ type (M10). Power nets get ≥2 contacts each.
 
 | Connector | Contacts | Between | Nets |
 | --- | --- | --- | --- |
-| `J_CHAIN` | 12, 2.54 mm 2×6 stacking header, Samtec **ESQ-106-24-G-D** socket up / tails down (M10, 2026-09-29), gap 17.5 mm | hub base board ↔ connector layer (passed through) ↔ battery module ↔ battery module …, or ↔ Qi2 board in place of battery module 1 | **1 `VBAT`, 2 GND, 3 `VBAT`, 4 GND, 5 `AUX_5V`, 6 `PACK_EN`, 7 `PACK_SENSE`, 8 `AUX_5V`, 9 GND, 10 `VBAT`, 11 GND, 12 `VBAT`** (reversal-safe, §4) |
+| `J_CHAIN` | 12, 2.54 mm 2×6: core ↔ connector on Samtec **ESQ-106-24-G-D** socket up / tails down (M10, 2026-09-29), gap 17.5 mm; **below the connector layer on pogo pins** (Samtec DW riser + Mill-Max 827 strip on each battery module, pins up, Mill-Max 1578-0 discs under the board above; 2026-09-29/30, §4) | hub base board ↔ connector layer (passed through) ↔ battery module 1 ↔ 2 ↔ 3 (each shifts the pack lines by one), or ↔ Qi2 board in place of battery module 1 | **rev 8.1 (2026-09-30): 1 `PACK_A`, 2 GND, 3 `PACK_B`, 4 GND, 5 `PACK_C`, 6 `AUX_5V`, 7 `AUX_5V`, 8 `PACK_C`, 9 GND, 10 `PACK_B`, 11 GND, 12 `PACK_A`** (reversal-safe, pin k meets 13−k; §4). Rev 8 was 1 `VBAT`, 2 GND, 3 `VBAT`, 4 GND, 5 `AUX_5V`, 6 `PACK_EN`, 7 `PACK_SENSE`, 8 `AUX_5V`, 9 GND, 10 `VBAT`, 11 GND, 12 `VBAT` |
 | `J_DIAL` | 5 | key board ↔ dial board (`right`) | unchanged from rev 7: **1 SW_ROW, 2 ENC_A, 3 GND, 4 ENC_B, 5 SW_COL** (reversal-safe) |
 | `J_COMM` | 10 | key board ↔ module-side comms board | above |
 | `J_USB` | 11 | hub core ↔ USB port board | unchanged from rev 7: **1 VBUS, 2 GND, 3 CC1, 4 GND, 5 D+, 6 VBUS, 7 D−, 8 ACOK, 9 CC2, 10 GND, 11 VBUS** |
@@ -929,7 +1062,9 @@ by every optional layer; the same bus as `J_EXP` and the SH socket.
 - **Chip selects:** CS0–CS3 run straight through; each layer picks one with a
   solder jumper, so a layer keeps its CS in any stack order and ZMK's devicetree
   stays fixed. At most four SPI layers. Each CS has a pull-up to 3V3 on the core.
-- **Layer ID:** every layer carries a 2 Kbit I2C EEPROM (24xx02 class, part open)
+- **Layer ID:** every layer carries a 2 Kbit I2C EEPROM (**Microchip 24AA024, MSOP-8**, 2026-10-01;
+  second source Rohm BR24G02-3; WP tied high through a solder jumper so the ID is read-only
+  until bridged; the 24AA02/24LC02B would not work, its A0–A2 are not connected)
   on SDA/SCL, its A0/A1 jumpers set to match the CS jumper (CSn → 0x50 + n). The
   hub reads 0x50–0x53 with the expansion LDO on to learn which layers are fitted,
   on which CS, their type and revision, and flags two layers set to the same CS.
@@ -978,7 +1113,8 @@ free board edge, so it moved onto the base board; the vertical MCU board and its
 stays; the `J_MCU` pin order was never committed and is not kept.
 
 **Stacking headers (M10, decided 2026-09-29).** Every stacking joint (chain 2×6, slot
-2×16, expansion 2×10) uses a **Samtec ESQ** elevated socket with square stack-through
+2×16, expansion 2×10; **below the connector layer the chain moved to pogo pins the
+same day**, §4) uses a **Samtec ESQ** elevated socket with square stack-through
 tails (catalog page ESW/ESQ): **socket on each board's top face, tails down** into
 the socket of the layer below, as in PC/104. 5.7 A per pin (2 pins powered),
 insertion depth 3.68–6.35 mm, 0.64 mm square tails, phosphor bronze, `-G` 20 µ″ gold.
@@ -996,12 +1132,28 @@ between a socket's top and the board above. Rejected `-34` at S = 17.0 (5.5 mm
 tails, 2.0 mm over the holder) and at 16.13 (boards resting on the sockets, 1.1 mm
 over the holder); rejected low insertion force `-49` (no force figures on the
 catalog page; lower normal force against E20's contact budget).
-- **The bottom module's tails are live** (`VBAT` from every enabled pack): its case
-  must shroud them, tips recessed inside the case's bottom outline (M11): the
-  tails stand 8.05 mm below the board, so the shroud is ≥~9 mm deep. A
-  detached module is still dead (§4).
+- **The lowest layer's underside**: since the battery seams went to pogo pins
+  (2026-09-29, §4) the bottom layer shows its chain target discs (with no battery
+  module, the connector layer's discs and its flush-cut ESQ tails). In rev 8.1 they
+  reach only hub pack inputs that no pack below drives (each LM74610 blocks reverse
+  current) and `AUX_5V` (the LM66200 does not drive its input), so they sit at
+  ~0 V; rev 8 had every pack's `VBAT` there. **A separate printed base closes the bottom
+  (2026-09-29, M11)**: a 2 mm floor with rubber-foot recesses (**3M Bumpon SJ5012**, black
+  Ø12.7 × 3.5 mm, in Ø13.3 × 1.0 mm recesses at (±40, ±40), ~2.5 mm proud, 2026-10-01), joined with the same
+  keyed lip and magnets as a battery module, so it fits under whichever layer is
+  lowest (~+2 mm floor + feet). Rejected: a floor with a slot over the tail field in
+  every section (the bottom layer's tails stay reachable through the slot), a cap
+  on the tail field (one per header, loose, friction on the tails). A Qi2 board
+  closes the bottom itself. A detached module's pins carry its own pack through its PTC (§4).
 - The core carries ESQ tails down into the connector layer (chain, slot) and the
-  expansion socket on its top face; optional layers stack the same way.
+  expansion socket on its top face; optional layers stack the same way. **The core
+  keeps full ESQ-106/116 parts (2026-09-29)** although nothing plugs into their
+  sockets: one part family and footprint per header, and the open sockets let a
+  future optional layer tap the chain or slot bus; cost: two 13.59 mm bodies on the
+  core's top (3.9 mm left under an optional layer's board there) and open live
+  contacts under the lid. Rejected: a Samtec TSW pins-only strip on the core (a
+  second family, its post length and stock unverified). The connector layer's slot
+  tails stay untrimmed: they stop 10.1 mm behind the AA holder in the section below.
 - Open: a second source (the family is Samtec-only as far as checked), contact
   resistance (not on the catalog page; E20 assumes ~20 mΩ, which a plain Würth
   61301221121 2×6 header meets at 20 mΩ max), mating cycles with `-G` plating
@@ -1153,17 +1305,19 @@ controller firmware builds in the same CI.
 
 | Threshold | Value | Measured as |
 | --- | --- | --- |
-| Lighting scale-down start | 2.30 V | `VBAT` SAADC, during a lighting frame (loaded) |
-| Lighting off | 2.15 V | same |
-| System-off | 2.05 V | `VBAT` SAADC with lighting off (unloaded), averaged over 8 reads |
-| Hardware UVLO (backstop) | ~1.9 V at the pack | TPS3840PH18 on `PACK_SENSE` (BAT54 per pack); +100 mV hysteresis is smaller than the ~230 mV IR drop at ~0.78 A, which is why lighting is off well before this point |
+| Lighting scale-down start | 4.40 V | PL40 `VDD` node SAADC (rev 8.1, 2026-10-01; §4), during a lighting frame (loaded); tuned on hardware |
+| Lighting off | 4.25 V | same |
+| System-off | 4.12 V | same node with lighting off, averaged over 8 reads; needs the bring-up gain calibration (§4) |
+| Lighting cut on unplug | battery cap within ~166 ms | PL43 output falling (GPIO), §4 |
+| Hardware UVLO (backstop) | 4.0 V ±1.5 % on the node (~4.16 V at the hub input, 25 °C) | TPS3840PL40 fed from the pack inputs through BAT54C + BAT54 and 10 kΩ, 1 µF; re-arms ~200 mV higher |
 | Slot probe (E18) | ~200 ms answer window after power-on; ~100 ms re-probe every ~2 s while awake; none while asleep | time from `SLOT_EN` high to the first register-map answer; tune both on hardware |
 
 **Deep sleep.** The hub sleeps with ZMK's stock sleep; the key boards stay powered
 with their module controllers in a low-power scan-wait state, and a keypress
 raises `INT`, which is wake-capable on the hub (System OFF wakes on any GPIO's
 DETECT). Idle current of the hub, the three key boards' LDOs and module
-controllers, and the LED boost is unproven (E7).
+controllers, and the LED converter is unproven (E7; datasheet estimate ~0.26 mA typ, ~0.47 mA
+worst, dominated by the three TPS22950L slot switches, §4).
 
 Set debounce in the module controller and measure in 7a.
 
@@ -1198,49 +1352,143 @@ In scope, co-gated with Phase 1.
 - **Joining**: alignment and retention between modules — magnets, dovetails or
   latches. **Nothing electrical crosses a seam** (rev 8), so the seam budget holds
   only the two walls and the joining hardware.
-- **Seam wall budget**: three cases need two walls at each of two seams. Resin/SLA
-  holds ~1.5 mm, so about **6 mm** of dead space appears mid-field.
-- **Comms boards**: each key module's faces its rear wall, screwed to the wall, one
-  cable, reachable without removing another board. On the hub, the wired
-  connector layer's three socket boards face that layer's wall the same way.
+- **Seam wall budget**: three cases need two walls at each of two seams. An FDM wall
+  of ~1.6 mm (four 0.4 mm lines) gives about **6 mm** of dead space mid-field.
+- **Comms boards**: each key module's sits at its rear wall, one cable, reachable
+  without removing another board. On the hub, the wired connector layer's three
+  socket boards sit at that layer's wall the same way. **Every board with a USB-C
+  lies flat** (2026-09-29): the GCT USB4085 is a horizontal top-mount part (axis
+  parallel to the board, 3.46 mm tall), so the board lies parallel to the floor on
+  standoffs with the receptacle at the edge facing the wall, its nose flush with
+  the wall's outer face in an opening ~0.25 mm larger than the receptacle all round
+  (every cable's overmold stays outside). Each wall opening stays inside its own
+  section, ≥1.7 mm under the seam (v0 had them straddling the seams).
 - **The hub is a tower of layers (M11, decided 2026-09-26)**: optional layers
   (display…) on top, the core layer, the connector layer, then battery modules or
   a Qi2 board. Each layer is its own enclosure section; the stacking headers carry
   the signals but are not a mechanical joint, so layers latch or screw to each
-  other. **Footprint ~90 × 90 mm outside** (2026-09-29): 2 mm resin walls, boards
-  ~84 × 84 mm. **The core layer is one ESQ joint tall**: the MCU sits on the base
+  other. **Footprint ~100 × 100 mm outside** (2026-09-29; grown from 90 × 90 the same
+  day for room): 2 mm ASA walls, boards ~94 × 94 mm, still under the 100 × 100 mm
+  size where many fabs' cheapest tier ends (from memory). Rejected: 110 × 110 mm
+  (boards past 100 mm), staying at 90 × 90 mm (tight: 3 mm from the AA holder to
+  the magnet shelves, antenna ≤40 × 7 mm). **Flat core/lid seam (2026-10-01, user;
+  replaced the 2026-09-29 antenna tab)**: the core section's walls rise 5 mm over
+  its 19.1 mm band all round (24.1 mm tall), so the antenna (up to ~50 × 12 mm)
+  fits under one flat seam; the lid is a shallow cap, 4.5 mm of wall + the 2 mm roof
+  (its magnet shelves fit under the roof with 0.9 mm to spare); the tower height is
+  unchanged. Accepted: an optional layer starts 4.5 mm below its board, so its ESQ
+  tails (8.05 mm) stick out ~3.5 mm below its case when it is off the tower; the
+  core's ESQ sockets stand 0.6 mm over the core wall with the lid off; the rear notch
+  that doubled as a second key is gone (the front key stays). Rejected: the 5 mm
+  rear-wall tab with a matching notch in the lid and every optional layer (user: the
+  stepped seam), a taller core layer now (deferred revisit), the antenna under the lid
+  roof (it travels with the lid, ~4 mm over the ESQ sockets), keeping 7 mm. Height per layer is not a choice: an
+  ESQ joint spans at most ~18 mm. **The core layer is one ESQ joint tall**: the MCU sits on the base
   board (2026-09-29), so nothing in the core is taller than the joint gap.
   **Every joint's gap is 17.5 mm (ESQ `-24`), so every layer is 19.1 mm board
   pitch**; a two-pack tower is ~88 mm tall (9.5 mm tail skirt, four boards, four
-  17.5 mm gaps, a 2 mm lid roof; 87.9 mm in the v0 model). **The hub antenna is an adhesive flex antenna on the inside of a
-  core-section wall**, fed from the module's u.FL, placed clear of the base board's
-  copper, the layer above and the cells (distances from the antenna's datasheet,
-  checked by the RSSI test); the same wall carries a **blanked RP-SMA knock-out**
-  for an external antenna on a u.FL-to-RP-SMA pigtail. **Walls (2026-09-29)**, front = the wall facing the keyboard, sides as seen from
+  17.5 mm gaps, a 2 mm lid roof; 87.9 mm in the v0 model), ~92 mm with the base
+  (2 mm floor + ~2 mm feet). **The hub antenna is the Yageo ANTX100P011B24003 PCB
+  antenna (39 × 10 × 0.55 mm, adhesive; 2026-10-01) on the inside of the core
+  section's rear wall**, fed from the module's u.FL, at x −46 … −7 (≥10 mm to the
+  expansion board and its SH shell, the datasheet's minimum to metal), kept ≥10 mm
+  from the base board's copper, the layer above and the cells (copper pull-back
+  open, M11), checked by the RSSI test; behind it the wall carries a **blanked
+  Ø9.6 mm knock-out** for the Yageo ANTX100ETHAB24553 whip (base Ø9.35 ±0.1; Yageo
+  shows no mounting, so a printed clamp is open). Rejected 2026-10-01: an RP-SMA
+  knock-out with a u.FL-to-RP-SMA pigtail (no RP-SMA antenna is on Raytac's -U
+  list). **Walls (2026-09-29)**, front = the wall facing the keyboard, sides as seen from
   the keyboard: **front**: the connector layer's three slot USB-C sockets, and the
-  slide switch, reset and bootloader buttons on the core's front wall above them;
+  power, reset and bootloader buttons on the core's front wall above them: **three NKK
+  UB snap-in pushbuttons** (§5 notes; 2026-10-01) in **16.2 mm square cut-outs**, 17.8 mm
+  square bezels **at the top of the core wall, 0.65 mm under the lid seam** (2026-10-02, user; moved up 5 mm into the
+  wall the flat lid seam freed),
+  power at x −30, reset 8, boot 28; each body (15.8 mm square, 8 mm behind the 2 mm wall
+  + 5 mm solder lugs) sits in front of the **core board, whose front edge is pulled back
+  to y −30** (user: no notches, a shorter board instead; the board is 94 × 77 mm, 5 mm
+  between the lug tips and its edge for the wires); the bodies end 4.65 mm above the
+  connector section, so its lip runs unbroken. Caps stand 3.9 mm proud of the wall (1.4 bezel + 2.5 cap).
+  **Bezels vs slot USB-C cables:** the bezels' lower edges are 7.6 mm above the slot
+  USB-C receptacles (11.3 mm above their axis), so a plug overmold up to ~18.6 mm thick
+  clears; the USB-C spec sets no overmold maximum (R2.0 §3.10.3, Fig. 3-80 only asks
+  0.05 mm from the product surface). ~1.45 mm of printed wall stays over each cut-out.
+  Rejected 2026-10-02: centring the buttons in the 24.1 mm wall (13.6 mm plugs, ~3.9 mm
+  of wall round each cut-out), leaving them 2.6 mm above the receptacles (plugs over
+  8.6 mm thick touch a bezel). Rejected 2026-10-01: Alps SKRTLBE010 tactiles
+  behind Ø1.6 mm pinholes and a C&K PCM12SMTR slide in a fingernail pocket (too fiddly,
+  user); APEM IP (10 N latching force), NKK KB (~28 mm deep), NKK YB (~22 mm deep);
   **rear**, right to left: host USB-C (USB port board), the expansion board's SH
-  socket, then the flex antenna and the blanked RP-SMA knock-out in the remaining
+  socket (JST SM12B-SRSS-TB, 14.0 × 4.25 × 2.9 mm, mouth 0.3 mm inside the wall;
+  opening **15.6 × 3.4 mm** = the SHR-12V-S-B plug's 15.0 × 2.8 mm + 0.3 mm a side,
+  JST eSH p2–p3, 2026-10-01), then the PCB antenna and the blanked whip knock-out in the remaining
   ~40 mm at the left end (all cables leave the back; the antenna sits ~20–40 mm from
   the SH cable and the USB shell, RSSI risk accepted, checked in §16; **the flex
-  antenna must be ≤~40 mm long**); **left** and **right**: nothing.
+  antenna may be up to ~50 × 12 mm**: the core/lid seam sits 5 mm higher all round, 2026-10-01; the chosen one is 39 × 10 mm); **left** and **right**: nothing.
   **Joints (2026-09-29)**: the core and the connector layer are joined by **M2
-  screws** into heat-set inserts (the 44-contact joint cannot be pulled apart by
+  screws** into captive M2 nuts (the 44-contact joint cannot be pulled apart by
   accident; swapping the connector layer takes the one driver); **battery modules
   and the lid join magnetically**: each section's bottom edge nests in a lip on the
   section below (takes sideways cable pulls), an asymmetric key in the lip stops a
-  90°/180° misfit, and disc magnets in the walls hold it, kept away from the
-  antenna corner. Cell access is tool-less: lift everything above a module off
-  (the cells sit 2.5 mm under the next board). Magnet part and holding force vs the
-  ESQ withdrawal force are open. **Optional layers join the core's top (and each
-  other) the same magnetic way**; the lid sits on the topmost section. **A future radio connector layer puts
+  90°/180° misfit, and magnets hold it, kept away from the antenna. Cell access is tool-less: lift everything above a module off
+  (the cells sit 2.5 mm under the next board). **Magnets (2026-09-29)**: the user's
+  own NdFeB blocks, **20 × 10 × 2 mm** (sizes vary; brittle; **magnetised through the
+  2 mm**, confirmed by the user; pockets sized for the nominal size + 0.3 mm, the
+  user's call, a test print confirms the fit), **two per seam**, one on the left and one on the
+  right wall, **lying flat** in a pocket in an ~11 × 23 mm shelf (x 37–48 from the
+  centre, centred front to back): the lower section's shelf sits under the seam, the
+  upper section's over it, pole faces meeting through two 0.6 mm skins. The shelves
+  sit mid-gap (8 mm over the lower board, 9.5 mm under the upper), so no board is
+  notched; they clear the AA holder (x ±29), the chain header, the USB boards and
+  the antenna. **Pockets are closed, side-entry, loose (~20.6 × 10.6 × 2.4 mm, about
+  0.3 mm clearance), no glue**: the magnet slides in from the section's inside after
+  printing, before the board goes in; gravity and its partner's pull keep it there
+  (accepted: a loose layer shaken sideways can lose one). **Every magnet is fitted
+  north face up**, so every seam attracts and every layer is built the same way.
+  The user has 40+ (more can be bought; a two-pack tower uses 16) and reports them
+  very strong: if a test print is hard to separate, thicken the 0.6 mm seam-side
+  skin (the tuning knob), or fall back to one pair per seam. Holding force is not
+  a target (the user accepts a low one): the magnets seat the
+  lip; the ESQ contacts add their own (Samtec's -37 LIF report: 0.57–1.09 N per
+  contact new). Rejected: upright magnets inside a thickened wall (end-to-end
+  pairing, much weaker), glue, a snap step at the pocket mouth (brittle magnet), a wall slot with a plug (visible on the clean side walls). **Optional layers join the core's top (and each
+  other) the same magnetic way**; the lid sits on the topmost section.
+  **v0 review (2026-09-29)**: header centres on every 94 × 94 mm board (x right
+  from the keyboard, y to the rear, board centre 0,0; all along X): **chain (25,
+  20), slot (−5, 5), expansion (0, −20)**, AA holder centred at (0, −22): every
+  tail clears the holder (the connector layer's slot tails stop 10.1 mm behind it),
+  the chain's pack pins stay out of the antenna corner (rear-left), and the
+  rear-left quadrant stays free for the MDBT50Q beside its antenna; no header is
+  centred, so a layer turned 180° does not mate (the keyed lip prevents it).
+  **A separate base closes the bottom** (§6). **The core ↔ connector M2 screws go
+  in from the top**: four vertical screws near the corners, through the core board
+  and a 9.5 mm boss in the core section's skirt, into captive M2 nuts in corner
+  bosses in the connector section; the same screws hold the core board down; reach
+  them by lifting the lid and any optional layers off (tool-less); the connector
+  layer stays on the batteries during a swap. Rejected: from below (lift and turn
+  over two layers, separate board fasteners, heads among the next module's tails),
+  through the side walls (visible heads, inner bosses in the 1 mm board-to-wall
+  gap, easy to undo by accident).
+  **Joint geometry (model v1, 2026-09-29, placeholders marked `[approx]` in
+  `mech/hub/build_hub.py`)**: the lower section of every seam carries a 1.2 × 2 mm
+  lip inside the upper wall (0.2 mm clearance) with a 5 mm key on the front lip
+  at x −15 (no 90°/180°/270° fit); magnetic seams put a 23 × 11 × 3.6 mm shelf on
+  the left and right walls on each side of the seam, the pocket 20.6 × 10.6 × 2.4 mm
+  with 0.6 mm skins, mouth towards the centre; the lip is gapped at the shelves and
+  at the screw bosses. Core ↔ connector screws at (±43.5, −26.5) (moved from −30 on 2026-10-01 with the core board's front edge) and (±43.5, 26)
+  (the rear pair clear of the USB port board), Ø6.5 bosses, heat-set inserts atop
+  6 mm bosses in the connector section. Every other board hangs on its own four M2
+  screws at (±43.5, ±20) into insert bosses under it (6 mm; on a pogo seam the whole 5 mm skirt, the lip gapped there). The base is 6 mm
+  (2 mm floor, shelves standing on it, foot recesses); with the pogo seams
+  (5 mm skirts) the two-pack tower spans −6 to 83.4 mm (−8.5 mm with the SJ5012 feet: ~92 mm). FDM: the shelves under a seam are 11 mm
+  cantilevers, so they need supports or the section printed the other way up. **A future radio connector layer puts
   its radio on the wall facing the keyboard**, and on the opposite side from the
   core's antenna wall, so the two 2.4 GHz radios sit apart (coexistence is a future
   test).
-- **Battery modules (M10, decided 2026-09-26)**: each a closed 2×AA case with its
-  battery board, tool-less cell access, and a pass-through stacking header (Samtec
-  ESQ, socket up, tails down, 2026-09-29, §6) so modules **stack under the hub**; the
-  bottom module's case shrouds its live tails; the case
+- **Battery modules (M10, decided 2026-09-26; rev 8.1 2026-09-30: up to 3, 4×AA, passive)**: each a closed 4×AA case (2×AA in rev 8) with its
+  passive battery board (holder, PTC, line shift), tool-less cell access, and the chain on **pogo pins** (Mill-Max
+  827-22-012-10-004101 on a cap board over a Samtec DW-06-17-T-D-254 riser (6.45 mm), pins up, Mill-Max 1578-0 gold target discs under the board above; 2026-09-29, §4) so modules **stack
+  under the hub**; a separate base under the lowest layer covers its underside
+  (2026-09-29); the case
   keys the join and the pinout is reversal-safe (§4). A future Qi board plugs into
   the hub instead of the stack, so the pad sits under the hub. Side by side is a future
   option.
@@ -1248,8 +1496,18 @@ In scope, co-gated with Phase 1.
   clear of the switch pins, the hotswap sockets and the reverse-mount LED holes.
   Service loops are just long enough to lift a board out. Each key module has only
   two internal cables now (`J_COMM`, and `J_DIAL` on `right`).
-- **Fastening**: heat-set brass inserts, not self-tapping screws. Every board uses
-  M2 screws, so one driver services the whole keyboard.
+- **Fastening**: **M2 heat-set brass inserts** melted into the ASA (2026-09-29),
+  **Ruthex RX-M2x4**: 3.6 mm across, 4.0 mm long, hole 3.2 mm (5.0 mm deep in the
+  model: 4.0 + 1 mm for displaced plastic), ≥1.3 mm of wall around it (ruthex.de
+  table; no strength figures published). Bosses are 6.5 mm across (1.65 mm wall).
+  Sourcing exception: not a Mouser/TME/Farnell part (ruthex.de, 3DJake). Rejected:
+  PEM IUB-M2-1 (datasheet: 334 N pull-out, 0.3 N·m torque-out in ABS; dearer,
+  stock unchecked). Screw lengths are set with the boards: ~M2 × 16 for the
+  core ↔ connector joint (1.6 board + 9.5 boss + insert), ~M2 × 5 for a board on its
+  own bosses. Not self-tapping
+  screws. Every board uses M2 screws, so one driver services the whole keyboard.
+  (Captive M2 nuts were chosen earlier the same day on the wrong premise of an SLA
+  resin case, which takes no heat-set insert; reverted once the case became FDM.)
 - **Row dish**: the PCBs stay flat. The MX switch body fixes plate-to-PCB distance,
   so a stepped plate cannot reach a flat board. The dish comes from **per-module
   tilt** and a **sculpted keycap profile**. Shallower than the real K860's arc.
@@ -1262,13 +1520,15 @@ In scope, co-gated with Phase 1.
   boards, so its height floor is no longer the 16 mm AA holder: the key module's
   floor becomes PCB + plate + switch + keycap plus the palm-rest shell. The
   silhouette is kept; the space under the palm rest is free.
-- **Printing (rev 7, M9 closed)**: desktop SLA plates run ~200–220 mm on the long
-  axis (Form 4 200 × 125 mm, Saturn-class ~220 × 125 mm); `left` and `right` at
-  233 mm deep do not fit in one piece. **The case is printed in one piece per
-  module by a large-plate service.** No joints, so wall thickness, insert
-  positions and the seam budget (M1) are unaffected. Cost: a slower, dearer
-  iteration loop than a desktop printer, and builders need the same service; the
-  build guide names the minimum build volume.
+- **Printing (2026-09-29, replaces rev 7's M9 answer)**: **FDM in ASA** on the
+  user's own printers, Bambu Lab H2S (340 × 320 × 340 mm, chamber heated to 65 °C)
+  and Prusa CORE One (250 × 220 × 270 mm, chamber to 55 °C), both from the vendors'
+  pages. **One piece per module**: `left` and `right` at 233 mm deep fit either bed,
+  so no print service and no joints. ASA needs the warm chamber against warping;
+  vent the fumes. Overhangs past ~45° (magnet shelves, lips) get a chamfer or
+  are printed the other way up. Rev 7 had assumed SLA resin from a large-plate
+  service, a premise the user never had (no resin printer). Rejected: PETG
+  (Tg ~80 °C, glossy, creeps), PLA (Tg ~55–60 °C, softens on a sunny desk).
 
 ## 12. Fabrication constraints
 
@@ -1285,7 +1545,7 @@ In scope, co-gated with Phase 1.
   strategy, min trace/space (JLCPCB 4-layer economy is 0.127 mm), min via.
 - **Hub core stackup**: 4 layers as the rev 7 core, which had a 32 × 90 mm outline
   forced by fitting inside a key module. **The hub core is not size-constrained**:
-  its outline is set by the hub enclosure (M11: ~84 × 84 mm, 2026-09-29, with the
+  its outline is set by the hub enclosure (M11: ~94 × 94 mm, 2026-09-29, with the
   MDBT50Q-U1MV2 on it and no antenna keepout), and the rev 7 fan-out congestion
   around the MDBT50Q (7 nets left open after every scripted approach) is expected
   to disappear with room to spread the power path. The rev 7 placement, rules
@@ -1318,45 +1578,66 @@ In scope, co-gated with Phase 1.
 - **Assembly split.** Key boards, the hub core, comms boards, the USB port board and
   the expansion board need assembly-house placement (module controller, WLCSP,
   QFN, the MDBT50Q). Battery and dial boards are hand-solderable, **except the
-  battery board's PTC (PTSLR12066V175): reflow or hot air only**, per Eaton, MSL
-  2a; and the per-pack LM66200 (DRL SOT, 0.5 mm pitch), placed in the same reflow or
-  hot-air step as the PTC. **MSL 3 LEDs**: bake note if reels have been opened.
+  battery board's PTC (MF-MSMF125/16X, 1812): reflow only** ("hand soldering is not
+  recommended", Bourns) **and its 1578-0 target discs (reflowed onto ENIG pads)**,
+  placed in one reflow or hot-air step; the DW riser and the 827 strip are
+  through-hole, hand or wave soldered. **MSL 3 LEDs**: bake note if reels have been opened.
 - Check `IS31FL3733` vs `-B` lifecycle and stock parity before committing.
 
 ## 13. Analogue and RF notes
 
-- **SAADC**: internal 0.6 V bandgap reference, **not** `VDD/4`. Sense **`VBAT` on the
-  chain bus**, ahead of the mux, so the pack level is known on USB too; it reads the
-  highest pack. Divider (carried over from rev 7): **49.9 kΩ / 49.9 kΩ 1 %, switched
-  on the high side** by an AO3415A whose gate a 2N7002 pulls down from `BAT_DIV_EN`
-  (1 MΩ gate pull-up to `VBAT`; 1 MΩ `BAT_DIV_EN` pull-down), so it draws nothing
-  off and `AIN0` never sits above `VDD` + 0.3 V. Reading, `AIN0` is ≤1.9 V and the
-  divider draws ~38 µA. Host CC sense reads 0.25–2.04 V through a 100 kΩ series
+- **SAADC** (nRF52840 PS v1.11 §6.23): internal 0.6 V reference at gain 1/6 (3.6 V
+  range), **not** `VDD/4`. **Rev 8.1 (2026-10-01):** `AIN0` reads **the TPS3840PL40's
+  `VDD` node** (the highest pack through its Schottky and 10 kΩ, held on 1 µF), so the
+  pack level is known on USB too. Divider **200 kΩ / 100 kΩ 1 %, switched on the high
+  side** by a CSD25483F4 (470 kΩ gate pull-up to the node) whose gate half a
+  DMN63D8LDW pulls down from `BAT_DIV_EN` (1 MΩ `BAT_DIV_EN` pull-down kept), so it
+  draws ≤100 nA off and `AIN0` never sits above `VDD` + 0.3 V. Reading, `AIN0` is
+  ≤2.1 V (≤3.0 V even at 8.9 V), the divider draws ~13 µA for ≤100 µs, TACQ 10 µs; a
+  bring-up gain calibration is required (§4). Rev 7's VBAT divider (49.9 kΩ / 49.9 kΩ,
+  AO3415A + 2N7002) is superseded. Host CC sense reads 0.25–2.04 V through a 100 kΩ series
   resistor into an `AINx` pad.
 - **Antenna** (2026-09-29): the hub holds the only radio, on the desk, away from
   the palms and the key field. The **MDBT50Q-U1MV2** has no antenna of its own; its
-  u.FL feeds an **adhesive flex antenna on the inside of a core-section wall**, so
+  u.FL feeds an **adhesive PCB antenna on the inside of a core-section wall**, so
   the antenna's position is chosen in the enclosure, not dictated by the module's
-  board edge. **A blanked RP-SMA knock-out** in the same wall takes an external
-  antenna on a u.FL-to-RP-SMA pigtail if the RSSI test (§16) is poor. The u.FL is
-  mated at assembly, not by the user. **Open**: the antenna part and its clearance
-  to metal and ground (from its datasheet); SLA resin loading the antenna
-  (datasheets tune for a stated plastic and thickness); which antenna type and gain
-  Raytac's MDBT50Q-U approval covers (the SGS RED report E2/2018/50088-02 lists the
-  -U model, the datasheet does not name its antenna). The rev 8 vertical MCU board
-  (2026-09-26) is dropped: the u.FL module needs no free board edge.
+  board edge. **Parts (2026-10-01, P20 closed):** Raytac's MDBT50Q-U1MV2 datasheet
+  (ver L, 2023-05-24, ch. 7, `build/ds/raytac/`) lists four approved antennas; only
+  two carry CE, and the hub uses both: **Yageo ANTX100P011B24003** (PCB dipole,
+  39 × 10 × 0.55 mm FR4 on adhesive tape, peak 2.1–2.2 dBi, 63–68 % efficient,
+  VSWR 2.5:1 max at 2.40–2.50 GHz, I-PEX 20278 on 1.13 mm × 100 mm cable,
+  −40…+85 °C, ≥10 mm from metal on three sides; Yageo datasheet V1 p3–p6) inside,
+  and **Yageo ANTX100ETHAB24553** (hinged whip, 102.3 mm, 2.0 dBi, VSWR ≤ 2.0,
+  integral 1.13 mm × 100 mm cable, base Ø9.35 mm, −40…+65 °C; spec R02 p4, p12)
+  as the external option through a **blanked knock-out** in the same wall, if the
+  RSSI test (§16) is poor. Raytac: "End-product may need to perform further testing
+  when applying CE"; "certificate(s) might not be applicable when using antenna
+  apart from above list". Hirose U.FL: 30 mating cycles, 2 N max cable load off
+  the board, 4 N along it (U.FL catalogue 2019.6, p2, p7); the u.FL is mated at
+  assembly, not by the user. ISED number for the -U is 8017A-MDBT50QU (not
+  8017A-MDBT50Q). **Risks:** Yageo measured the antenna in its own fixture with no
+  plastic; it resonates near 2.35 GHz there (p5), and the 2 mm ASA wall pulls it
+  lower, so the match near 2.48 GHz gets worse (RSSI test). **Open (M11):** the
+  base board's and the layer above's copper pull-back for the ≥10 mm, the whip's
+  clamp. Rejected: Ezurio FlexPIFA, Taoglas FXP74/FXP73/FXP830, Molex 146153,
+  Kyocera AVX 1001932FT (not on Raytac's list; FXP74/FXP830 also over 2.2 dBi),
+  Linx ANT-2.4-FPC-LH (5–6 dBi), Yageo ANTX100P111B24003 (3.3 dBi, no CE),
+  Aristotle RFA-02-5 (5 dBi, no CE), an RP-SMA knock-out with a u.FL-to-RP-SMA
+  pigtail (no RP-SMA antenna approved). The rev 8 vertical MCU board (2026-09-26)
+  is dropped: the u.FL module needs no free board edge.
 - **ESD**: entry points are the host USB-C port (USB port board), every link socket
-  at both ends (comms boards, TPD6E05U06 on the six CC/D± pins, SMF6.0A on VBUS),
+  at both ends (comms boards, TPD6E05U06 on the six CC/D± pins, TVS0500 on VBUS),
   the expansion connector (expansion board), the key matrix (finger → keycap →
-  switch → module-controller pin, clamped on the key board), the AA terminals
-  (battery module), the dial shaft (dial board, lugs to GND, DNP TPD4E1U06DBV), and
-  the chain contacts (M10: clamp on each battery module). Internal cables are not
+  switch → module-controller pin, clamped on the key board), the dial shaft (dial
+  board, lugs to GND, DNP TPD4E1U06DBV), and the AA terminals and chain contacts
+  (rev 8.1: the battery module is passive, so they are clamped at the hub's pack
+  inputs, SMF4L9.0CA). Internal cables are not
   entry points and get no clamps.
 - **EMC**: informational only, since this ships as open source and builders carry
   their own compliance. Modular approval covers the intentional radiator only; the
   product remains an unintentional radiator under FCC Part 15B / EN 55032, and the
   module's FCC and IC identifiers would go on the label of anything sold.
-- **Test points** beyond SWD: on the hub core, `VBAT`, `PACK_SENSE`, `PACK_EN`,
+- **Test points** beyond SWD: on the hub core, `PACK_A`/`B`/`C`, `VBAT`, `SYS`, the PL40 node,
   `VSYS`, `VBUS_IN`, LED rail, expansion 3V3, GND, each slot's SDA/SCL/`INT` and
   `SLOT_EN`, host CC1/CC2. On the key board, `VIN`, 3.3 V, SDA/SCL/`INT` at the
   link entry, the driver's I2C, and the module controller's SWD pads.
@@ -1396,7 +1677,7 @@ KiCad annotates per project, so refs are partitioned by project: `keys-right` 1x
 unused; a Qi board takes 11xx and future comms boards 12xx and up. A ref alone
 names the board it is on, which the repair guide relies on.
 
-## 15. Future modules: Qi2, comms, Li-ion
+## 15. Future modules: Qi2, comms
 
 **Qi2 (optional, later).** A Qi board takes power from a Qi2 charging pad and
 feeds `AUX_5V` into the hub, where it is `VBUS_IN`'s second OR input. **It is used
@@ -1405,7 +1686,7 @@ hub's chain header, so the pad sits under the hub and nothing else is in the pat
 Battery modules still pass `AUX_5V` through, which keeps a Qi board under a battery
 stack possible later at no cost; it is not a supported setup in rev 8. A Qi-only
 hub has no battery: off the pad and off USB it stops. Behaviour is either/or: with `AUX_5V` present the
-priority muxes run the keyboard from it as from USB, the packs sit isolated, and
+hub runs the keyboard from it as from USB (`VBUS_IN`, Qu), the packs sit isolated, and
 **nothing charges the cells**. Rev A reserves: `AUX_5V` on the chain bus (≥2
 contacts), the LM66200 IN2 on the hub, an `AUX_5V`-present GPIO, and a spare
 TCA9548A channel for a receiver's status bus. Candidate receiver: ST **STWLC89** (Qi 2.x
@@ -1424,11 +1705,7 @@ key board through `VIN`. A mixed pair (e.g. cable plus radio) chooses or relays
 between media itself; the hub and key board see only the register map. Nothing
 beyond the reservation is designed in rev 8.
 
-**Li-ion.** Rev 7 reserved a Li-ion path on the core (`VDDH` on its own solder
-jumper, DNP REG0 inductor). With the cells now off the hub core and chained, a
-Li-ion build would be a different battery module with its own charger and
-protection delivering 2S-AA-like voltage on `VBAT`, or feeding `AUX_5V`; the hub
-keeps the `VDDH` jumper and DNP REG0 footprints in case it is needed.
+**Li-ion: not supported (2026-09-30).** No Li-ion build is planned; rev 7's reserved path (`VDDH` jumper, DNP REG0) is dropped from the plans.
 
 ## 16. Verification
 
@@ -1442,48 +1719,55 @@ keeps the `VDDH` jumper and DNP REG0 footprints in case it is needed.
       purchasable set
 - [ ] **Insert one AA backwards, then both, in each battery module. Nothing is
       damaged.**
-- [ ] **Insert two 14500 cells in one pack. Nothing is damaged; OVP holds `VBAT`
-      off.** Scope the OVP FET drain at 1 µs/div through the first 20 ms: `VBAT` never
-      rises above 6.0 V at any instant. Repeat 10 times with contact bounce
-- [ ] **Hot swap:** keyboard running on the other pack, pull a fresh AA pair and
-      insert a 14500 pair as fast as possible, then swap one AA for one 14500:
-      `VBAT` and `VSYS` never exceed 6.0 V / 3.6 V. Repeat with R806 lifted, then
-      refit it
-- [ ] **Chain:** one, two, three and ten battery modules, stacked (ten with a mix of fresh and flat packs: no reverse current into any pack, far packs drain last); one module joined turned 180° (if the case allows it) leaves every pack off; a detached module's contacts read 0 V:
-      every combination runs; no current flows between packs when one is fresh and
-      one depleted; the slide switch turns every pack off; UVLO cuts all packs at
-      ~1.9 V and does not oscillate (scope `PACK_EN` and `PACK_SENSE`)
+- [ ] **Chain (rev 8.1):** one, two and three battery modules stacked, and a 4th
+      below them (its pack reaches no hub input); a fresh pack with a flat one: no
+      current between packs, the highest carries the load; a lifted module's pins
+      show its own pack through its PTC; the power switch off turns Qb off (`SYS`
+      0 V on battery)
 - [ ] **Runs correctly on one battery module alone**
 - [ ] **USB only, no cells fitted**: boots, `VSYS` = 3.3 V, every slot powers its
       module
 - [ ] Battery power-on: each key board's 3.3 V never exceeds its `VIN` (scope both
-      at the driver); no GPIO required for the boost or logic regulators to start
-- [ ] OVP on a bench supply: never trips below 3.59 V, always trips by 3.81 V
-      rising; releases above 3.36 V falling
+      at the driver); no GPIO required for the TPS630701 or TPS70933 to start
+- [ ] **Switch-on** from a ~4.4 V pack starts; a 4.2 V pack does not (re-arm ~4.32 V)
+- [ ] **Pack swap and insert while running** (4.9 → 4.4 V, and a pack added): no
+      UVLO edge, `SYS` ≥~3.4 V
 - [ ] 20 V on the host USB-C socket's VBUS, steady and **hot-plugged from a charged
-      source**: `VBUS_IN` never exceeds 6.0 V at any instant; then a 5 V source
+      source**: `VBUS_IN` never exceeds 6.0 V and `VBUS_LOCAL` (the MDBT50Q `VBUS` pad)
+      5.8 V at any instant; then a 5 V source
       stepped to 20 V while connected: same limit
-- [ ] 1 kV contact ESD (then the chosen IEC level) on AA terminals and chain
-      contacts: supervisor `VDD` stays under 10 V
+- [ ] 1 kV contact ESD (then the chosen IEC level) on AA terminals, chain contacts
+      and a lifted module's pins, and a surge into one pack input that drives its
+      SMF4L9.0CA into clamp: the PL40's `VDD` stays ≤10 V
 - [ ] Contact ESD on every link socket at both ends, on the dial shaft and knob, and
       on the expansion socket: no reset, no stuck key, the link recovers
-- [ ] Freshest alkaline pack available never trips OVP
-- [ ] **Plug USB with fresh alkaline packs fitted: `VSYS` ≤3.3 V, zero pack current**
-- [ ] Firmware system-off at ~2.05 V; `PACK_EN` disables every pack at
-      ~1.87–1.93 V at the pack, across 0–40 °C
-- [ ] USB hand-over: plug and unplug under full lighting; LED rail never dips below
-      `VSYS`, ~10 µF bulk and no blanking; `VSYS` never resets the MCU; every key
-      board's module controller stays up
-- [ ] USB source at 4.5 V with full lighting: LED rail stays on `VBUS_IN`; ramp down
-      and up: hands over between 3.63 and 4.40 V with ~0.3 V hysteresis (E3)
+- [ ] **Plug USB with fresh alkaline packs fitted: `VBUS_IN` ≤5.5 V at every
+      instant (Qb off before Qu on), `VSYS` ≤3.3 V, then zero pack current**
+- [ ] **Bring-up SAADC calibration** (bench supply on one pack input, DMM on the
+      PL40 node; firmware stores the gain), then: lighting off at 4.25 V and
+      **system-off at 4.12 V** on the node (fires 4.09–4.17 V); the hardware cut at
+      3.94–4.06 V on the node (~4.16 V at the hub input) without oscillation, 0–40 °C
+- [ ] **USB unplug** at the 250 mA cap (4.4–6.4 V packs) and at the ~0.8 A USB rail
+      with a ~4.4 V pack: firmware drops the lighting within ~166 ms of the PL43
+      output falling, no UVLO edge; `VSYS` never resets the MCU; every key board's
+      module controller stays up. Scope the PL43 output, both P-FET gates and `SYS`
+- [ ] USB source ramped down through the PL43's 4.3 V and back with full lighting:
+      one hand-over each way to the packs and back, no oscillation
+- [ ] −20 °C with a ~4.4 V pack at the 250 mA cap: at most one clean cut; 4.5 V runs
+- [ ] Steady battery near the cut (~4.5 V, 250 mA cap): the LM74610 body-diode
+      windows (25 ms every ~1.2 s) keep VSYS ≥~3.0 V
+- [ ] Bench supply ramped slowly on the host port: the KTS1693 trips between 5.38 and
+      5.78 V (E22) and re-arms ~0.1 V lower
 - [ ] Host CC sense reads default / 1.5 A / 3 A correctly on three chargers; LED
       budget follows
 - [ ] Driver case temperature at full white on a 5.0 V rail, 30 min
-- [ ] LED boost idle (PFM) output ≤5.3 V, and under full load 4.93–5.19 V (E19)
+- [ ] LED rail (TPS630701) idle (PFM) 4.95–5.15 V and under full load 4.95–5.05 V
+      (E19)
 - [ ] **LED headroom (E19):** max-bin green and blue at full current at `right`'s
       far end on a 1 m cable, on battery and on a 4.75 V USB source
 - [ ] **Measured idle current, µA trace**, hub asleep, three modules in scan-wait.
-      The §4 idle row is unproven until this exists
+      The §4 idle row is unproven until this exists; compare against the §4 estimate
+      (~0.26 mA typ, ~0.47 mA worst; ~143 µA on the LED rail, of it 3 × ~44 µA TPS22950L)
 - [ ] Keypress on each module wakes a sleeping hub
 - [ ] **I2C over the cable (E16):** scope SDA/SCL at both ends through 1 m cables
       from three makers at 400 kHz: rise ≤300 ns, no SCL-to-SDA glitch past
@@ -1507,9 +1791,9 @@ keeps the `VDDH` jumper and DNP REG0 footprints in case it is needed.
 - [ ] Trip the host port KTS1693 into its over-current latch: the fault blink code
       names the USB port board; the trip lands at 1.82–2.18 A. Scope the 5–10 ms
       debounce pulse on a hard short from a 3 A charger
-- [ ] Partial short on `VBAT` (~1 Ω, fresh NiMH, two modules): record the pack
-      LM66200 case temperature, UVLO or thermal cycling, whether the PTC trips (the
-      2.5–3.5 A band is an accepted risk, E9)
+- [ ] Partial short on `SYS` (~1 Ω, fresh NiMH, one pack): record the LM74610 FET
+      and Qb case temperatures, UVLO or thermal cycling, and whether the PTC trips
+      (hold 1.25 A, trip 2.50 A)
 - [ ] Host USB eye/enumeration through the USB port board cable at its longest
       routed length, on three hosts
 - [ ] Change cells in a battery module with no tools
@@ -1522,8 +1806,11 @@ keeps the `VDDH` jumper and DNP REG0 footprints in case it is needed.
       nothing is damaged
 - [ ] A layer fitted rotated 180° on the expansion header: nothing is damaged, the
       layer works again once refitted
-- [ ] Hub BLE RSSI against a dev kit in the open, **once with the internal flex
-      antenna and once with an external antenna on the RP-SMA knock-out**, with the
+- [ ] Power button (NKK UB16, gold, ~1 µA through the 4.7 MΩ pull-down, under NKK's
+      0.1 mA minimum): Qb turns on and off reliably over ~1000 latches, and N1's gate reads
+      the PL40 output within a few mV when latched
+- [ ] Hub BLE RSSI against a dev kit in the open, **once with the internal PCB
+      antenna and once with the Yageo whip in the knock-out**, with the
       stack as above
 - [ ] Canary CI against ZMK `main` runs weekly and reports breakage
 - [ ] Dial spun fast both ways: no missed or doubled steps; a turn without a press
@@ -1546,20 +1833,21 @@ Decided 2026-09-26 in a design review with the user; the rev 7 state is commit
 
 | Was (rev 7) | Now (rev 8) |
 | --- | --- |
+| Case SLA resin from a large-plate print service (M9, rev 7) | **FDM ASA on the user's H2S / CORE One, one piece per module, M2 heat-set inserts** (2026-09-29) |
 | Three modules, each with a core board (MDBT50Q, full power path), 2 battery boards, a USB port board, link boards and seam boards | **One hub** with the only MCU module, the only power path and the host port; **three key modules with no radio, cells or power path** |
 | ZMK split: `left` central, `right` and `numpad` peripherals; wired UART transport with BLE failover, all-or-nothing, pair-2 passthrough on `right`, orientation detection, handshake, hysteresis | **One ZMK keyboard**; key modules are I2C targets behind a TCA9548A; no split transport |
 | Key matrix, dial and LED driver wired to the core over `J_ROW`/`J_COL`/`J_LED` | **Module controller** MCU on each key board: scans, decodes the dial, drives the LED driver, serves one register map; **TCA8418 rejected** (25–40 ms per press, SCPS215G p. 33), **hub-scanned TCA6424A rejected** (polling cannot cross a radio link) |
 | Link boards (upstream with KTS1693, downstream with TPS22950L) + seam boards with SAMZO magnetic pogo pairs | **Comms board pairs**, swappable; rev A cable comms board (repurposed link board: hub population with TPS22950L, module population without); seams mechanical only; pogo parts dropped |
 | Link over USB-C: pair 1 on D±, pair 2 on SBU, needing a full-featured cable between `left` and `right` | **Any USB 2.0 C-to-C cable**; SDA/SCL on D±, `INT` on CC; star wiring |
-| 4 AA per module in two packs (12 AA per keyboard), pack OR (LM66200) and UVLO on each core | **Chainable 2×AA battery modules** on the hub, rev A two; each carries its own ideal diode; UVLO and slide switch on the hub drive `PACK_EN`; `PACK_SENSE` keeps the supervisor alive |
+| 4 AA per module in two packs (12 AA per keyboard), pack OR (LM66200) and UVLO on each core | **Chainable 2×AA battery modules** on the hub, rev A two; each carries its own ideal diode; UVLO and power switch on the hub drive `PACK_EN`; `PACK_SENSE` keeps the supervisor alive **Rev 8.1 (2026-09-30): up to 3 passive 4×AA (NiMH) modules, one chain line per pack, protection + OR + UVLO on the hub** |
 | Battery lighting cap 250 mA per module | **250 mA for the whole keyboard**; more battery modules add runtime only |
 | Link VBUS switch on the downstream link boards, gated by handshakes | **Slot switch per hub slot**, on while its module answers |
 | Module ID: resistor on the key board, ratiometric ADC read on the core, safe mode on mismatch | **Strap read by the module controller**, reported in the register map; any module in any slot |
-| Core PCB 32 × 90 mm, 7 nets unrouted after every scripted approach | **Hub core = one base board, ~84 × 84 mm, in a ~90 × 90 mm tower** (2026-09-29; a vertical MCU board 2026-09-26 → 29); rev 7 core PCB kept in git for reference |
+| Core PCB 32 × 90 mm, 7 nets unrouted after every scripted approach | **Hub core = one base board, ~94 × 94 mm, in a ~100 × 100 mm tower** (2026-09-29; a vertical MCU board 2026-09-26 → 29); rev 7 core PCB kept in git for reference |
 | Every board inside a module case | **The hub is a stack of layers**: optional layers (display…) / core / swappable connector layer / battery modules 1…N or a Qi2 board; 2×10 expansion (reversal-safe, CS0–CS3 by jumper, an ID EEPROM per layer; X1, 2026-09-28), 2×16 slot and 2×6 chain stacking headers |
 | Qi2: keepouts, DNP footprints, a future Li-ion battery board | **Qi board on the hub's chain header, instead of the battery stack**, `AUX_5V`, never charging cells |
 | — | **Reserved for future comms boards**: spare pins and `VSYS` on `J_SLOT`, spare pins on `J_COMM`, `VIN` accepts power from the module side |
-| MDBT50Q-1MV2 with "-U1MV2 (chip antenna)" as second source, both keepouts on the core | **MDBT50Q-U1MV2 only** (u.FL; Raytac ver L: 1MV2 is the chip-antenna part, U1MV2 the u.FL part), on the base board; adhesive flex antenna inside the case wall, blanked RP-SMA knock-out for an external antenna (2026-09-29) |
+| MDBT50Q-1MV2 with "-U1MV2 (chip antenna)" as second source, both keepouts on the core | **MDBT50Q-U1MV2 only** (u.FL; Raytac ver L: 1MV2 is the chip-antenna part, U1MV2 the u.FL part), on the base board; adhesive flex antenna inside the case wall, blanked RP-SMA knock-out for an external antenna (2026-09-29); **2026-10-01: Yageo ANTX100P011B24003 PCB antenna inside, blanked knock-out for the Yageo ANTX100ETHAB24553 whip, both on Raytac's -U list (no RP-SMA)** |
 | `CONFIG_BT_MAX_PAIRED=11` | 9 |
 | Untethered use: modules work apart on BLE | **Modules need their hub cable**; accepted |
 | Untethered deep sleep: a sleeping satellite cannot wake the central | Any module's keypress wakes the hub |
@@ -1568,7 +1856,26 @@ Decided 2026-09-26 in a design review with the user; the rev 7 state is commit
 Carried over unchanged: the pack chain per pack (OVP, reverse block, PTC, TVS,
 bleeder, gate network, series budget), the host USB port board, the logic and LED
 power paths, lighting, dial board, expansion board, layout geometry, plate, case
-print route, most of the verification list.
+print route, most of the verification list (rev 8.1 replaced the pack chain and the
+logic and LED power paths, below).
+
+### Rev 8.1 (2026-09-30 – 2026-10-01): battery architecture
+
+Decided with the user one part at a time (E21); switchover simulated in
+`tools/sim/e21_switchover.py`. §4 was rewritten around it on 2026-10-01.
+
+| Was (rev 8) | Now (rev 8.1) |
+| --- | --- |
+| Chainable 2×AA battery modules, any number, each with TVS, AO3415A reverse FET, TPS3840PL35 + AO3415A OVP, PTSLR12066V175 PTC and an LM66200 ideal diode on `PACK_EN`; MPD BC2AAPC | **Up to 3 passive 4×AA (NiMH) modules**: MPD BC4AAPC, Bourns MF-MSMF125/16X PTC, a line shift so each pack reaches its own hub input (`PACK_A`/`B`/`C`); a 4th module is unconnected |
+| Chain 2×6: 4 `VBAT`, 4 GND, 2 `AUX_5V`, `PACK_EN`, `PACK_SENSE` | **2×6: `PACK_A`/`B`/`C` twice each, 4 GND, 2 `AUX_5V`** (reversal-safe) |
+| UVLO TPS3840PH18 on `PACK_SENSE` driving `PACK_EN` (~1.9 V per 2-cell pack); firmware system-off ~2.05 V on a rev 7 AO3415A/2N7002 divider | **TPS3840PL40** fed from the pack inputs through BAT54C + BAT54, 10 kΩ / 1 µF: cut ~4.16 V at the hub input; firmware reads that node (200 k / 100 k via a CSD25483F4, bring-up gain calibration): system-off 4.12 V, lighting off 4.25 V |
+| Per-module OVP, gate RC, 6.2 V gate zeners | **None**: Li-ion unsupported, worst pack ~6.4 V |
+| Logic rail: TPS61099DRV/MAX17222 boost and TLV75733P LDO on a TPS2116 priority mux | **TPS70933** LDO from `SYS` |
+| LED rail: TPS61023 boost (750 k / 100 k) on battery, VBUS on USB, TPS2116 priority mux | **TPS630701** buck-boost (fixed 5.0 V, XFL4020-152ME) from `SYS` on both |
+| Packs OR-ed on the modules | Per pack input on the hub: **SMF4L9.0CA + LM74610-Q1 + CSD17313Q2** (1 µF pump cap), OR into `VBAT`, **CSD25402Q3A** battery switch (power switch AND UVLO AND no USB, 2 × DMN63D8LDW) and a second one for USB into `SYS` (TPS3840PL43 detect, 2.2 MΩ / 22 nF delay); `SYS` 100 µF |
+| Series path ~296 + 10·n mΩ | ~291 mΩ worst (pack C, three pogo hops) |
+| Slot-VBUS TVS SMF6.0A on both comms-board populations | **TVS0500DRV** (2026-10-01, E7: the slot VBUS is the always-live LED rail; the SMF6.0A has no leakage figure at 5 V) |
+| Idle current unestimated | Datasheet estimate **~0.26 mA typ / ~0.47 mA worst**, ~9 / ~5 months per pack (E7) |
 
 ## 17a. Earlier changelogs (rev 2–7, per-module-core architecture)
 
@@ -1764,10 +2071,16 @@ Rev 8 opens:
 - Pin orders decided 2026-09-29: `J_COMM`, `J_SLOT`, the 2×16 slot header (§6).
 - **E16** I2C through a USB 2.0 cable's D± pair; **E17** CC as `INT` (closed 2026-09-26: 220 kΩ pull-ups); **E18** slot power policy (closed 2026-09-26: answer window ~200 ms, ~100 ms re-probe every ~2 s awake, none asleep);
   **E20** closed 2026-09-26 (LM66200 per pack, 2×6 header, ~296 + 10·n mΩ).
-- **M10** battery-module mechanics (contacts decided: 2×6 stacking header, stack only, any number of modules);
-  **M11** the hub enclosure (2026-09-29: ~90 × 90 mm tower, MCU on the base board,
-  core one joint tall; workflow in §14). **P20** the hub antenna parts (flex
-  antenna, RP-SMA pigtail) and Raytac's -U antenna approval.
+- **M10** battery-module mechanics (contacts decided: 2×6 stacking header, stack only, any number of modules;
+  battery seams on a Mill-Max 827-22-012-10-004101 pogo strip, 2026-09-30; targets Mill-Max 1578-0 discs, riser Samtec DW-06-17-T-D-254, 2026-09-30);
+  **E21** closed 2026-10-01: the rev 8.1 battery power path (§4, simulated; §17 rev 8.1
+  table); **E7** datasheet idle estimate ~0.26 mA typ (§4), measured in 7a;
+  **E22** closed 2026-10-01: KTS1693 trip lowered to 5.38–5.78 V (27.4 kΩ) for the
+  MDBT50Q `VBUS` pad's 5.8 V abs-max;
+  **M11** the hub enclosure (2026-09-29: ~100 × 100 mm tower, MCU on the base board,
+  core one joint tall; workflow in §14). **P20** closed 2026-10-01: Yageo
+  ANTX100P011B24003 PCB antenna + a blanked knock-out for the Yageo
+  ANTX100ETHAB24553 whip, both on Raytac's -U approved list (§13).
 - **X1** closed 2026-09-28: top expansion header 2×10, reversal-safe, CS0–CS3 by
   jumper, an ID EEPROM per layer at 0x50 + CS number (§6).
 - **F9** Zephyr/ZMK support for the TCA9548A and a custom `kscan` at the pinned

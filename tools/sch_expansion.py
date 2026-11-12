@@ -31,7 +31,7 @@ PARTS = [
       "10": "RST", "11": "INT", "12": "GND"},
      {"MPN": "JST SM12B-SRSS-TB"}),
     # ESD at the connector, IO + GND only (SLVSBO7O Tables 4-2, 4-3). VRWM 5.5 V, VBR 6.5 V min at 1 mA:
-    # 5V stays below VBR up to the KTS1693 OVLO trip (5.95 V max)
+    # 5V stays below VBR up to the KTS1693 OVLO trip (5.78 V max since E22, 2026-10-01)
     ("U1001", "Power_Protection:TPD4E05U06DQA", "TPD4E05U06", "keyboard:TI_USON-10_2.5x1.0mm_P0.5mm_DQA0010", (40, 18),
      {"1": "3V3", "2": "5V", "4": "SDA", "5": "SCL", "3": "GND", "8": "GND",
       "6": None, "7": None, "9": None, "10": None},
@@ -75,7 +75,7 @@ NOTES = [
     ((4, 62), "Expansion board per spec §2a, §6 (P17). J1001 JST-SH 12 at the case wall: 1 GND 2 3V3 3 5V 4 SDA 5 SCL 6 SCK 7 MOSI 8 CS 9 DC 10 RST 11 INT 12 GND.\n"
               "3V3 is the core's gated TLV75733P; 5V is local USB only (after the KTS1693). Pull-ups and bulk capacitance stay on the core.\n"
               "U1001 TPD4E05U06 (3V3, 5V, SDA, SCL) and U1002 TPD6E05U06 (SCK..INT), assembler-placed at J1001, IO + GND only (SLVSBO7O).\n"
-              "VRWM 5.5 V, VBR >= 6.5 V at 1 mA: 5V up to the 5.95 V OVLO trip stays below breakdown. C1001/C1002 100 nF at the connector.\n"
+              "VRWM 5.5 V, VBR >= 6.5 V at 1 mA: 5V up to the 5.78 V OVLO trip stays below breakdown. C1001/C1002 100 nF at the connector.\n"
               "J1002 J_EXP (JST GH 15), mirrored for reversal: 1/15 5V, 2/14 GND, 3/13 3V3, 8 GND; 4 SCL-12 SCK, 5 SDA-11 INT, 6 RST-10 MOSI, 7 DC-9 CS.\n"
               "Reversed, rails and GND meet themselves and no two push-pull drivers face each other. Cable pin 1 to pin 1."),
 ]

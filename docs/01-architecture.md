@@ -65,7 +65,7 @@ and the firmware are concerned; the key modules are I2C targets.
   HUB STACK (top to bottom)
     [optional layers: display, ...] --expansion header 2x10 (pass-through)--+
     [CORE LAYER]  base board: MDBT50Q-U1MV2, power path, LED rail, TCA9548A, buttons, headers
-                  + flex antenna on the inside of the case wall (u.FL; RP-SMA knock-out, blanked)
+                  + Yageo PCB antenna on the inside of the case wall (u.FL; whip knock-out, blanked)
                   + [USB port board] on J_USB (11)      USB-C, CC, KTS1693, USBLC6
                   + [expansion board] on J_EXP (15)     JST-SH 12, ESD (cabled accessories)
         --slot header 2x16--   --chain header 2x6--
@@ -86,7 +86,7 @@ and the firmware are concerned; the key modules are I2C targets.
 ```
 
 **The principle is unchanged: put every failure mode on something cheap that plugs
-in.** Plug wear, surges, ESD, reversed or Li-ion cells and encoder wear hit a
+in.** Plug wear, surges, ESD, reversed cells and encoder wear hit a
 small board: USB port, comms, battery module, dial or expansion. The hub core and
 key boards sit behind that protection.
 
@@ -97,7 +97,7 @@ Partitioning rules:
   medium replaces the comms boards and nothing else.
 - **Anything that must reach the MCU without detour plugs into the hub core.** Host
   D+/D− crosses one cable (USB port board → hub core). The battery chain plugs into
-  the hub core, where the undervoltage supervisor and the slide switch sit.
+  the hub core, where the undervoltage supervisor and the power switch sit.
 
 Rules that protect it from mistakes:
 
@@ -110,25 +110,28 @@ Rules that protect it from mistakes:
 ## 2. Power domains
 
 ```
-  PROTECTION (per battery module, xN, chained)
-  --------------------------------------------
-  2xAA --[TVS, bleeder]--[rev FET]--[OVP FET]--[PTC]--[ideal diode (1 uF in), ~ON <- PACK_EN]--> VBAT (chain)
-     `--[BAT54]--> PACK_SENSE (chain) --> [hub] TPS3840PH18 (~1.9 V pack) --> slide switch --> PACK_EN
+  BATTERY MODULES (passive, up to 3; rev 8.1)
+  -------------------------------------------
+  4xAA --[PTC]--> own chain line; each module shifts the lines by one, so packs reach hub inputs A, B, C
 
-  USB AND AUX INPUT (hub)
-  -----------------------
-  host USB VBUS --[KTS1693 OVP 5.55-5.95 V, OCP latch ~2 A]--[TVS]--[LM66200 IN1]--+
-  AUX_5V (chain header, Qi board later) ---------------------------[LM66200 IN2]------+-- VBUS_IN
+  PACK INPUTS AND SYS (hub)
+  -------------------------
+  PACK_A/B/C --[bidirectional TVS]--[LM74610-Q1 + N-FET ideal diode]--+--> VBAT --[Qb P-FET]--+--> SYS
+       `--[Schottky]--> PL40 node (10 k, 1 uF) --> TPS3840PL40 UVLO --> power switch --> Qb   |
+                                                                  (Qb also off while USB is in)|
+  USB AND AUX INPUT (hub)                                                                     |
+  -----------------------                                                                     |
+  host USB VBUS --[KTS1693 OVP 5.38-5.78 V, OCP latch ~2 A]--[TVS]--[LM66200 IN1]--+          |
+  AUX_5V (chain header, Qi board later) ---------------------------[LM66200 IN2]------+-- VBUS_IN --[Qu P-FET]--+
+                                                                   VBUS_IN --> TPS3840PL43 (USB present)
 
   DOMAIN A: VSYS, 3.3 V regulated (hub)
   -------------------------------------
-  VBUS_IN --[LDO 3.3 V]--> IN1 [priority mux] --> VSYS --> MDBT50Q VDD, TCA9548A, expansion I/O
-  VBAT ----[logic boost]--> IN2
+  SYS --[TPS70933 LDO]--> VSYS --> MDBT50Q VDD, TCA9548A, hub I/O
 
-  DOMAIN B: LED rail, ~5.0 V on battery (E19), ~5 V on USB (hub)
-  -------------------------------------------------------
-  VBAT ----[boost 5.0 V, EN pulled up]--> IN2 [priority mux] --> LED RAIL --> expansion LDO (gated)
-  VBUS_IN ------------------------------> IN1                        |
+  DOMAIN B: LED rail, ~5.0 V on USB and battery (hub)
+  ---------------------------------------------------
+  SYS --[TPS630701 buck-boost, fixed 5.0 V]--> LED RAIL --> expansion LDO (gated)
                                                    +-----------------+-----------------+
                                            slot switch (TPS22950L, latch-off), one per slot, on the hub-side comms board
                                                    |
@@ -138,42 +141,39 @@ Rules that protect it from mistakes:
              `--[LDO 3.3 V]--> module controller, driver VIO, link pull-ups
 ```
 
-**Where the domains live.** The pack protection is on each battery module; host
-VBUS protection is on the USB port board; domains A and B, the input OR and the
-UVLO are on the hub core; each slot switch is on its hub-side comms board; domain C
-is on each key board.
+**Where the domains live.** The battery modules carry only cells, a PTC and seam
+parts; pack protection, the OR, the UVLO, both switches and domains A and B are on
+the hub base board; host VBUS protection is on the USB port board; each slot switch
+is on its hub-side comms board; domain C is on each key board.
 
-**Why VSYS is fed through an LDO and a mux on USB.** The nRF52840 `VDD` is rated
-to 3.6 V. **Rev 2 OR-ed 5 V VBUS straight onto VSYS**, which would have destroyed
-the MCU on the first plug-in. An LDO alone is not enough: an ideal-diode OR picks
-the higher source, and a fresh alkaline pack near 3.3 V would keep supplying while
-on USB. A priority mux disconnects the packs whenever VBUS is present.
+**Why one `SYS` rail (rev 8.1).** Rev 8 split the rails because USB (5 V) and a
+2-cell pack (1.8–3.2 V) needed different converters, and paid for it with two
+priority muxes, a logic boost, a USB LDO and an LED boost. A 4-cell pack (~4.0–6.4 V)
+straddles 5 V the way USB does, so one rail takes either source, and one converter
+per domain follows it. Full reasoning and the rejected alternatives in §6, "Battery —
+up to 3 passive 4×AA modules".
 
-**Why VSYS is regulated on battery too (rev 6).** Rev 5 fed VBAT straight into the
-mux, so `VSYS` ran at 1.85–3.3 V and differed between modules. The nRF52840's
-`VIH` is 0.7·`VDD` and its pin abs-max is `VDD` + 0.3 V, so a module on USB could
-not read a 2.2 V module's TX, and a 3.3 V module over-drove a 1.9 V module's pins;
-the wired link only worked with matched cells. A dedicated logic boost now takes
-VBAT to 3.3 V on the mux's IN2, so every module's UART, I2C and `AINx` levels are
-identical whatever the cells. With a fresh pack above 3.3 V the boost stays in
-down mode and still regulates. The cost is the boost's ~1 µA quiescent current.
+**Why VSYS is an LDO output, always (rev 2, rev 6, rev 8.1).** The nRF52840 `VDD` is
+rated to 3.6 V. **Rev 2 OR-ed 5 V VBUS straight onto VSYS**, which would have
+destroyed the MCU on the first plug-in. **Rev 5 ran `VSYS` unregulated** from the
+cells, so logic levels moved with the cells. Since rev 8.1 the TPS70933 (2.7–30 V
+in) makes VSYS from `SYS` on every source, so `VDD`, the slot I2C levels and every
+`AINx` reading are independent of the source; it drops out only briefly near the
+UVLO cut, during an LM74610 body-diode window (spec §4).
 
-**Why the LED rail uses a priority mux, not an OR.** **Rev 3 OR-ed VBUS with the
-4.7 V boost and assumed VBUS always wins.** USB only promises 4.75 V at the
-receptacle; after the cable, the OVP FET and the switches, VBUS_IN can sit below
-4.7 V under load, and an OR would quietly move the LED load onto the boost, which
-draws from `VBAT`, so on USB the cells would carry it (rev 7 and earlier said "the
-3.3 V LDO", which the topology does not do). A TPS2116 in priority mode keeps VBUS_IN
-selected above its `PR1` threshold, 3.63–4.40 V with ~0.3 V of hysteresis from its
-`ST` pin (E3, 2026-09-15). The threshold sits low on purpose: `VREF` is ±8 %, so rev 7's
-~4.3 V nominal could reach 4.72 V and hand a compliant but weak port's LED load to the
-cells. Below ~4.5 V the LEDs dim instead, which is the lesser failure. `ST` is low only
-while IN2 is in use, so a resistor from `PR1` to `ST` adds the hysteresis the part
-lacks without a GPIO, and a sagging source cannot hunt between inputs.
+**Why USB has priority over the packs.** An ideal-diode OR picks the higher source,
+and fresh alkalines (~6.4 V) sit above any USB port, so they would carry the
+keyboard while it is plugged in. The PL43 on `VBUS_IN` turns the battery switch Qb
+off whenever USB is present, and a delay turns the USB switch Qu on only after Qb is
+off (simulated at the datasheet corners, E21): the packs supply nothing on USB, and
+a pack never back-feeds `VBUS_IN`.
 
-
-**Why only the host port has an integrated OVP switch (rev 8).** Every part behind
-`VBUS_IN` is 6.0 V abs-max. A discrete comparator plus P-FET was designed and
+**Why only the host port has an integrated OVP switch (rev 8).** The LM66200 behind
+`VBUS_IN` is 6.0 V abs-max and the MDBT50Q's `VBUS` pad 5.8 V; the KTS1693's ±3.2 %
+reference cannot trip between vSafe5V's 5.5 V and 5.8 V, so its divider sets 5.38–5.78 V
+and gives up the top of vSafe5V on low-corner units rather than the MCU module (E22,
+2026-10-01). A
+discrete comparator plus P-FET was designed and
 simulated first (rev 4 and 2026-09-13): its comparator output is undefined for
 ~190 µs at power-up, the FET's gate–drain capacitance let a 20 V hot plug through,
 and a source that jumped from 5 to 20 V while connected still put 16.8 V on the
@@ -183,17 +183,18 @@ at the host port.** Link sockets carry the hub's own LED rail outward, and the k
 modules' sockets have no `Rd`, so a USB-C source never turns on into them. A
 legacy USB-A-to-C charger forcing 5 V into a link socket is ≤6 V; a
 non-compliant >6 V source there reaches the TPS22950L or the key board's LDO and
-driver behind only the SMF6.0A, the same residual risk rev 7 accepted on its
+driver behind only the slot TVS (TVS0500 since 2026-10-01: VBR 7.5–8.4 V, ≤50 mA
+DC breakdown), the same residual risk rev 7 accepted on its
 downstream link ports.
 
 **Why the key boards run from the LED rail, not `VBUS_IN`.** The key boards need
 power on battery too. The LED rail is the one rail that exists on both battery and
-USB and already has the current capacity. The cost is that the LED boost runs
-whenever the keyboard is on battery (rev 7 already kept it running: "Driver idle"
-in the spec). Each key board makes its own 3.3 V with an LDO, so `VIO` is derived
-from `VCC`'s own net and cannot come up first. On a collapse an LDO that blocks
-reverse current can hold `VIO` above a falling `VCC`, so the rev 7 series
-resistors at the driver stay.
+USB and already has the current capacity. The cost is that the LED converter runs
+whenever the keyboard is on, and in sleep the three slot switches stay on with it:
+together most of the ~0.26 mA idle estimate (E7). Each key board makes its own 3.3 V
+with an LDO, so `VIO` is derived from `VCC`'s own net and cannot come up first. On a
+collapse an LDO that blocks reverse current can hold `VIO` above a falling `VCC`, so
+the rev 7 series resistors at the driver stay.
 
 **Why each slot has a latch-off switch.** A slot is a user-facing socket that
 sources power. A shorted cable, a crushed plug or a phone plugged into a hub slot
@@ -201,25 +202,22 @@ must cost one slot, not the LED rail. The TPS22950L latches off above `IHCD`
 1.2–1.9 A and stays off until `SLOT_EN` toggles; firmware keeps a slot on only
 while its module answers (spec §6).
 
-**Why the LED rail bypasses that path on USB.** At the USB default 500 mA, pushing
-LED current through a 3.3 V LDO and back up through a 4.7 V boost yields about
-270 mA of rail current for the whole keyboard, with the LDO burning ~0.75 W. A
-direct VBUS feed onto the rail, muxed with the boost output, fixes both. The boost
-stays enabled and idles while VBUS holds the rail above its setpoint, so neither
-plug nor unplug collapses the rail.
+**Why one buck-boost makes the LED rail on USB and battery (rev 8.1).** Rev 3–8 fed
+the rail from VBUS directly on USB (through an OR, then a priority mux) to avoid
+pushing LED current through a 3.3 V LDO and back up through a boost, and boosted
+from the cells on battery. With one `SYS` rail the TPS630701 takes either source and
+regulates 5.0 V in buck or boost mode, so the rail never changes source and a weak
+USB port no longer leaves max-bin LEDs short of headroom.
 
-**Why domain B is ~5.0 V on battery (E19, 2026-09-26; 4.7 V until rev 7).** The
+**Why domain B is ~5.0 V (E19, 2026-09-26; 4.7 V until rev 7).** The
 driver's datasheet headroom is ≤400 mV sink at 672 mA and ≤200 mV source at 42 mA,
 about 0.4 V at our 320 mA / 20 mA. The LED's maximum forward voltage at 20 mA is
 4.1 V green and 4.0 V blue, so a max-bin die needs ~4.5 V at the driver. Rev 7's
 4.7 V (4.63–4.87 V) left ~0.2 V with the driver on the same board; rev 8 puts ~1 m
 of cable, a slot switch and two connectors in between (~0.1 V at 0.28 A), which left
-~0.03 V worst case. The divider moves to 750 kΩ / 100 kΩ: 4.93–5.19 V, ≥0.33 V after
-the cable, under the boost's 5.5 V OVP and the driver's 5.5 V maximum, for ~7 % more
-cell power at the same brightness. **Rev 3 said blue and green run to about 3.6 V**;
-that was closer to typical than maximum. On USB the rail is VBUS_IN, which on a
-healthy port costs driver dissipation and on a weak one can leave a max-bin part
-slightly under current.
+~0.03 V worst case. The TPS630701's fixed 5.0 V (4.95–5.15 V) leaves ≥0.35 V after
+the cable, under the driver's 5.5 V maximum. **Rev 3 said blue and green run to
+about 3.6 V**; that was closer to typical than maximum.
 
 **Why the driver is never power-gated.** Absolute maximum is "voltage at any input
 pin, VCC + 0.3 V". Collapsing VCC while `VIO`, SDA and SCL still sit at 3.3 V puts
@@ -231,83 +229,47 @@ sleep, so the effect layer needs no reload-on-wake path.
 voltage", and the datasheet's own application circuit ties it to the MCU rail while
 the VCC group sits higher.
 
+**The battery rules (rev 8.1).** Six hazards.
 
-**The battery rules.** Seven hazards.
-
-1. **No pack may reach another pack.** Every battery module feeds `VBAT` through
-   its own ideal diode, which blocks reverse current, so a fresh pack never
-   charges a depleted one, including an alkaline one. **This is why the chain needs
-   an ideal diode per module** and why the rev 7 dual LM66200 could not simply be
-   extended: it had two inputs. Nothing on the link side can back-feed `VBAT`.
-2. **Reverse polarity.** A plain high-side ideal diode's body diode conducts with a
-   reversed pack, dragging VSYS to about −2.4 V. A series reverse-blocking P-FET
-   precedes the OR-ing, one per pack. The terminal TVS sits ahead of that FET, so it
-   is bidirectional; a unidirectional part would forward-conduct into the reversed
-   pack with nothing limiting the current.
-3. **Overvoltage.** 14500 Li-ion cells fit AA holders, and two in a 2S holder make
-   8.4 V. **Rev 2 had no protection here.** No integrated OVP switch goes below 4 V,
-   so each pack gets a nano-power supervisor driving a second series P-FET. The
-   supervisor's rated threshold is a falling edge with 200 mV hysteresis, so a 3.5 V
-   part trips rising near 3.7 V: under `VDD`'s 3.9 V abs-max, above the freshest
-   alkaline pack. A 9 V-standoff TVS guards the terminals without crowbarring a
-   14500 pair. Lithium primaries (L91, ~3.66 V fresh per pack) are also excluded as
-   unsupported, since they exceed `VDD`'s recommended maximum.
-   **The supervisor is too slow to stop a step, so the FET must already be off when
-   one arrives.** Rev 6 made it off by default with a gate-to-source capacitor, which
-   works on a discharged board. **The 2026-09-15 simulation found the other case:**
-   on a running pack that capacitor holds the FET on, and the pack node, a 1 µF input
-   capacitor drained by microamps, keeps it charged for seconds after the cells come
-   out. A 14500 pair swapped in during that time reached `VBAT` at 8.3 V, and swapping
-   a single cell (5.6 V) would pass through the logic boost to `VDD`. A bleeder at the
-   holder terminal (330 kΩ, 8.5 µA) empties the node in about half a second, faster
-   than anyone can change a cell. The window scales with that node's capacitance, so
-   each battery module keeps its ideal diode's input at 1 µF and the bulk sits on
-   `VBAT` at the hub, after the OR. Rejected:
-   a 100 kΩ bleeder (a 0.17 s window, but 28 µA per pack against a 6-month idle
-   target) and a zener-driven fast turn-off clamp (closes the hole outright, but three
-   more parts and an unsimulated circuit).
-4. **Short circuit.** 2×NiMH will deliver amps, and there is a boost inductor
-   downstream. PTC in each pack lead, hold ≥1 A. **Nothing in the path is a current
-   limiter**, and the LM66200 has no limit of its own. A hard short pulls the pack
-   below the UVLO, which opens the OR. A partial short between the LM66200's 2.5 A
-   rating and the PTC's 3.5 A trip may sit there until the LM66200's thermal
-   shutdown, because Eaton publishes no trip curve below 8 A. That band was accepted
-   (E9, 2026-09-15): the part at risk is a battery module's ideal diode, only under an internal fault
-   that has already damaged something, and the lower-trip PTCs push the pack path
-   past its 300 mΩ budget. The USB side has the same shape: a KTS1693 latch stays fully
-   on for its 5–10 ms debounce, so one short pulse passes; that too is accepted
-   rather than trading the latch for a 200 ms retry loop. On the slot side, each
-   slot's TPS22950L latches off above 1.2–1.9 A.
-5. **Over-discharge.** Firmware enters system-off at ~2.05 V. As a backstop, a
-   supervisor on the hub drives `PACK_EN`, the active-low `~ON` of every battery
-   module's ideal diode, at ~1.9 V at the pack, so the ideal diodes double as the
-   cutoff switch. On battery that removes supply from the hub and every key board
-   together. The supervisor is fed from `PACK_SENSE`, a BAT54 from each pack node,
-   so it survives its own cutoff (below), which is why a 1.8 V part gives a
-   1.9 V pack threshold. **Rev 2 put the supervisor on boost EN
-   alone**, which collapsed the driver's VCC under a live `VIO` and left the MCU
-   draining the cells indefinitely.
+1. **No pack may reach another pack.** Each pack has its own chain line and its own
+   LM74610 ideal diode into `VBAT`, which blocks reverse current, so a fresh pack
+   never charges a depleted one, alkaline or not. This is why the module count is
+   capped at three: one hub input per pack.
+2. **Reverse polarity.** The LM74610 turns its FET off within 2 µs of reverse voltage
+   and blocks to −45 V; the pack's sense Schottky blocks it from the UVLO node. The
+   input TVS sits ahead of the LM74610, so it is bidirectional; a unidirectional part
+   would forward-conduct into a reversed pack with only the PTC limiting the current.
+3. **Overvoltage: none needed (rev 8.1).** Li-ion is not supported (2026-09-30), so
+   the worst input is a fresh 4×alkaline pack at ~6.4 V, and every part on the pack
+   side and on `SYS` is rated ≥10 V. Rev 2 had no protection against 14500 cells;
+   rev 6–8 had a per-pack supervisor + P-FET OVP with a gate RC and a pack bleeder,
+   all gone with the 2-cell packs.
+4. **Short circuit.** NiMH packs deliver amps. The PTC in each pack lead (MF-MSMF125/16X:
+   1.25 A hold, 2.5 A trip) is the only current limit on the battery side; a hard
+   short also pulls the pack below the UVLO, which opens Qb. On the USB side a
+   KTS1693 latch stays fully on for its 5–10 ms debounce, so one short pulse passes;
+   accepted rather than trading the latch for a 200 ms retry loop. On the slot side,
+   each slot's TPS22950L latches off above 1.2–1.9 A.
+5. **Over-discharge.** Firmware enters system-off at 4.12 V on the UVLO node. As a
+   backstop the TPS3840PL40 turns Qb off at 4.0 V on its node (~4.16 V at the hub
+   input, ~1.03 V/cell plus the path IR). On battery that removes supply from the hub
+   and every key board together. **Rev 2 put the supervisor on boost EN alone**,
+   which collapsed the driver's VCC under a live `VIO` and left the MCU draining the
+   cells indefinitely.
 6. **Pack load is not shared.** Ideal-diode OR-ing hands the whole load to the
-   higher pack until the two equalise. **Rev 2 claimed two packs halve the
-   C-rate.** Every per-pack part is sized for the whole keyboard's battery load
-   (rev 8; one module's in rev 7), and battery lighting is capped at 250 mA on the
-   rail for the whole keyboard, about 730 mA from one pack near UVLO. Adding battery
-   modules adds runtime, not brightness.
-   Two P-FETs at 1.9 V gate drive make a 150 mΩ series budget unreachable; the path
-   is allowed 300 mΩ, about 0.2 V at worst case.
+   highest pack until they equalise. **Rev 2 claimed two packs halve the C-rate.**
+   Every per-pack part is sized for the whole keyboard's battery load, and battery
+   lighting is capped at 250 mA on the rail for the whole keyboard, ~0.37–0.45 A from
+   one pack near the cut. Adding battery modules adds runtime, not brightness. The
+   worst-case series path (holder, PTC, three pogo hops, ESQ, both FETs) is ~291 mΩ,
+   ≤0.13 V at 0.45 A.
 
-7. **The chain adds resistance (rev 8).** The pack path had ~4 mΩ of headroom under
-   its 300 mΩ budget in rev 7, which did not count connector contacts. Every chain
-   hop adds contact resistance on `VBAT` and GND, most for the pack farthest from
-   the hub. Low-resistance chain contacts or a larger budget (lighting scales down
-   earlier on a flat far pack) are decided with the contacts (E20, M10).
-
-**`PACK_SENSE` and the supervisor (rev 8).** The supervisor that cuts the packs
-off must survive the cutoff. Rev 7 powered it from both packs ahead of the OR
-through a BAT54C. The chain keeps that: a BAT54 from each pack node onto a µA-level
-`PACK_SENSE` net, which is the supervisor's supply and sense. Powered from `VBAT`
-instead, it would lose its supply the instant it opened the ideal diodes, release
-them, and oscillate.
+**Why the UVLO is fed from the pack inputs (rev 8.1, E21).** The supervisor that cuts
+the packs off must survive the cut. Rev 7 and 8 fed it ahead of the OR through
+Schottkys (`PACK_SENSE` in rev 8), and rev 8.1 does the same with one Schottky per hub
+input. A first rev 8.1 drawing put it on `VBAT`, which keeps its supply after the
+cut but sits ~0.77 V under the pack whenever an LM74610 runs on its body diode (for
+~45–60 ms each time a pack takes over), so it tripped at USB unplug (switchover sim).
 
 **VBUS must reach the MDBT50Q's `VBUS` pad directly**, not only through the power
 path. The USB regulator and attach detection both depend on it.
@@ -375,7 +337,7 @@ cable must be inert rather than damaging.
 | Phone or laptop (C-to-C) in a hub slot | `INT` pull-ups at ≤~0.09 V against the device's `Rd`, below vRa max 0.15 V (Type-C R2.0 Table 4-36), so no source is seen; slot VBUS is on until the probe times out; no module answers, slot turns off, re-probed later | Inert (E17, E18) |
 | Legacy device on a C-to-micro-B cable in a hub slot | Draws from VBUS regardless of CC until the probe timeout; latch-off above 1.2 A | Benign; a few seconds of current per re-probe |
 | C-to-C charger in a hub slot | Charger needs `Rd` to source; sees none | Inert |
-| Legacy USB-A-to-C charger in a hub slot | 5 V forced into the slot output; the TPS22950L has no reverse current blocking, so it can back-feed the LED rail at ≤5.25 V; the TPS2116 blocks reverse current into its inputs | Benign; >6 V non-compliant sources are the accepted residual risk |
+| Legacy USB-A-to-C charger in a hub slot | 5 V forced into the slot output; the TPS22950L has no reverse current blocking, so it can back-feed the LED rail at ≤5.25 V; the rail is the TPS630701's output, in power-save mode (`PS/SYNC` high, rev 8.1), so it stops switching rather than pumping that current back into `SYS` (rev 8: the TPS2116 blocked it) | Benign; >6 V non-compliant sources are the accepted residual risk |
 | Key module into a laptop or C-to-C charger | No `Rd` on the module side: the source never turns on VBUS | Inert |
 | Key module on a legacy USB-A-to-C charger or port | 5 V powers the key board; D± see the host's 15 kΩ pull-downs or nothing; no hub, so nothing addresses the module controller | Inert |
 | Two key modules cabled together | Neither sources power | Inert |
@@ -501,13 +463,29 @@ beyond an Arduino-style long-tail socket (~11 mm). One ESQ joint spans ~15.3–1
 mm (A + B = 23.24 mm for every lead style). The user chose the PC/104 orientation,
 socket on each board's top face, over socket down / tails up, which would have left
 only a recessed female socket at the bottom of the stack; the cost is live `VBAT`
-tails under the bottom module, which its case must shroud. Rejected **two parts
+tails under the bottom module, which a separate printed base covers (2026-09-29). Rejected **two parts
 (extra-long pins + socket)**: easier to second-source, but two parts per header per
 board and ~20 mm pins. **Lead style `-24`, standard force, gap 17.5 mm on every joint
 (2026-09-29)**: 2.5 mm over the AA holder and 4.14 mm insertion, for 8.05 mm tails
 under the bottom module (vs 5.5 mm with `-34` at 17.0 mm, which left 2.0 mm over
 the holder); low insertion force `-49` rejected for lower contact normal force
 against the E20 contact budget.
+**Battery seams on pogo pins (2026-09-29)**: every cell swap opens the chain
+joints above that module, and ESQ is rated 100 mating cycles (10 µ″ gold), so the
+seams below the connector layer carry the chain on 12 pogo pins (100 000+ cycles)
+standing on each battery board, pins up, landing on gold target discs under the board above;
+the magnets hold the stack against the springs (~7 N). **Part (2026-09-30): Mill-Max
+827-22-012-10-004101**, a through-hole 2×6 strip with 2.29 mm stroke (60 g per pin at
+mid-stroke, 20 mΩ max, 7 A), on a cap board over a **Samtec DW-06-17-T-D-254** riser
+(2026-09-30: one 2×6 board spacer soldered through both boards at 6.45 mm ±0.20, no
+extra mated contact; a pluggable BCS socket + pins was rejected for its extra contact); **targets (2026-09-30):
+Mill-Max 1578-0 discs** (Ø1.98 × 0.63 mm, 10 µ″ hard gold) reflowed on ENIG pads, since
+ENIG alone wears and hard-gold fingers exist only at a board edge; chosen over the
+1.4 mm-stroke 818/814 for twice the window for FDM seam tolerance at the same force,
+over the SMT 820 (solder pads alone take the side load) and the 3 mm 839 (~11.8 N). A module left behind after
+a lift shows dead pins (its pack switches off when detached). The screwed
+core ↔ connector joint and the expansion header keep ESQ. Rejected: ESQ on every
+seam, pogo everywhere, pins facing down.
 
 **Key-board bootloader recovery (2026-09-29, F7's hardware side).** Chosen:
 software entry, the vector table written last (so an interrupted update boots
@@ -531,7 +509,7 @@ up; no jumper, no clash, but a layer's CS then depends on its position, so
 reordering breaks a static devicetree), **two CS lines on a 2×8** (frees 2 pads,
 caps SPI layers at two, a new core to grow) and **CS from an I2C expander** (every
 CS edge an I2C transaction, fragile as Zephyr `cs-gpios`, one more part on the
-core). The ID EEPROM (24xx02 class, address 0x50 + CS number by jumpers next to
+core). The ID EEPROM (Microchip 24AA024, 2026-10-01; address 0x50 + CS number by jumpers next to
 the CS jumper) tells the hub which layers are fitted, on which CS, of what type and
 revision, and catches two layers on one CS; it does not auto-configure drivers.
 Rejected **no ID** (a write-only SPI display on the wrong CS is just blank, and
@@ -558,7 +536,22 @@ the MCU board, `J_MCU`, the wall's keying slot and the riser; the core is one jo
 tall and the tower ~17–20 mm lower. Costs accepted: **a single-source module**
 (no other u.FL module on these pads), an MCU fault costs the whole base board (the
 module's bottom pads need hot air), the antenna part and its Raytac approval still
-to settle (P20), and RSSI now depends on where the antenna sits in the case.
+to settle (P20, closed 2026-10-01, below), and RSSI now depends on where the
+antenna sits in the case.
+
+**Antenna parts (2026-10-01, P20).** Raytac's separate MDBT50Q-U1MV2 datasheet
+(ver L, ch. 7) lists four antennas tested with the -U; only two carry CE, and the
+hub uses both: the **Yageo ANTX100P011B24003** PCB dipole (39 × 10 × 0.55 mm,
+adhesive, 2.2 dBi, ≥10 mm from metal) inside the rear wall, and the **Yageo
+ANTX100ETHAB24553** whip (2.0 dBi, integral 100 mm cable, base Ø9.35 mm) as the
+external option through a blanked knock-out. The RP-SMA knock-out and pigtail went:
+no RP-SMA antenna is on the list, and Raytac warns its certificates "might not be
+applicable" with any other antenna. Costs accepted: the PCB antenna is rigid, has
+no data on plastic and resonates near 2.35 GHz in Yageo's fixture, so the 2 mm ASA
+wall may cost match at the top of the band (RSSI test); the whip needs a printed
+clamp; the external antenna is swapped inside the core (Hirose U.FL: 30 cycles).
+Rejected: flexes tuned on 2 mm ABS (Taoglas FXP74, FXP830) or tolerant of metal
+(Ezurio FlexPIFA), all outside Raytac's list and two of them over 2.2 dBi.
 Rejected: **1MV2 with P1MV2 as second source** (integral, both in Raytac's reports,
 but RF tied to the tower and nothing to fall back on); **the U1MV2 with only an
 external antenna** (a stick on the desk); **keeping the vertical MCU board** with
@@ -566,7 +559,68 @@ the u.FL module (a 60-pin joint, a riser and a taller tower for an on-board ante
 no longer used); earlier, **a horizontal core with an antenna tab** and **the whole
 core vertical**. The pad assignment (spec §5) stays.
 
-### Battery — chainable 2×AA modules on the hub (rev 8)
+### Battery — up to 3 passive 4×AA modules (rev 8.1, decided 2026-09-30)
+
+The user asked for simpler battery modules: holder only, the connector just
+passed on. A board stays either way (the pogo strip, riser and target discs solder
+to one, and the holder is PCB-mount), so the choice was active vs passive. Rev 8's
+module board did three jobs a passive board cannot: it OR-ed its pack (so a fresh
+pack never drives a flat one), switched itself off when lifted (so its ~6 mm proud
+pins were dead), and protected the LM66200 (a 5.5 V class part) against reversed
+cells. **Li-ion is not supported at all (2026-09-30)**; the rev 7 overvoltage reasoning
+about 14500 cells below is history only. Moving those jobs to the hub works only if each pack keeps its own
+line to the hub, which caps the count. The user accepted **up to 3 modules of 4×AA
+NiMH** (4.8 V nominal, ~4.0 V empty, ~5.6–5.8 V fresh; ~6.4 V with alkalines).
+
+Chosen: **passive modules** (4×AA holder, one PTC, the pogo seam parts); **one
+chain line per pack, shifted by one position per module** so identical modules
+reach hub inputs A, B, C by position and a 4th is unconnected; chain pinout 1/12
+`PACK_A`, 3/10 `PACK_B`, 5/8 `PACK_C`, 2/11/4/9 GND, 6/7 `AUX_5V` (reversal-safe);
+**the hub** carries per-input reverse/OVP/ESD, a 3-input OR, a buck-boost for the
+~5.0 V LED rail (the 4-cell pack spans it), a 3.3 V regulator and a 4-cell UVLO
+(parts decided the same day, E21). Accepted: a lifted module's pins carry its raw pack (the PTC
+bounds a short); the hub is laid out for 3 inputs whether used or not. **Li-ion is not
+supported (2026-09-30)**, which removed the overvoltage cut entirely.
+
+**Hub power path (2026-09-30).** Rev 8 split the rails because USB (5 V) and a 2-cell
+pack (1.8–3.2 V) needed different converters. A 4-cell pack (3.6–6.4 V) straddles
+5 V like USB does, so one `SYS` rail takes either, a buck-boost (TPS630701, fixed
+5.0 V) makes the LED rail from it on USB and battery alike, and one LDO (TPS70933)
+makes 3.3 V: the logic boost, the USB LDO, both TPS2116 muxes, the LED boost and its
+PR1 divider all go. Each pack input is a zero-Iq LM74610-Q1 ideal diode (reverse
+protection and OR), and one P-FET (CSD25402Q3A) after the OR is the only battery
+cutoff: off when the power switch is off, when the TPS3840PL40 sees <4.0 V,
+or when a TPS3840PL43 on `VBUS_IN` sees USB (a second, reversed CSD25402Q3A then feeds
+`SYS` from USB). The supervisor is powered from the three pack inputs through one
+Schottky each (BAT54C + BAT54, 2026-10-01), ahead of the LM74610s and the cut, so it keeps
+its supply without rev 8's `PACK_SENSE` diode-OR. It first sat on `VBAT`; the E21
+switchover sim (`tools/sim/e21_switchover.py`) showed why that fails: each time a pack
+takes over, its LM74610 runs ~100–155 ms on the FET's body diode (pump capacitor empty)
+and then 55 ms every ~2.7 s, ~0.77 V under the pack, so a `VBAT` sense cut out at
+unplug from packs up to ~4.9 V. The same sim set the USB handover: Qu's gate pull-up
+10 kΩ (off before Qb turns on, or the pack back-feeds `VBUS_IN` and USB is re-detected
+forever) and a 2.2 MΩ / 22 nF delay on N4's gate with a BAT54 bypass (Qu on only after
+Qb is off, or a fresh alkaline pack drives `VBUS_IN` past the LM66200's 6.0 V; 10 nF
+failed at the datasheet corners), N2's pull-up 1 MΩ and 100 µF on `SYS`; then the last
+values: Qb's gate pull-up 1 MΩ, N1's pull-down 4.7 MΩ (its current runs through the
+sense Schottkys and lifts the cut), a 100 kΩ `VBUS_IN` bleeder (Qu's leak must never
+fake a USB detect) and a 1 µF LM74610 pump cap (halves the post-handover window).
+The supervisor's `VDD` sits behind 10 kΩ with 1 µF, which keeps the TVS clamp
+(15.4 V) off its 12 V pin and gives firmware ~166 ms to drop the lighting to the
+battery cap after USB goes; without that a ≤4.6 V pack cycles the cut at the ~0.8 A
+USB rail. Firmware's own low-battery stages read that same supervisor node through a
+switched 1/3 divider (low-leakage CSD25483F4, so the pin is not loaded), with a one-off
+gain calibration at bring-up, and power off cleanly at 4.12 V, just above the 4.0 V
+±1.5 % hardware cut.
+First pick was the LM74720-Q1 per input (reverse, OR and OV in one), dropped once its datasheet showed an internal boost
+with an inductor per channel, and OV was unneeded without Li-ion. Worst-case series
+path ~291 mΩ (≤0.13 V at 0.45 A).
+
+Rejected: **active 4×AA modules** (protection and a ≥6.5 V ideal diode per module,
+any number of modules; more parts per module), **staying at 2×AA**, **packs
+directly in parallel** (packs charge each other; lifted pins unbounded).
+
+### Battery — chainable 2×AA modules on the hub (rev 8, superseded by rev 8.1)
 
 Rejected **fixed battery slots on the hub**: the pack count is fixed when the hub
 is laid out.
@@ -584,7 +638,7 @@ under the hub (M10, 2026-09-26; side by side is a future option). The header's
 pinout is reversal-safe and a detached module switches itself off (spec §4). More
 modules add runtime, not peak current (battery rule 6).
 
-### USB power — LDO + priority mux, LED rail direct, CC sensed
+### USB power — LDO + priority mux, LED rail direct, CC sensed (rev 3–8; rev 8.1: one `SYS` rail, §2)
 
 Rejected **LDO before the OR**: fewer parts, but fresh packs win the OR and drain
 on USB.
@@ -653,7 +707,12 @@ Chosen: the RGB already under every key, accepting that on opaque caps the
 indication reads as a glow around the cap edge. Legibility is checked in the Phase 1
 test cell.
 
-### Cells — alkaline and NiMH only, with OVP
+### Cells — alkaline and NiMH only (OVP until rev 8; none since rev 8.1)
+
+Rev 8.1 (2026-09-30): Li-ion is not supported and the packs are 4×AA, so the OVP and
+the reasoning below about 2-cell packs are history; 4 × L91 lithium primaries are not
+checked against rev 8.1 and stay unsupported.
+
 
 Rejected **supporting lithium primaries through a regulator**: costs dropout at the
 NiMH end or a bypass-mode part's quiescent current.
@@ -692,8 +751,8 @@ about 12 mm overall, accepted as a known deviation.
 ### MCU — pre-certified module, on the hub only (rev 8)
 
 Rejected **bare nRF52840 with a PCB antenna** and **socketed nice!nano**. The hub
-carries the **MDBT50Q-U1MV2** (u.FL) with a flex antenna in the case wall
-(2026-09-29, §1a above). Raytac restricts **21 of the 48 pads to low-frequency
+carries the **MDBT50Q-U1MV2** (u.FL) with a Yageo PCB antenna in the case wall
+(2026-09-29 / 2026-10-01, §1a above). Raytac restricts **21 of the 48 pads to low-frequency
 I/O**; the hub uses 42 of 47 GPIOs with 19 of 24 full-function pads (spec §5,
 2026-09-29). The 32.768 kHz
 crystal is **not** inside the module. The nRF52840's TWIM tops out at **400 kHz**,
@@ -710,19 +769,39 @@ the joining hardware in ~6 mm.
 first) on top, the core layer, the swappable connector layer, then battery modules
 (any number, M10) or a Qi2 board in their place. Each layer is its own enclosure
 section, latched or screwed to the next; the stacking headers carry signals only.
-The tower is ~90 × 90 mm (2026-09-29); the core is one base board with the MCU on
-it and one joint tall; the hub antenna is a flex antenna inside a core-section wall
-with a blanked RP-SMA knock-out beside it. Walls (2026-09-29): slot sockets
-and the controls on the front (facing the keyboard); on the rear, right to left,
+The tower is ~100 × 100 mm (2026-09-29); the core is one base board with the MCU on
+it and one joint tall; the hub antenna is a Yageo ANTX100P011B24003 PCB antenna
+inside a core-section wall with a blanked knock-out for the Yageo whip behind it
+(2026-10-01). Walls (2026-09-29): slot sockets
+and the controls on the front (facing the keyboard; 2026-10-01: three NKK UB snap-in
+pushbuttons with 17.8 mm square bezels, a green latching power button and red/black momentary
+reset/boot, wired to the core board, chosen to be easy to press; pinholes and a small slide
+were tried first and rejected as too fiddly); on the rear, right to left,
 host USB-C, SH socket and the antenna (the user wanted every cable at the back;
 rejected, the antenna alone on the left wall, better RF margin but off §11's
 opposite-wall rule; accepted, the antenna ~20–40 mm from two cables and a USB
-shell, and a flex antenna ≤~40 mm long). Joints: core ↔ connector layer on M2
+shell, and a flex antenna up to ~50 × 12 mm under the core/lid seam, which sits 5 mm higher all round since 2026-10-01; a raised rear-wall tab until then, rejected by the user for its stepped seam). Joints: core ↔ connector layer on M2
 screws (a 44-contact joint should not come apart by accident); battery modules and
 the lid on magnets with a keyed nesting lip, so cell access stays tool-less;
 optional layers join the same way (a display swaps without tools).
+**v0 review (2026-09-29)**: headers at chain (25, 20), slot (−5, 5), expansion
+(0, −20) on every board, clear of the AA holder and of the antenna corner; a
+separate base under the lowest layer covers its live tails in every configuration
+(rejected: a slotted floor in every section, which leaves the tails reachable; a
+loose tail cap); the core keeps full ESQ parts although its sockets face up unused
+(one part family, and a future optional layer can tap the chain or slot bus;
+rejected a TSW pins-only strip, a second family with unverified post length); the
+core ↔ connector M2 screws go in from the top through the core board, so they also
+hold it down (rejected: from below, through the side walls).
+**Case (2026-09-29)**: FDM in ASA on the user's Bambu Lab H2S and Prusa CORE One,
+one piece per module (both beds take a 233 mm module), M2 heat-set brass inserts.
+The earlier SLA-resin premise (and the captive nuts chosen for it the same day) was
+wrong: the user has no resin printer. Rejected PETG (softer, creeps) and PLA
+(softens on a sunny desk). **Magnets (2026-09-29)**: the user's 20 × 10 × 2 mm NdFeB blocks,
+two per seam, flat in loose side-entry pockets on side-wall shelves (no glue, all
+north up); a low holding force is accepted, the magnets only seat the lip.
 Rejected: magnets everywhere (the core joint could be pulled apart by a cable),
-printed snap latches (SLA resin is brittle). A future radio connector layer puts
+printed snap latches (rejected as brittle when the case was assumed SLA resin; not revisited for ASA). A future radio connector layer puts
 its antenna on the front wall, opposite the core's. The model is a script in
 `mech/hub/` driving FreeCAD; outlines flow from it to KiCad.
 
@@ -753,10 +832,15 @@ resolution and phase.
 - **The battery chain**: the per-pack ideal diode, contact resistance per hop, the
   stacking header's exact part and the stack's mechanical joint (M10); the per-hop
   resistance is accepted at ~10 mΩ (E20).
-- **Idle current** of the hub asleep with three key boards in scan-wait (E7).
-- **The hub tower**: layer enclosures, latching, the flex antenna's distance from
-  the other layers' metal (RSSI), keying the top header against offset-by-one (M11);
-  the antenna parts and Raytac's -U approval (P20).
+- **Idle current** of the hub asleep with three key boards in scan-wait (E7). The
+  datasheet estimate (2026-10-01, spec §4) is ~0.26 mA typ / ~0.47 mA worst, ~9 / ~5
+  months per 4×AA pack. The cost of keeping slots powered in sleep dominates it: three
+  TPS22950L at 44 µA each, through the LED converter at ~60–65 % light-load
+  efficiency. The slot-VBUS TVS became a TVS0500 so that no part on the always-live
+  LED rail has an unbounded leakage.
+- **The hub tower**: layer enclosures, latching, the antenna's ≥10 mm from the
+  other layers' copper (pull-back, RSSI), the whip's clamp, keying the top header
+  against offset-by-one, the base, magnets and screw bosses (M11).
 - **KTS1693 supply** for the one host port.
 - Whether a hotswap socket, a reverse-mount LED window, a diode and stabiliser
   clearance coexist in one 19.05 mm cell, and whether glow through an opaque cap is
@@ -768,8 +852,9 @@ resolution and phase.
 
 Resolved and still valid from rev 7: Zephyr's `is31fl3733` driver does bulk writes
 (now relevant to the module controller only if it runs Zephyr); the power-path
-ratings (TPS2116, LM66200, TPS22950, TLV757P 6.0 V abs-max; TPS3840 12 V; TPS61023
-starts at ≤1.8 V); the hot cell swap closed in simulation by the pack bleeder; the
-MAX17222 second-source margin; the logic boost divider.
+ratings (LM66200, TPS22950, TLV757P 6.0 V abs-max; TPS3840 12 V). Rev 8's TPS2116,
+TPS61023, logic boost, MAX17222 and pack bleeder results are history since rev 8.1.
+New in rev 8.1: the E21 switchover sim (`tools/sim/e21_switchover.py`) and the E7
+datasheet idle estimate (spec §4); the MDBT50Q `VBUS` pad vs the KTS1693 trip (E22).
 
 The number row is locked at 6/3: 1–6 on `left`, 7–9 and 0 on `right`.
