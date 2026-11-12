@@ -17,8 +17,8 @@ in the spec §2: left 36, right 52 + dial, numpad 22), `layout/keys.json` genera
 generator's parameters, then the test cell (tightest spot: `'` against right Shift, 0.64 mm between caps).
 Assumptions the print must confirm: arc model (Shift-row radius 790 mm, 0° at the outer edge to about 10° at the
 split, bottom row straight on the 5° chord), 456 mm taken as the key-field width (leaves about 3 mm between the
-halves), F-row 0.25u behind the number row. The right matrix (6x9) maps the nav keys into free slots by table;
-M1 may regroup it. `.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
+halves), F-row 0.25u behind the number row. Matrices follow physical rows and columns (right is 6x11: 8 alpha + 3 nav columns).
+`.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
 Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3.14 side still imports its
 packages (checked), tidy up only if the user asks.
 Decided 2026-11-13: Pico 2 W (in the hub), host USB-C port on the hub, ANSI. **`archive/rev8/` is the rev 8 design: not

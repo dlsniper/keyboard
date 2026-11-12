@@ -47,9 +47,8 @@ CHARNAMES = {"`": "GRAVE", "-": "MINUS", "=": "EQUAL", "[": "LBRACKET", "]": "RB
              "\\": "BSLASH", ";": "SEMI", "'": "QUOTE", ",": "COMMA", ".": "DOT",
              "/": "SLASH", "*": "STAR", "+": "PLUS"}
 
-NAV_MATRIX = {"K1": (0, 8), "Home": (1, 7), "Ins": (1, 8), "NavDel": (2, 8), "End": (3, 7),
-              "PgDn": (3, 8), "Up": (4, 6), "K2": (4, 7), "Dial": (4, 8), "PgUp": (5, 4),
-              "Left": (5, 5), "Down": (5, 6), "Right": (5, 7)}
+# Right nav block: matrix row = physical row, matrix column = 8 + nav column
+# (the hub scans through two port expanders, so the matrix need not be squeezed).
 
 
 def slug(label):
@@ -130,7 +129,7 @@ def nav_keys(x0, yc):
             ("Left", 0, yArrow, 5), ("Down", 1, yArrow, 5), ("Right", 2, yArrow, 5)]
     out = []
     for lab, k, y, prow in spec:
-        r, c = NAV_MATRIX[lab]
+        r, c = prow, 8 + k
         out.append(mk("R_", lab, cx(k), y, 0.0, 1, 1, r, c, prow,
                       "encoder" if lab == "Dial" else "switch"))
     return out
@@ -254,7 +253,7 @@ def build():
             k["rot"] = r3(k["rot"])
         out[name] = {"keys": ks, "assembly": {"x": r3(mx - gx), "y": r3(my - gy), "rot": 0}}
     out["left"]["matrix"] = {"rows": 6, "cols": 7}
-    out["right"]["matrix"] = {"rows": 6, "cols": 9}
+    out["right"]["matrix"] = {"rows": 6, "cols": 11}
     out["numpad"]["matrix"] = {"rows": 6, "cols": 4}
     return out
 

@@ -56,8 +56,8 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 | | left | right | numpad |
 | --- | --- | --- | --- |
 | Keys (D1, 2026-11-13; final at D2) | 36 | 52 + dial push | 22 |
-| Matrix (rows x cols) | 6 x 7 | 6 x 9 | 6 x 4 |
-| Reader | 1 x SPI expander (13 pins used) | 2 x SPI expander (15 matrix + 2 dial) | 1 x SPI expander (10 pins) |
+| Matrix (rows x cols), by physical position | 6 x 7 | 6 x 11 | 6 x 4 |
+| Reader | 1 x SPI expander (13 pins used) | 2 x SPI expander (17 matrix + 2 dial) | 1 x SPI expander (10 pins) |
 | LEDs (type open, O7) | 36 | 52 (none under the dial) | 22 |
 | Dial | none | PEC11R, 24 detents, push switch in the matrix, on the separate dial board | none |
 
