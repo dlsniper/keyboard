@@ -25,8 +25,8 @@ Rules for every milestone:
 
 ```
  now ─► M0 layout ─► M1 schematics ─► M2 PCBs ─► order ─┐
-              └────► M3 case (starts at layout sign-off) ├─► M5 firmware ─► M6 wireless (later)
-                     M4 firmware bring-up on a bare Pico ┘
+              └────► M3 case + hub (starts at layout sign-off) ├─► M5 firmware ─► M6 wireless (later)
+                     M4 firmware bring-up on a breadboard ┘
 ```
 
 Hardware first (user, 2026-11-13): layout, schematics, PCBs and case are done before
@@ -58,78 +58,76 @@ matrix sizes in the spec are final.
 
 ## M1, schematics
 
-**Goal:** three key-board schematics generated from one script, checked.
+**Goal:** key boards, hub boards and battery module drawn from scripts, checked.
 
-1. `tools/sch_keys.py` builds all three from `layout/keys.json` (matrix, LED chain,
-   Pico sockets, link connectors, expansion header, level shifter, fuses). Rework
-   `tools/sch_usb_port.py` into the rev 9 port board. Add the three key boards to
-   `tools/gen_kicad.py` and `check_interconnect.py` (pruned to rev 9 on 2026-11-13).
-2. Pin assignment per module, written into the spec. Matrix wired for pull-up
-   scanning (tinygo-keyboard supports both directions; pull-ups avoid the RP2350
-   pull-down erratum E9). LED rail, links and fuses sized from datasheets for the
-   3 A case; brightness caps are firmware values set later (M4).
-3. Pico 2 W antenna keep-out and mechanical outline from the Raspberry Pi datasheet.
+1. `tools/sch_keys.py` builds the three key boards from `layout/keys.json`: matrix,
+   SPI port expander(s), LEDs (type per D10), module connector that also takes a
+   future pod (spec O10), spare-pin header.
+2. Hub: core layer (Pico 2 W sockets, buttons, frozen stack connector), connector
+   layer (3 module slots, rail switches, host port from `hardware/usb-port`), power
+   path and AA module for up to 5 packs. Starting points are rev 8.1's spec and the
+   archived generators (`archive/rev8/tools/sch_core.py`, `sch_battery.py`), brought
+   out and reworked, not used in place.
+3. Hub pin map written into the spec and exported as data for the firmware. Pull-up
+   scanning. Rails, cable and fuses sized from datasheets.
 4. ERC clean; an independent review of the schematics against the datasheets.
 
-**Decisions:** **D3** link connector and cable (O1). D4 (host USB) and D5 (old folders) were
-decided 2026-11-13: a USB-C port board on `right`; folders moved to `archive/rev8/`.
+**Decisions:** **D10** key LED type (pros and cons first). **D3** module cable and
+connector (about 8 wires, pod-capable).
 
-**Exit check:** ERC 0, the review's findings closed, the pin map exported as data
-for the firmware to use later.
+**Exit check:** ERC 0, the review's findings closed, pin map exported.
 
 ## M2, PCBs
 
-**Goal:** three boards and three plates ready to order.
+**Goal:** key boards, plates, hub boards and battery module boards ready to order.
 
 1. Footprint placement from `layout/keys.json` by script; outlines shared with the case.
-2. Routing: matrix, LED chain with wide 5 V, link, expansion.
-3. DRC with schematic parity; a second independent review. No firmware has run
-   on hardware at this point, so the review also checks every Pico pin against the
-   RP2350 and Pico 2 W datasheets (UART-capable pins, radio-reserved pins).
+2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source.
+3. DRC with schematic parity; a second independent review, including every Pico pin
+   against the RP2350 and Pico 2 W datasheets.
 4. Plates (1.5 mm FR4) from the same file.
 5. Fab outputs, BOM with European sources, a costed quote.
 
-**Decisions:** **D6** board house and who assembles (assembled SMD or hand
-soldering). **D7** the order itself.
+**Decisions:** **D6** board house and who assembles. **D7** the order itself, placed
+only after M4 step 2 has proven SPI over the real cable (spec O2).
 
 **Exit check:** DRC 0 on all boards, review closed, the user approves the quote.
 
-## M3, case
+## M3, case and hub tower
 
-**Goal:** three ASA shells that fit the boards and feel right.
+**Goal:** three ASA key-module shells and the hub tower, fitting the boards.
 
-1. One FreeCAD script per module, driven by `layout/keys.json` and the board outlines.
-2. Fit prints of the corners and the seams before any full print.
-3. Seams (magnets), feet, the opening for the host cable and the links.
+1. One FreeCAD script per key module, driven by `layout/keys.json` and the board outlines.
+2. Hub tower from rev 8's `build_hub.py` (v7), reworked for the rev 9 boards and
+   five battery modules; the seam test print rev 8 never did (pogo force against
+   magnet pull).
+3. Fit prints of corners and seams before any full print; feet; cable openings.
 
 **Decisions:** **D8** tenting, negative tilt and palm rest: how close to the K860.
 
-**Exit check:** boards, plates and shells assemble with no rework; the user has
-typed on it for a day.
+**Exit check:** everything assembles with no rework; the user has typed on it for a day.
 
-Starts after D2; its outlines must be frozen before M2 step 1 finishes.
+Starts after D2; outlines must be frozen before M2 step 1 finishes.
 
 ## M4, firmware bring-up
 
-**Goal:** the firmware skeleton runs on real Pico 2 W boards, so M5 starts from
-something that types. Comes after the hardware milestones by the user's choice;
-the test image already compiles for `pico2-w`.
+**Goal:** the firmware skeleton runs on a real Pico 2 W and reads keys through an
+expander, so M5 starts from something that types. Can run while M1 to M3 proceed.
 
-1. `firmware/` Go module: one package per module (`right`, `left`, `numpad`) on
-   tinygo-keyboard, shared keymap and link code, a `make` target and a CI job.
-   The pin map comes from the M1 data.
-2. One Pico 2 W on a breadboard with 2×2 switches, the encoder and 8 LEDs: types,
-   turns volume, lights, opens in Vial.
-3. Three Pico 2 W wired primary + two satellites: keys from all three arrive;
-   a primary-to-satellite channel for lighting (O2).
-4. Measure LED current against brightness and set the caps per host level (O3).
+1. `firmware/` Go module: one program for the hub, on tinygo-keyboard, with our
+   SPI-expander matrix source; a `make` target and a CI job.
+2. Pico 2 W on a breadboard with an MCP23S17, 2x2 switches, the encoder and 8 LEDs,
+   **through 1 m of the candidate cable**: types, turns volume, lights, opens in
+   Vial; scan rate and key-to-USB latency measured (O2).
+3. n-key rollover over USB checked; added to TinyGo if missing (O9).
+4. LED current against brightness, caps per source (O3); idle current on a 4 x AA
+   pack measured.
 
-**Exit check:** the user types on the breadboard through all three Picos; O2 and
-O3 have written answers in the spec.
+**Exit check:** the user types on the breadboard; O2, O3 and O9 have written
+answers in the spec.
 
-**Buy:** 4 × Pico 2 W with headers (3 go into the keyboard), breadboards and jumper
-wires, a micro-USB cable, through-hole 1N4148 diodes, a DIP 74AHCT125. Switches,
-sockets, the encoder and LEDs come from the M0 test-cell and M2 orders.
+**Buy:** 2 x Pico 2 W with headers, MCP23S17 in DIP, breadboards and jumper wires, a
+micro-USB cable, through-hole 1N4148 diodes, a DIP 74AHCT125, the candidate cable.
 
 ## M5, firmware
 
@@ -147,9 +145,11 @@ tinygo-keyboard or TinyGo is sent upstream.
 
 ## M6, wireless (later, not scheduled)
 
-Bluetooth on the Pico 2 W's radio needs pairing support in `tinygo.org/x/bluetooth`
-for the CYW43439 (O6); we add it and contribute it. Wireless also needs a battery
-and charging design, which rev 9 does not have. Planned once M5 is done.
+Bluetooth to the host on the Pico 2 W's radio needs pairing support in
+`tinygo.org/x/bluetooth` for the CYW43439 (O6); we add it and contribute it. The
+batteries and power path are already in the hub by then. If it proves too hard, a
+new core layer with a Nordic module is the fallback. After it: cable-free module
+pods (spec O10).
 
 ## Who does what
 
@@ -170,10 +170,11 @@ whoever delegates verifies what comes back.
 | --- | --- | --- |
 | D1 | Key set per module (ANSI decided) | M0 start |
 | D2 | Layout sign-off | M0 end |
-| D3 | Link connector and cable | M1 |
+| D3 | Module cable and connector (about 8 wires, pod-capable) | M1 |
 | D4 | Host USB port: decided, USB-C port board on `right` | done |
 | D5 | Retired rev 8 folders: decided, moved to `archive/rev8/` | done |
 | D6 | Board house and assembly | M2 |
 | D7 | Place the order | M2 end |
 | D8 | Tenting, tilt, palm rest | M3 |
 | D9 | Keymap and layers | M5 |
+| D10 | Key LED type (SK6812MINI-E chain or IS31FL3733 matrix) | before M1 |

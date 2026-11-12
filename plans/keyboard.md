@@ -1,14 +1,19 @@
-# Split K860-alike, rev 9: wired, Go firmware
+# Split K860-alike, rev 9: hub tower, one Pico 2 W, Go firmware
 
 Three-piece MX keyboard styled on the Logitech ERGO K860: `left` (alphas), `right`
-(alphas + arrows + nav + dial), `numpad`. **Rev 9 (2026-11-13) restarts the
-electronics** around what TinyGo can run today. The typing part of rev 8 is kept;
-the hub tower, radio, battery chain and module controllers are archived
-(tag `rev8-archive`, files under `archive/rev8/`).
+(alphas + arrows + nav + dial), `numpad`, each cabled to a **hub tower** that is the
+keyboard as far as the host is concerned. Firmware in Go (TinyGo).
 
-Decided by the user 2026-11-13: wired USB first; a socketed Raspberry Pi Pico 2 W per
-module; SK6812MINI-E per key; archive rev 8 and write this short spec; the Pico on a
-strip above the top row; a USB-C port board on `right`; ANSI layout.
+**Rev 9.1 (2026-11-13, user):** the hub tower and the AA battery modules are back.
+They are an integral part of the product and its differentiator; the first rev 9
+draft had dropped them and put a Pico in every module. Now: **one socketed Pico 2 W,
+in the hub**; key modules carry no controller. Rev 8's files stay under
+`archive/rev8/` (tag `rev8-archive`) as the reference for the hub and battery work.
+
+Decided by the user 2026-11-13: wired USB first; Pico 2 W; ANSI; D1 key set (§2);
+hub tower + AA modules restored; key modules read through SPI port expanders scanned
+by the hub; the hub's core layer is the swappable unit; up to 5 AA modules;
+latency like a proper keyboard and n-key rollover.
 
 Priorities, unchanged: repairable and user-friendly before compact; modular and
 upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distributors.
@@ -16,29 +21,35 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 ## 1. Topology
 
 ```
- host --USB-C--> [USB port board] --> [right: Pico, primary] --link--> [left: Pico]
-                                              |
-                                              +----------link--> [numpad: Pico]
+                         +--------------------------+
+ host --USB-C----------->| hub tower                |--cable--> left
+        (Bluetooth: M6)  |  core layer: Pico 2 W    |--cable--> right
+                         |  connector layer: 3 slots|--cable--> numpad
+                         |  AA modules 1..5         |
+                         +--------------------------+
 ```
 
-- `right` is the primary: USB HID to the host, keymap, layers, Vial.
-- `left` and `numpad` are satellites: scan their own matrix, report key events to
-  the primary over UART (tinygo-keyboard's split support). The Pico's two UARTs
-  give exactly two satellite links.
-- Every key board is the same kind of board: sockets, diodes, LEDs, a Pico on pin
-  sockets, a link connector. No hub, no cells, no power path. The Pico 2 W's radio
-  is unused in rev 9 (O6).
-- **The Pico sits on a strip of the key PCB behind the top row** (about 25 mm deep),
-  USB end towards the rear edge, antenna at the board edge. Each case has an opening
-  for the Pico's micro-USB and a way to press BOOTSEL, so any module can be flashed
-  on its own.
-- **Host port: a USB-C port board on `right`**, swappable, cabled to the key board.
-  It carries the receptacle, protection and CC current sensing, feeds 5 V to the
-  LED rail and the links, and passes data to the Pico through a short internal
-  micro-USB lead. Starting point: rev 8's `hardware/usb-port`.
-- A link carries 5 V, GND, TX, RX. Connector and cable: open (O1).
-- Each key board brings its spare Pico pins and 5 V / 3V3 / GND to an **expansion
-  header**, so a wireless or other module can be added later without a respin.
+- **Hub tower** (about 100 x 100 mm ASA stack on the desk, rev 8 concept): top to
+  bottom optional layers, core layer, connector layer, AA battery modules. It holds
+  the only controller, the host USB-C port, the power path and the cells. Front
+  buttons: power, reset, boot.
+- **Core layer = the upgrade unit**: Pico 2 W on pin sockets. The connector between
+  core layer and the rest is frozen at M1 so a later core board (for example with a
+  Nordic module, if Bluetooth on the Pico 2 W proves too hard) drops in without
+  touching key modules, cables or battery modules.
+- **Key modules are dumb**: sockets, diodes, LEDs, one SPI port expander
+  (MCP23S17 class; two on `right`), a cable connector. No firmware, nothing to flash.
+- **Cable, hub to each module, about 8 wires**: SCK, MOSI, MISO, CS, INT, LED data,
+  5 V (switched LED/logic rail), GND; whether 3.3 V travels or is made on the module
+  is an M1 detail. Connector and cable: open (O1); a plain USB-C 2.0 cable does not
+  have enough wires.
+- **Cable-free modules are a wanted upgrade (user, 2026-11-13), not rev 9's first
+  build.** The module's cable connector doubles as a **pod socket**: a later pod
+  (its own controller with radio, its own AA pack and converter) plugs in where the
+  cable goes and becomes the SPI master of that module's expander. Key boards stay
+  the same in both cases; the connector is chosen with this in mind (O1, O10).
+- The hub has a rear **expansion port**; each key board keeps a few spare expander
+  pins on a header.
 
 ## 2. Modules
 
@@ -46,12 +57,15 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 | --- | --- | --- | --- |
 | Keys (D1, 2026-11-13; final at D2) | 36 | 52 + dial push | 22 |
 | Matrix (rows x cols) | 6 x 7 | 6 x 9 | 6 x 4 |
-| Controller | Raspberry Pi Pico 2 W (RP2350 + CYW43439), socketed; the Pico 2 and Pico fit the same sockets | same | same |
-| LEDs | 36 x SK6812MINI-E | 52 (none under the dial) | 22 |
+| Reader | 1 x SPI expander (13 pins used) | 2 x SPI expander (15 matrix + 2 dial) | 1 x SPI expander (10 pins) |
+| LEDs (type open, O7) | 36 | 52 (none under the dial) | 22 |
 | Dial | none | PEC11R, 24 detents, push switch in the matrix, on the separate dial board | none |
-| GPIO used / 26 | 13 matrix + 1 LED + 2 UART = 16 | 15 matrix + 2 dial + 1 LED + 4 UART = 22 | 10 + 1 + 2 = 13 |
 
-- Switches: MX, Kailh hotswap sockets (CPG151101S11). One `1N4148W` per key.
+- Switches: MX, Kailh hotswap sockets (CPG151101S11). One `1N4148W` per key, so
+  every module has full n-key rollover.
+- **Latency target: that of a proper keyboard.** The hub scans all three matrices
+  at 1 kHz or faster (about 0.1 ms per module pass at 4 MHz SPI). A keypad-scanner
+  chip was rejected for this: the TCA8418 datasheet gives a fixed 25-40 ms.
 - **ANSI (US) layout.**
 - **Key set (D1, user, 2026-11-13)**, K860 as the model, all alpha keys 1u (stepped
   inner edge, standard caps):
@@ -68,68 +82,72 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   19.05 mm. Each alpha half: rows are concentric arcs (Shift row radius 790 mm), 0° at
   the outer edge to about 10° at the split, constant pitch along each arc; the bottom
   row is straight, on the 5° chord; F-row 0.25u behind the number row; nav block and
-  numpad square. To be checked against the K860 print (D2).
+  numpad square. To be checked against the K860 print (D2). The file is independent of
+  where the controller sits.
 - Stabilisers: Cherry MX plate/PCB 2U footprint from the vendored kiswitch subset.
-- **Antenna keep-out**: no copper, sockets or metal under and around the Pico 2 W antenna
-  end, per the Raspberry Pi datasheet (dimensions taken from it at M1). The on-board LED
-  hangs off the radio chip, not a GPIO; status indication uses the key LEDs.
-- LED data: one GPIO per module through a 3.3 V to 5 V buffer (74AHCT1G125 class),
-  LEDs chained in a serpentine, row by row.
 - Plate: 1.5 mm FR4, no copper (as rev 8).
+- **Key LEDs: open (O7).** Candidates: SK6812MINI-E chain (one data wire, rail
+  switched at the hub) or rev 8's IS31FL3733 matrix driver. The user chooses after a
+  pros and cons review, before M1 draws them.
 
 ## 3. Power
 
-- USB bus power only, entering at the USB-C port board on `right`.
-- Rails: port board 5 V -> `right`'s LED rail and Pico; -> each link through a
-  resettable fuse -> the satellite's LED rail, and its Pico's `VSYS` through a
-  Schottky, so a satellite can be on its own USB and the link at once.
-- 110 LEDs at full white would draw several amps. **Firmware caps total LED
-  current** from what the host offers: the port board reports 500 mA, 1.5 A or
-  3 A from the CC pins. At 500 mA roughly 250-300 mA is left for light. Cap values
-  per level are set by measurement (O3); link wire, connector and fuse are sized
-  for the 3 A case.
+- Sources: host USB (priority) or **AA battery modules, up to 5** stacked under the
+  hub (user, 2026-11-13; rev 8.1 planned 3). Each is passive: 4 x AA NiMH (alkaline
+  tolerated), holder, PTC; charged outside the keyboard. No Li-ion, no charging.
+- Power path in the hub, starting from rev 8.1's design (ideal-diode OR of the
+  packs, USB priority switch, under-voltage cut-off at about 1.0 V per cell, 5 V
+  rail converter, pack voltage read by the controller). It was specified but never
+  drawn; M1 draws it, reworked for 5 packs and the Pico 2 W.
+- The hub switches each module's rail, so LEDs draw nothing when off and on battery.
+- Firmware caps LED current from what the source offers (USB 500 mA / 1.5 A / 3 A
+  from the CC pins; battery: its own cap). Values by measurement (O3).
+- Batteries only pay off with Bluetooth (M6). Expect days to weeks per pack on a
+  Pico 2 W, to be measured; the swappable core layer is the way out if that is not
+  enough.
 
 ## 4. Firmware
 
-- Go, built with TinyGo, on `github.com/sago35/tinygo-keyboard` (matrix scan, rotary
-  encoder, layers, UART split, Vial). One `main` package per module under
-  `firmware/`.
-- LEDs with the `ws2812` driver from `tinygo.org/x/drivers`.
-- Dial: turn = volume. Layer/profile indication on the number row is a rev 9
-  stretch goal; rev 8's 9 BLE host profiles are gone with the radio.
+- Go, built with TinyGo, one program, on the hub's Pico 2 W. Based on
+  `github.com/sago35/tinygo-keyboard` (layers, Vial, encoder) with our own matrix
+  source that scans the SPI expanders; a small MCP23S17 driver to write and upstream.
+- **Rollover:** hardware is n-key. TinyGo's USB keyboard report is to be checked
+  at M4; if it is 6-key only we add an n-key report and send it upstream.
+- Dial: turn = volume, read through the `right` expander at the scan rate.
+- Bluetooth (M6): `tinygo.org/x/bluetooth` pairs only on Nordic chips today; we add
+  what the Pico 2 W needs and contribute it.
 
 ## 5. What is reused from rev 8
 
-- Layout intent and key counts (§2), dial board (`hardware/dial`, drawn and laid out).
-- `hardware/lib/kiswitch` (hotswap + stabiliser footprints), the PEC11R footprint.
-- Tooling: `tools/schlib.py`, `tools/gen_kicad.py`, `tools/kicad-check.sh` (schematics
-  generated from Python, checked headless).
+- Hub tower concept and CAD script (`archive/rev8/mech/hub/build_hub.py`), stacking
+  layers, pogo/magnet battery seams, front buttons, expansion port.
+- Battery modules and power path as specified in rev 8.1 (§3).
+- `hardware/usb-port` (USB-C receptacle, KTS1693, CC sense, ESD), now the hub's
+  host port; `hardware/dial`; `hardware/lib/kiswitch`; the PEC11R footprint.
+- Tooling: `tools/schlib.py`, `tools/gen_kicad.py`, `tools/kicad-check.sh`.
 - Mechanical decisions: ASA on FDM, Ruthex M2 inserts, magnet seams, 3M Bumpon feet.
-- `hardware/usb-port` (USB-C receptacle, KTS1693 over-voltage switch, CC sense, ESD;
-  ERC clean in rev 8): the base for rev 9's port board, to be reworked at M1.
 
-Retired (kept only in the archive): hub tower and its CAD, MDBT50Q, MSPM0G3505
-module controllers and register map, TCA9548A, comms/socket boards, AA battery
-modules and the rev 8.1 power path, IS31FL3733, ZMK. Their folders, generator scripts and sims were moved to `archive/rev8/`
-(2026-11-13); KiCad library paths inside them no longer resolve, use the
-`rev8-archive` tag to open them.
+Still retired: MDBT50Q, MSPM0G3505 module controllers and their register map,
+TCA9548A, I2C-over-USB-cable comms boards, ZMK. Files are brought out of
+`archive/rev8/` only when a milestone reworks them; archived KiCad library paths do
+not resolve in place.
 
 ## 6. Milestones
 
-See [`roadmap.md`](roadmap.md): M0 layout, M1 schematics, M2 PCBs, M3 case,
-M4 firmware bring-up, M5 firmware, M6 wireless. Hardware first (user, 2026-11-13).
+See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
 
 ## 7. Open items
 
-- **O1** link connector and cable (TRRS, JST, USB-C-as-cable, other): decide at M1.
-- **O2** tinygo-keyboard with two UART satellites, and a primary-to-satellite
-  channel for lighting commands (stock UART split reports keys one way): prove at M4.
-- **O3** LED current caps per host level (500 mA / 1.5 A / 3 A): sized for 3 A at M1, cap values measured at M4.
-- **O4** closed 2026-11-13: retired folders moved under `archive/rev8/`.
-- **O5** closed 2026-11-13: **Pico 2 W** (user). A test image (matrix + encoder + two UART
-  satellites + ws2812, tinygo-keyboard v0.9.0, TinyGo 0.44.0) compiles for `pico2-w`, `pico2`
-  and `pico`; not yet run on hardware. RP2350 pull-down erratum (E9): the matrix is wired for
-  pull-up scanning, which tinygo-keyboard supports as an option.
-- **O6** wireless (roadmap M6). `tinygo.org/x/bluetooth` v0.17.0 pairs only on Nordic chips
-  today; when we get there we add what the Pico 2 W needs and contribute it upstream
-  (user, 2026-11-13). Needs a battery design, which rev 9 does not have.
+- **O1** module cable and connector, about 8 wires (D3, M1).
+- **O2** SPI at 4 MHz over a 1 m cable: prove on the bench at M4 before PCBs are
+  ordered, or order after M4.
+- **O3** LED current caps per source: sized at M1, measured at M4.
+- **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
+- **O7** key LED type (D10): pros and cons to the user before M1.
+- **O8** five battery modules: chain connector and power path rework from rev 8.1's three.
+- **O9** n-key USB report in TinyGo (M4).
+- **O10** cable-free pods: mechanical mount and power pins on the module connector
+  reserved at M1; the pods themselves (controller, radio link to the hub, latency
+  over radio) come after M6.
+- O4, O5 closed 2026-11-13 (archive move; Pico 2 W, test image compiles for `pico2-w`;
+  RP2350 erratum E9 avoided by pull-up scanning, which the expander's pull-ups give).

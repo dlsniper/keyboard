@@ -1,8 +1,12 @@
 # Next
 
-State 2026-11-13, branch `rev9-go` (from `next-steps` at `0dd1df2`, tagged `rev8-archive`). **Spec rev 9**:
-`plans/keyboard.md` (short; wired USB, a socketed Pico per module, SK6812MINI-E, TinyGo + tinygo-keyboard). Rev 8
-spec, docs and hand-off notes are under `archive/rev8/`. Nothing of rev 9 is drawn or built yet.
+State 2026-11-13, branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
+modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
+pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
+battery and power-path rework only). Nothing of the electronics is drawn yet.
+**Owed to the user before M1: D10, a pros and cons review of key LED types** (SK6812MINI-E chain against rev 8's
+IS31FL3733) through the options UI.
 
 **Roadmap: `plans/roadmap.md`** (M0 layout, M1 schematics, M2 PCBs, M3 case, M4 firmware bring-up, M5 firmware,
 M6 wireless; hardware first by the user's choice). **M0 tasks 1 and 2 are done (2026-11-13)**: D1 decided (key set
@@ -17,8 +21,8 @@ halves), F-row 0.25u behind the number row. The right matrix (6x9) maps the nav 
 M1 may regroup it. `.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
 Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3.14 side still imports its
 packages (checked), tidy up only if the user asks.
-Decided 2026-11-13: Pico 2 W on a strip above the top row, USB-C port board on `right`, ANSI. **`archive/rev8/` is the retired rev 8 design: do not
-read it as current, and no tool touches it** (`gen_kicad.py`, `kicad-check.sh`, `check_interconnect.py` cover only
+Decided 2026-11-13: Pico 2 W (in the hub), host USB-C port on the hub, ANSI. **`archive/rev8/` is the rev 8 design: not
+current, read it only for the hub/battery rework, and no tool touches it** (`gen_kicad.py`, `kicad-check.sh`, `check_interconnect.py` cover only
 `hardware/usb-port` and `hardware/dial`; check run 2026-11-13: ERC 0, interconnect 0 errors, one expected
 "no board outline" DRC item on usb-port, so the script exits 1). Open items in the spec §7.
 Decisions go to the user as options with pros and cons.
