@@ -61,8 +61,9 @@ matrix sizes in the spec are final.
 **Goal:** key boards, hub boards and battery module drawn from scripts, checked.
 
 1. `tools/sch_keys.py` builds the three key boards from `layout/keys.json`: matrix,
-   SPI port expander(s), LEDs (type per D10), module connector that also takes a
-   future pod (spec O10), spare-pin header.
+   SPI port expander(s), LEDs (type per D10), LED rail switch on a spare expander
+   pin, the 2x6 bay header (D3), spare-pin header. Plus the **port board** (USB-C
+   receptacle, 3.3 V regulator, protection), module side and hub side.
 2. Hub: core layer (Pico 2 W sockets, buttons, frozen stack connector), connector
    layer (3 module slots, rail switches, host port from `hardware/usb-port`), power
    path and AA module for up to 5 packs. Starting points are rev 8.1's spec and the
@@ -72,8 +73,8 @@ matrix sizes in the spec are final.
    scanning. Rails, cable and fuses sized from datasheets.
 4. ERC clean; an independent review of the schematics against the datasheets.
 
-**Decisions:** D10 key LED type is decided (SK6812MINI-E chain). **D3** module cable and
-connector (about 8 wires, pod-capable).
+**Decisions:** D10 key LED type is decided (SK6812MINI-E chain). D3 is decided
+(full-featured USB-C cable, port board in a pod bay; spec §1).
 
 **Exit check:** ERC 0, the review's findings closed, pin map exported.
 
@@ -169,8 +170,8 @@ whoever delegates verifies what comes back.
 | | Decision | When |
 | --- | --- | --- |
 | D1 | Key set per module (ANSI decided) | M0 start |
-| D2 | Layout sign-off | M0 end |
-| D3 | Module cable and connector (about 8 wires, pod-capable) | M1 |
+| D2 | Layout sign-off: signed off 2026-11-13 (print and test cell), M0 exit check passed | done |
+| D3 | Module cable and connector: decided 2026-11-13, full-featured USB-C cable, receptacle on a swappable port board in a pod bay | done |
 | D4 | Host USB port: decided, USB-C port board on `right` | done |
 | D5 | Retired rev 8 folders: decided, moved to `archive/rev8/` | done |
 | D6 | Board house and assembly | M2 |

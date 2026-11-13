@@ -39,15 +39,36 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   touching key modules, cables or battery modules.
 - **Key modules are dumb**: sockets, diodes, LEDs, one SPI port expander
   (MCP23S17 class; two on `right`), a cable connector. No firmware, nothing to flash.
-- **Cable, hub to each module, about 8 wires**: SCK, MOSI, MISO, CS, INT, LED data,
-  5 V (switched LED/logic rail), GND; whether 3.3 V travels or is made on the module
-  is an M1 detail. Connector and cable: open (O1); a plain USB-C 2.0 cable does not
-  have enough wires.
+- **Cable, hub to each module (D3, user, 2026-11-13): a full-featured USB-C cable
+  (USB 3 / Thunderbolt class, all wires present) used as plain wiring, not as USB.**
+  A USB 2.0 or charge-only USB-C cable does not work; ports and cables get marked.
+  Chosen over RJ45, GX16 and a ribbon header. Wire plan, flip-proof without a mux
+  (both lanes of each kind tied together on the boards; to be checked against the
+  USB-C cable wiring when drawn at M1):
+  - high-speed pairs, hub TX to module RX: SCK, with the other conductor grounded;
+  - high-speed pairs, module TX to hub RX: MISO and INT;
+  - D+ / D-: MOSI and CS;
+  - SBU1 = SBU2: LED data (5 V level);
+  - VBUS: 5 V, GND: ground, shell: shield;
+  - CC: module detect, wired so that plugging a module or the hub into a real USB
+    device does no harm (M1).
+  Consequences for M1: hub side and module side have different pin-outs (the cable
+  is symmetric); there is no 3.3 V wire, so 3.3 V is made on the module's port
+  board; there is one 5 V wire, so the LED rail is switched **on the key board** by a
+  spare expander pin (the hub still switches each module's VBUS); the 24-pin
+  receptacle is reflow-only, which is why it sits on the small port board.
+- **Port bay (D3, user, 2026-11-13):** the USB-C receptacle is not on the key board.
+  Each key board has a frozen through-hole **2x6 header** in a rear bay (about
+  30 x 25 mm): SCK, MOSI, MISO, CS, INT, LED data, 2 x 5 V, 2 x GND, 3.3 V in,
+  detect. A small **port board** (receptacle, 3.3 V regulator, protection) plugs
+  onto it, held by two M2 screws. A worn port is a two-screw swap, and a different
+  cable later needs only new port boards.
 - **Cable-free modules are a wanted upgrade (user, 2026-11-13), not rev 9's first
   build.** The module's cable connector doubles as a **pod socket**: a later pod
   (its own controller with radio, its own AA pack and converter) plugs in where the
   cable goes and becomes the SPI master of that module's expander. Key boards stay
-  the same in both cases; the connector is chosen with this in mind (O1, O10).
+  the same in both cases: the pod replaces the port board on the 2x6 bay header and
+  feeds 5 V and 3.3 V through it (O10).
 - The hub has a rear **expansion port**; each key board keeps a few spare expander
   pins on a header.
 
@@ -55,8 +76,8 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 
 | | left | right | numpad |
 | --- | --- | --- | --- |
-| Keys (D1, 2026-11-13; final at D2) | 36 | 52 + dial push | 22 |
-| Matrix (rows x cols), by physical position | 6 x 7 | 6 x 11 | 6 x 4 |
+| Keys (D1; **final, D2 signed off 2026-11-13**) | 36 | 52 + dial push | 22 |
+| Matrix (rows x cols), by physical position; final | 6 x 7 | 6 x 11 | 6 x 4 |
 | Reader | 1 x SPI expander (13 pins used) | 2 x SPI expander (17 matrix + 2 dial) | 1 x SPI expander (10 pins) |
 | LEDs (SK6812MINI-E, D10) | 36 | 52 (none under the dial) | 22 |
 | Dial | none | PEC11R, 24 detents, push switch in the matrix, on the separate dial board | none |
@@ -82,8 +103,10 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   19.05 mm. Each alpha half: rows are concentric arcs (Shift row radius 790 mm), 0° at
   the outer edge to about 10° at the split, constant pitch along each arc; the bottom
   row is straight, on the 5° chord; F-row 0.25u behind the number row; nav block and
-  numpad square. To be checked against the K860 print (D2). The file is independent of
-  where the controller sits.
+  numpad square. Checked against the K860 print and the printed test cell
+  (`mech/testcell/`: switch in the 14.1 mm cutout, cap gap at the tightest rotated
+  spot, socket seating, LED window under the switch slot); **signed off by the user,
+  D2, 2026-11-13**. The file is independent of where the controller sits.
 - Stabilisers: Cherry MX plate/PCB 2U footprint from the vendored kiswitch subset.
 - Plate: 1.5 mm FR4, no copper (as rev 8).
 - **Key LEDs: SK6812MINI-E chain (D10, user, 2026-11-13)**, one per key, reverse
@@ -146,16 +169,19 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
 
 ## 7. Open items
 
-- **O1** module cable and connector, about 8 wires (D3, M1).
-- **O2** SPI at 4 MHz over a 1 m cable: prove on the bench at M4 before PCBs are
-  ordered, or order after M4.
+- O1 closed 2026-11-13: full-featured USB-C cable, receptacle on a swappable port
+  board, 2x6 bay header on the key boards (D3, §1). Open under it, for M1: the wire
+  plan checked against the USB-C cable wiring, the CC detect and mis-plug
+  protection, how ports and cables are marked.
+- **O2** SPI at 4 MHz over a 1 m full-featured USB-C cable: prove on the bench at M4
+  before PCBs are ordered, or order after M4.
 - **O3** LED current caps per source: sized at M1, measured at M4.
 - **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
 - O7 closed 2026-11-13: SK6812MINI-E chain (D10, §2). Open under it: a European source for the LED.
 - **O8** five battery modules: chain connector and power path rework from rev 8.1's three.
 - **O9** n-key USB report in TinyGo (M4).
-- **O10** cable-free pods: mechanical mount and power pins on the module connector
-  reserved at M1; the pods themselves (controller, radio link to the hub, latency
+- **O10** cable-free pods: they take the port board's place in the bay (2x6 header,
+  two M2 screws; D3); bay size and header position frozen at M1; the pods themselves (controller, radio link to the hub, latency
   over radio) come after M6.
 - O4, O5 closed 2026-11-13 (archive move; Pico 2 W, test image compiles for `pico2-w`;
   RP2350 erratum E9 avoided by pull-up scanning, which the expander's pull-ups give).

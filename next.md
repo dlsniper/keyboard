@@ -16,12 +16,17 @@ in the spec §2: left 36, right 52 + dial, numpad 22), `layout/keys.json` genera
 `layout/keys-a4.pdf` (2 A4 landscape tiles, 1:1, 100 mm rulers) and `layout/keys-preview.png`.
 **M0 task 3 done (2026-11-13)**: the user printed the PDF, the scale bars and the K860 comparison match, no
 generator parameters changed (arc model, 456 mm field width and F-row offset stand).
-**M0 task 4, test cell, is designed, not yet printed**: `mech/testcell/` (`build_testcell.py`, run with
-`/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd mech/testcell/build_testcell.py`; reads `'` and right
-Shift from `keys.json`; two ASA parts, plate 1.5 mm with M2 insert bosses and a 1.6 mm PCB stand-in with socket
-holes and the 3.4 x 3.0 mm LED window; no stabiliser features; parts list and print notes in its `README.md`).
-**Next: the user prints and assembles the test cell, then D2 (layout sign-off), which is the user's.** After D2:
-M1 (schematics; D3 cable and connector first) and M3 can start.
+**M0 is done (2026-11-13)**: the user printed and assembled the test cell (`mech/testcell/`, built with
+`/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd mech/testcell/build_testcell.py`) and reported all
+four checks good (14.1 mm cutout, cap gap, socket seating, LED window), no parameter changed. **D2 signed off; key
+counts and matrix sizes in the spec §2 are final.**
+**M1 started; D3 decided (user, 2026-11-13), spec §1**: module cable is a **full-featured USB-C cable used as plain
+wiring**; the receptacle sits on a **swappable port board** in a rear bay, on a frozen through-hole **2x6 header**
+on each key board (a future pod takes the port board's place). The spec holds a flip-proof wire plan (proposal, not
+yet checked against the USB-C cable wiring) and the consequences: different hub-side and module-side pin-outs,
+3.3 V made on the port board, LED rail switched on the key board by a spare expander pin, CC used for detect.
+**Next: M1 task 1** (`tools/sch_keys.py` for the three key boards, and the port board), starting by checking the
+wire plan against the USB Type-C cable wiring and fixing the 2x6 header pin order. M3 may also start (D2 is done).
 Matrices follow physical rows and columns (right is 6x11: 8 alpha + 3 nav columns).
 `.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
 Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3.14 side still imports its
