@@ -93,7 +93,8 @@ met 2026-11-13; signed off by the user 2026-11-13.
 1. Footprint placement from `layout/keys.json` by script; outlines shared with the case.
    `tools/pcb_keys.py`: `left` placed and DRC-checked 2026-11-13 (straight edges, rear strip, bay at the split,
    port board on top; user). `right` (split edge mirrors left's angle; user) and `numpad` placed 2026-11-13, DRC 0 errors.
-   Then the hub boards (parts chosen with a hub CAD section).
+   Hub boards: FreeCAD section (`mech/hub/`), parts chosen (user), `tools/pcb_hub.py` placed hub-core, hub-conn and battery
+   2026-11-13 (DRC 0 errors, parity 0, not routed). Open: cap board of the chain seam, port boards.
 2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source. `tools/route_keys.py`: `left`, `right` and
    `numpad` routed 2026-11-13 (DRC 0 errors, 0 unconnected, parity 0 on each; `tools/route_board.sh` repeats the strip
    autorouter until clean), silkscreen pass by `tools/silk_keys.py`. Hub boards and port board next.

@@ -1286,6 +1286,15 @@
 				(justify left)
 			)
 		)
+		(property "Group" "misc"
+			(at 58.42 63.4999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(pin "1"
 			(uuid "9cddb3f1-448a-594d-8376-d16848507b07")
 		)
@@ -1387,6 +1396,15 @@
 				(justify left)
 			)
 		)
+		(property "Group" "misc"
+			(at 99.06 63.4999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(pin "1"
 			(uuid "7f73c99b-8259-5972-9c38-b7d122d8bfac")
 		)
@@ -1439,9 +1457,18 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "2x8 pogo pins on a riser, as the rev 8 seam (M3)"
+		(property "MPN" "Samtec DW-08-17-T-D-254 riser to the cap board (Mill-Max 827-22-016-10-004101 spring pins)"
 			(at 165.1 66.0399 0)
 			(effects (hide yes)
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Group" "misc"
+			(at 165.1 66.0399 0)
+			(effects
 				(font
 					(size 1.27 1.27)
 				)
@@ -1693,7 +1720,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_2x08_P2.54mm_Vertical"
+		(property "Footprint" "keyboard:PogoTarget_2x08_P2.54mm"
 			(at 264.16 60.96 0.0000)
 			(effects
 				(font
@@ -1702,9 +1729,18 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "2x8 target pads for the module below (M3)"
+		(property "MPN" "16 x Mill-Max 1578-0-57-15-00-00-03-0 target discs, underside"
 			(at 266.7 66.0399 0)
 			(effects (hide yes)
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Group" "misc"
+			(at 266.7 66.0399 0)
+			(effects
 				(font
 					(size 1.27 1.27)
 				)

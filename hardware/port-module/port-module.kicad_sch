@@ -2358,7 +2358,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_JAE_DX07S024WJ1R350"
+		(property "Footprint" "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A"
 			(at 60.96 59.69 0.0000)
 			(effects
 				(font
@@ -2367,7 +2367,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "JAE DX07S024WJ1R350 (24-pin, reflow)"
+		(property "MPN" "Amphenol 12401548E4-2A (24-pin, horizontal, hybrid SMD + through-hole)"
 			(at 63.5 81.2799 0)
 			(effects (hide yes)
 				(font

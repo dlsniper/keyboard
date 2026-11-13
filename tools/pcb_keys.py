@@ -103,7 +103,7 @@ def read_netlist(sch):
                   if f.get("name") not in ("Footprint", "Datasheet", "Description")}
         comps[c.get("ref")] = {"value": c.findtext("value"), "fp": c.findtext("footprint"), "fields": fields,
                                "uuid": c.findtext("tstamps"), "key": fields.get("KeyID"), "nets": {},
-                               "no_bom": "exclude_from_bom" in props, "no_pos": "exclude_from_board" in props}
+                               "no_bom": "exclude_from_bom" in props, "dnp": "dnp" in props, "no_pos": "exclude_from_board" in props}
     for net in root.find("nets"):
         for node in net.findall("node"):
             comps[node.get("ref")]["nets"][node.get("pin")] = net.get("name")

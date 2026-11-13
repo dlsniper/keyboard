@@ -47,7 +47,7 @@ FP_HDR2 = "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical"
 FP_SOCK2 = "Connector_PinSocket_2.54mm:PinSocket_2x06_P2.54mm_Vertical"
 FP_TP = "TestPoint:TestPoint_Pad_D1.5mm"
 FP_DIAL = "Connector_JST:JST_GH_SM05B-GHS-TB_1x05-1MP_P1.25mm_Horizontal"  # as hardware/dial J901
-FP_USBC24 = "Connector_USB:USB_C_Receptacle_JAE_DX07S024WJ1R350"
+FP_USBC24 = "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A"
 
 # ---- spec: plans/keyboard.md section 2 "Key board circuit" and section 1 bay table ----------------
 GPA = [f"GPA{i}" for i in range(8)]
@@ -268,7 +268,7 @@ def build_port_board():
         for p in pins:
             nets[p] = net
     s.part("J1", "keyboard:USB_C_Receptacle_24P", "USB-C 24P (module)", FP_USBC24, (24, 30),
-           nets, {"MPN": "JAE DX07S024WJ1R350 (24-pin, reflow)"})
+           nets, {"MPN": "Amphenol 12401548E4-2A (24-pin, horizontal, hybrid SMD + through-hole)"})
     s.part("U1", "Regulator_Linear:AP2112K-3.3", "AP2112K-3.3", FP_LDO, (70, 12),
            {"1": "+5V", "2": "GND", "3": "+5V", "4": None, "5": "+3V3"}, {"MPN": "Diodes Inc AP2112K-3.3TRG1"})
     s.part("J2", "Connector_Generic:Conn_02x06_Odd_Even", "BAY (socket)", FP_SOCK2, (110, 22),

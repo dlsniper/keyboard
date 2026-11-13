@@ -79,8 +79,8 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   port**: `left` 0, `numpad` 1, `right` 2 and 3 (MCP23S17 address pins, HAEN).
 - Other consequences: there is no 3.3 V wire, so 3.3 V is made on the module's port
   board; there is one 5 V wire, so the LED rail is switched **on the key board** by
-  an expander pin; the 24-pin receptacle is reflow-only, which is why it sits on
-  the small port board.
+  an expander pin; the 24-pin receptacle (**Amphenol 12401548E4-2A**, horizontal, hybrid; M2, user, 2026-11-13: the JAE part drawn at M1
+  was an upright type) sits on the small port board.
 - **Port bay (D3, user, 2026-11-13):** the USB-C receptacle is not on the key board.
   Each key board has a frozen through-hole **2x6 header** in a rear bay (about
   30 x 25 mm), 2.54 mm pitch, pins on the key board, socket on the port board:
@@ -223,6 +223,14 @@ tables and the boards against each other).
   core board reach them. Pin height and positions are set at M2 from the Pico
   drawing. The Pico's VSYS is fed from +5V through a Schottky; its 3V3 output is the
   hub's logic rail.
+- **Hub mechanics (M2 session 4, user, 2026-11-13)**, numbers in `mech/hub/hub_geom.py`, section model
+  `mech/hub/build_hub.py`, placement `tools/pcb_hub.py`: tower 100 mm outside, boards 94 x 94 mm (core 94 x 77), 17.5 mm
+  between boards everywhere. Stack: Samtec ESQ-125 stack-through socket on both boards (both on top, the core's tails
+  in the connector layer's socket). Pico on standard sockets; USB and BOOTSEL by three Mill-Max 0929-7 spring pins
+  (1.15 mm of 1.40 mm stroke used: check on the real socket stack). Buttons: NKK UB16 (power, latching) and UB15 on
+  leads to JST XH plugs on the core board. Module ports: Amphenol 12401548E4-2A on the connector layer's front edge.
+  Chain seam: riser (Samtec DW-08-17-T-D-254) and cap board with a Mill-Max 827 2x8 spring-pin strip on each battery
+  board, Mill-Max 1578 target discs under the board above. All three boards placed, DRC 0 errors, parity 0, not routed.
 - **Buttons:** power is a latching switch in the battery-switch gate line (microamps;
   on USB the hub is always on), reset pulls RUN low, boot pulls BOOTSEL low.
 - **Stack connector, frozen: 2x25, 2.54 mm**, pins on the core, socket on the

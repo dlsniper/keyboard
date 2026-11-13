@@ -224,7 +224,7 @@ SYMBOLS = [
     # Same pin names as KiCad's Connector:USB_C_Receptacle, all passive: the board ties RX/TX/SBU/D to signal nets,
     # and a bidirectional pin on GND trips ERC against PWR_FLAG.
     symbol(
-        "USB_C_Receptacle_24P", "J", "Connector_USB:USB_C_Receptacle_JAE_DX07S024WJ1R350",
+        "USB_C_Receptacle_24P", "J", "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A",
         "https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification",
         "USB Type-C receptacle, all 24 contacts plus shield (full-featured)",
         "usb type-c receptacle full featured",
@@ -893,7 +893,34 @@ def tssop24_pw():
                      "TSSOP-24 PW TI TCA9548A", "smd", body, -5.0, 5.0)
 
 
+def spring_pin_0929():
+    """Mill-Max 0929 discrete spring pin, through-hole (catalogue p. 25: solder mount in .029 in min hole, tail .025 in,
+    largest body step .072 in). Used for the Pico 2 W underside pads; TP2 and TP3 are 2.0 mm apart, so the pad is 1.3 mm."""
+    body = ('\t(pad "1" thru_hole circle (at 0 0) (size 1.3 1.3) (drill 0.8) (layers "*.Cu" "*.Mask"))\n')
+    body += circle("F.Fab", 0, 0, 0.915, 0.05)
+    body += circle("F.CrtYd", 0, 0, 0.95, 0.05)
+    return footprint("SpringPin_MillMax_0929_THT", "Mill-Max 0929-x-15-20-7x-14-11-0 spring pin, through-hole, 0.8 mm hole",
+                     "pogo spring pin Mill-Max 0929", "through_hole", body, -1.8, 1.8)
+
+
+def pogo_target_2x08():
+    """2x8 target pads on 2.54 mm for Mill-Max 1578 discs (1.98 mm), reflowed. Numbered like KiCad's PinSocket_2x08
+    (pin 2 at -2.54 in x), so that placed on the BOTTOM of the upper board pad n sits over pin n of a PinHeader_2x08
+    pattern on the top of the board below (the spring-pin strip on the cap board)."""
+    body = ""
+    for i in range(16):
+        x, y = (-2.54 if i % 2 else 0.0), 2.54 * (i // 2)
+        body += (f'\t(pad {q(str(i + 1))} smd circle (at {n(x)} {n(y)}) (size 2.1 2.1) (layers "F.Cu" "F.Paste" "F.Mask"))\n')
+    body += rect("F.Fab", -3.81, -1.27, 1.27, 19.05, 0.05)
+    body += rect("F.CrtYd", -4.1, -1.55, 1.55, 19.35, 0.05)
+    body += circle("F.SilkS", 1.9, 0, 0.1, 0.15, fill=True)
+    return footprint("PogoTarget_2x08_P2.54mm", "2x8 target pads, 2.54 mm, Mill-Max 1578-0-57-15-00-00-03-0 discs; PinSocket numbering",
+                     "pogo target pads chain", "smd", body, -2.6, 20.4)
+
+
 FOOTPRINTS = {
+    "SpringPin_MillMax_0929_THT": spring_pin_0929(),
+    "PogoTarget_2x08_P2.54mm": pogo_target_2x08(),
     "TI_LQFP-48_7x7mm_P0.5mm_PT0048A": lqfp48_pt(),
     "TI_TSSOP-24_4.4x7.8mm_P0.65mm_PW0024A": tssop24_pw(),
     "TI_SOT-23-5_DBV0005A": sot23_5_dbv(),

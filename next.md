@@ -155,11 +155,48 @@ track; DRC shows 0 unconnected).
 nearest free spot. No `silk_overlap` or `silk_over_copper` warning is left on any of the three boards.
 **Not looked at by eye**: none of the three boards has been opened in KiCad since routing. The strips are autorouted and look
 untidy (many vias on `right` between U1 and U2); they pass DRC, tidy by hand only if wanted.
-**Next (M2 session 4)**: the user looks at the three boards in KiCad; then the hub session (FreeCAD section, parts, footprints,
-placement) and the port board layout. Plates (roadmap M2 step 4) and the independent PCB review (step 3) come after the hub.
+**M2 session 4 done (2026-11-13): hub tower section in FreeCAD, hub parts chosen, hub-core / hub-conn / battery placed.
+`tools/pcb_check.sh hub-core hub-conn battery`: 0 errors, 0 parity on each (79 / 499 / 26 connections open: not routed).**
+**The user has not looked at the three key boards yet** (asked how; the answer was given at the end of session 4: open
+`hardware/<name>/<name>.kicad_pro` in KiCad, PCB editor, Inspect > Design Rules Checker, View > 3D Viewer). Their remarks are still owed.
+**User decisions (options UI)**: buttons = **NKK UB on leads** (rev 8's UB16 latching / UB15, JST XH plugs on the core board, core
+board 94 x 77 mm); Pico spring pins = **long discrete pins, Pico on standard sockets**: Mill-Max 0929-7-15-20-75-14-11-0
+(catalogue page in `build/ds/pogo/`); stack = **rev 8's Samtec ESQ stack-through, 17.5 mm between the boards** (the same socket on
+both boards, both on top, the core's tails go down into the connector layer's socket); **module-port receptacle = Amphenol
+12401548E4-2A** (horizontal, hybrid). **Found: the JAE DX07S024WJ1R350 drawn at M1 is an upright receptacle** (A and B rows on
+opposite sides of the body); replaced on hub-conn and port-module (`sch_hub.py`, `sch_keys.py`, same pad names, ERC 0, checks pass).
+Carried over from rev 8 without a new question: tower 100 mm outside, boards 94 mm, screw holes, BC4AAPC place, chain seam parts
+in 2x8 (Samtec DW-08-17-T-D-254 riser, cap board, Mill-Max 827-22-016-10-004101 strip, 1578 target discs).
+**Geometry = `mech/hub/hub_geom.py`** (plain data; read by the CAD section and the placement script; change positions only there).
+**CAD section = `mech/hub/build_hub.py`** (`freecadcmd mech/hub/build_hub.py`; boards, connectors, tall parts, standoff places, a
+plain tube for the shell; report in `build/mech/hub/hub-section.txt`, model `hub-section.FCStd` / `.step`; freecadcmd swallows
+`print`, the script uses `App.Console`). Shells, lips, magnets, lid are M3. Its checks: chain pins compressed 1.14 of 2.29 mm; holder
+2.0 mm under the board above; 7.3 mm over the 220 uF cans; core tails 4.14 mm inside the lower socket; no clashes.
+**Tight spots to check on real parts**: the Pico spring pins are compressed 1.15 mm of a 1.40 mm stroke with the Pico underside at
+11.04 mm (8.5 mm socket + 2.54 mm spacer): 0.25 mm before bottoming, so measure the real socket stack (a 0.3 mm taller socket is
+better than a shorter one); TP2 / TP3 are 2.0 mm apart and the pin body is 1.83 mm: 0.17 mm between the D+ and D- pins; TP
+positions are taken from KiCad's `RaspberryPi_Pico_W_SMD` footprint (check on the Pico 2 W drawing); receptacle origin 4.7 mm
+from the board edge is a guess (`pcb_hub.py` `RECEPTACLE_EDGE`, Amphenol drawing); its 0.4 mm holes in 0.65 mm pads need a rule
+exception (0.1 mm annular ring: ask JLCPCB at the order); the BC4AAPC footprint is 60.2 x 62.4 mm, deeper than rev 8's 57.2 mm
+body, so the chain moved to y = 20 / 29; the lookup could not find the Mill-Max 827 drawing again (2x8 strip and its
+insulator length unconfirmed).
+**Placement = `tools/pcb_hub.py [--force] [board ...]`** (KiCad's Python, header has the command): fixed parts from `hub_geom.py`,
+the rest packed group by group into zones (the symbol field `Group`, written by `sch_hub.py`: port A-C, pack 1-5, sense, switch,
+conv, misc); all SMD on top, only the chain target pads underneath. It checks and stops on: stack pin n above pin n, chain target
+pad n over strip pin n (connector layer and battery), spring pins on TP2 / TP3 / TP6. New footprints (`gen_kicad.py`):
+`SpringPin_MillMax_0929_THT`, `PogoTarget_2x08_P2.54mm`. Rule exceptions are in each board's `.kicad_dru` (pads inside one footprint
+0.13 mm; spring pins under the Pico's courtyard; receptacle pins). **The packing is a first, DRC-clean placement, not a layout**:
+about half of hub-conn is free; the converter (input and output capacitors at the pins, AGND / PGND at the VCC capacitor), the
+port clusters and the pack inputs are to be arranged for routing in the routing session, and 2 layers may not be enough for hub-conn.
+**pcbnew notes**: `Flip()` on a footprint that is not on a board crashes KiCad's Python (macOS crash dialog; the user saw three);
+for a flipped footprint a local point (x, y) lands at (x, -y) turned by the orientation.
+**Not done**: the cap board (riser to spring-pin strip, 26 x 18 mm, pin n to pin n; no project yet), the port board layouts
+(`port-module` with the new receptacle, bay numbers from `pcb_keys.py` `BAY`; `usb-port` still rev 8's layout), hub routing.
+**Next (M2 session 5)**: the user's remarks on the key boards; arrange and route hub-core, battery and hub-conn; cap board; then the
+port boards. Plates (roadmap M2 step 4) and the independent PCB review (step 3) come after.
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
-the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet could not be
-downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
+the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
+downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
 is still rev 8's layout (OC_MODE ball B4 was on GND, now open; R502, R503 values); TPS552892: AGND and PGND join
 only at the VCC capacitor, no thermal pad (heat leaves through the strips); stack 2x25 and chain 2x8 pairs follow
 the mirror rule above (unmirrored, the chain shorts PACK1 to GND through the fuse).

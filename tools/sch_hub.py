@@ -34,9 +34,16 @@ FP_C = "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 FP_C1210 = "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
 FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"
 FP_SOD123 = "Diode_SMD:D_SOD-123"
-FP_USBC24 = "Connector_USB:USB_C_Receptacle_JAE_DX07S024WJ1R350"
+FP_USBC24 = "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A"
 FP_GH11 = "Connector_JST:JST_GH_SM11B-GHS-TB_1x11-1MP_P1.25mm_Horizontal"
 FP_TP = "TestPoint:TestPoint_Pad_D1.5mm"
+# stack: the same stack-through socket on both boards, both on the top side (user, 2026-11-13: rev 8's ESQ, 17.5 mm)
+FP_STACK = "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical"
+MPN_STACK = "Samtec ESQ-125-24-T-D (stack-through: body 13.59 mm, tail 9.65 mm; 17.5 mm between the boards)"
+FP_TARGET = "keyboard:PogoTarget_2x08_P2.54mm"      # on the board's underside
+MPN_TARGET = "16 x Mill-Max 1578-0-57-15-00-00-03-0 target discs, underside"
+FP_XH2 = "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
+FP_XH3 = "Connector_JST:JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical"
 
 PORTS = ("A", "B", "C")
 PACKS = (1, 2, 3, 4, 5)  # hub input 1 = the module next to the hub, 5 = the lowest module
@@ -89,6 +96,7 @@ class Board:
     def __init__(self, width=150):
         self.parts, self.flags, self.notes, self.dnp = [], [], [], set()
         self.count = {}
+        self.group = "misc"      # placement group, a symbol field read by tools/pcb_hub.py
         self.x0, self.y0, self.w = 12, 12, width
         self.x, self.y, self.rowh = self.x0, self.y0, 0
 
@@ -109,7 +117,8 @@ class Board:
 
     def part(self, prefix, lib, value, fp, size, pins, props=None):
         ref = self.ref(prefix)
-        self.parts.append((ref, lib, value, fp, self.at(*size), {str(k): v for k, v in pins.items()}, props or {}))
+        props = dict(props or {}, Group=self.group)
+        self.parts.append((ref, lib, value, fp, self.at(*size), {str(k): v for k, v in pins.items()}, props))
         return ref
 
     def r(self, value, n1, n2, tol="1%", dnp=False):
@@ -170,9 +179,8 @@ def build_core():
     pico.update({"30": "RUN", "35": None, "36": "+3V3", "37": None, "39": "VSYS", "40": None})
     b.part("A", "keyboard:Pico2W", "Pico 2 W (on 2x 1x20 sockets)", "Module:RaspberryPi_Pico_Common_THT",
            (44, 36), pico, {"MPN": "Raspberry Pi Pico 2 W (SC1634) on 2 x 1x20 2.54 mm sockets"})
-    b.part("J", "Connector_Generic:Conn_02x25_Odd_Even", "STACK (pins down)",
-           "Connector_PinHeader_2.54mm:PinHeader_2x25_P2.54mm_Vertical", (44, 36), STACK,
-           {"MPN": "2x25 2.54 mm stacking header (Samtec ESQ-125 class)"})
+    b.part("J", "Connector_Generic:Conn_02x25_Odd_Even", "STACK (ESQ, tails down)",
+           FP_STACK, (44, 36), STACK, {"MPN": MPN_STACK})
     b.part("J", "Connector_Generic:Conn_02x05_Odd_Even", "EXPANSION",
            "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical", (40, 22),
            {1: "+3V3", 2: "+5V", 3: "SDA", 4: "SCL", 5: "SP1", 6: "SP2", 7: "SP3", 8: "SP4", 9: "GND", 10: "GND"},
@@ -180,13 +188,15 @@ def build_core():
     b.row(2)
     # pogo pins to the Pico's underside test pads
     for net, name in (("USB_DN", "TP2 USB D-"), ("USB_DP", "TP3 USB D+"), ("BOOTSEL", "TP6 BOOTSEL")):
-        b.part("TP", "Connector:TestPoint", f"pogo, Pico {name}", "", (16, 16), {1: net},
-               {"MPN": "spring pin, height and position from the Pico 2 W drawing (M2)"})
+        b.part("TP", "Connector:TestPoint", f"pogo, Pico {name}", "keyboard:SpringPin_MillMax_0929_THT", (16, 16), {1: net},
+               {"MPN": "Mill-Max 0929-7-15-20-75-14-11-0 (12.19 mm free, 1.40 mm stroke)"})
     # buttons: power is latching (on: UVLO output to the battery-switch gate; off: gate line to GND)
-    b.part("SW", "Switch:SW_SPDT", "POWER (latching)", "", (30, 16), {1: "PWR_SW_A", 2: "PWR_SW_B", 3: "GND"},
-           {"MPN": "latching push switch, SPDT"})
-    b.part("SW", "Switch:SW_Push", "RESET", "", (26, 16), {1: "RUN", 2: "GND"}, {"MPN": "tactile switch"})
-    b.part("SW", "Switch:SW_Push", "BOOT", "", (26, 16), {1: "BOOTSEL", 2: "GND"}, {"MPN": "tactile switch"})
+    b.part("SW", "Switch:SW_SPDT", "POWER (latching, on leads)", FP_XH3, (30, 16), {1: "PWR_SW_A", 2: "PWR_SW_B", 3: "GND"},
+           {"MPN": "NKK UB16KKG01N-F on leads to a JST XHP-3; board: JST B3B-XH-A"})
+    b.part("SW", "Switch:SW_Push", "RESET (on leads)", FP_XH2, (26, 16), {1: "RUN", 2: "GND"},
+           {"MPN": "NKK UB15KKG01N-C on leads to a JST XHP-2; board: JST B2B-XH-A"})
+    b.part("SW", "Switch:SW_Push", "BOOT (on leads)", FP_XH2, (26, 16), {1: "BOOTSEL", 2: "GND"},
+           {"MPN": "NKK UB15KKG01N-C on leads to a JST XHP-2; board: JST B2B-XH-A"})
     b.row(2)
     b.part("D", "Device:D_Schottky", "MBR120", FP_SOD123, (24, 12), {1: "VSYS", 2: "+5V"}, {"MPN": "onsemi MBR120VLSFT1G"})
     b.c("10u", "+5V")
@@ -210,12 +220,13 @@ def build_core():
 
 def build_port(b, p):
     f = lambda s: s.format(p=p)
+    b.group = f"port{p}"
     nets = {}
     for net, pins in RECEPTACLE_HUB.items():
         for pin in pins:
             nets[pin] = f(net)
     b.part("J", "keyboard:USB_C_Receptacle_24P", f"MODULE PORT {p}", FP_USBC24, (40, 24), nets,
-           {"MPN": "JAE DX07S024WJ1R350 (24-pin, reflow)"})
+           {"MPN": "Amphenol 12401548E4-2A (24-pin, horizontal, hybrid SMD + through-hole)"})
     # Type-C source switch: Rp on CC, VBUS on only with Rd, UFP low = sink attached
     b.part("U", "Interface_USB:TPS25810RVC", "TPS25810", "Package_DFN_QFN:Texas_RVC0020A_WQFN-20-1EP_3x4mm_P0.5mm_EP1.6x2.6mm",
            (44, 30),
@@ -256,6 +267,7 @@ def build_port(b, p):
 
 def build_pack_input(b, i):
     """Pack input i: TVS, ideal diode, and for inputs 1-4 the priority P-FET (body diode = waiting path)."""
+    b.group = f"pack{i}"
     pk, vm = f"PACK{i}", (f"VM{i}" if i < 5 else "VBAT")
     b.part("D", "Device:D_TVS", "SMF4L9.0CA", "keyboard:D_SOD-123FL_Littelfuse", (24, 12), {1: pk, 2: "GND"},
            {"MPN": "Littelfuse SMF4L9.0CA"})
@@ -292,13 +304,11 @@ def build_pack_input(b, i):
 
 def build_conn():
     b = Board(436)
-    b.part("J", "Connector_Generic:Conn_02x25_Odd_Even", "STACK (socket up)",
-           "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical", (44, 32), conn(STACK, STACK_RESERVED),
-           {"MPN": "2x25 2.54 mm socket (Samtec ESQ-125 class)"})
+    b.part("J", "Connector_Generic:Conn_02x25_Odd_Even", "STACK (ESQ, socket up)",
+           FP_STACK, (44, 32), conn(STACK, STACK_RESERVED), {"MPN": MPN_STACK})
     b.part("J", "Connector_Generic:Conn_01x11", "J_USB (host port board)", FP_GH11, (36, 30), J_USB, {"MPN": "JST SM11B-GHS-TB"})
     b.part("J", "Connector_Generic:Conn_02x08_Odd_Even", "CHAIN (to AA module 1)",
-           "Connector_PinSocket_2.54mm:PinSocket_2x08_P2.54mm_Vertical", (40, 24), CHAIN,
-           {"MPN": "2x8 pogo target pads / riser, as the rev 8 seam (M3)"})
+           FP_TARGET, (40, 24), CHAIN, {"MPN": MPN_TARGET})
     # LED data level shifter, one for the three ports; outputs low by default
     b.part("U", "keyboard:74x125_SO14", "74AHCT125", "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm", (34, 26),
            {1: "GND", 2: "LED_A", 3: "LEDB_A", 4: "GND", 5: "LED_B", 6: "LEDB_B", 10: "GND", 9: "LED_C", 8: "LEDB_C",
@@ -317,6 +327,7 @@ def build_conn():
         build_port(b, p)
     for i in (2, 3, 4, 1, 5):  # 1 and 5 are the short ones and share a row
         build_pack_input(b, i)
+    b.group = "sense"
     # bleeder switches for pack inputs 2-5, on with the logic rail
     b.dual_nfet("+3V3", "BLD2", "GND", "+3V3", "BLD3", "GND")
     b.dual_nfet("+3V3", "BLD4", "GND", "+3V3", "BLD5", "GND")
@@ -337,6 +348,7 @@ def build_conn():
     b.r("100k", "BAT_DIV_EN", "GND")
     b.dual_nfet("BAT_DIV_EN", "DIV_G", "GND", "GND", "GND", "GND")
     b.row(2)
+    b.group = "switch"
     # battery switch VBAT -> SYS: on with the power switch AND UVLO OK AND no USB
     b.pfet("QB_G", "VBAT", "SYS")
     b.r("1M", "VBAT", "QB_G")
@@ -358,6 +370,7 @@ def build_conn():
     b.r("15k", "USB_PRESENT", "GND")  # 2.3 V at the Pico with VBUS at 3.8 V, 3.3 V at 5.5 V
     b.r("0R", "AUX_5V", "VBUS_IN", dnp=True)
     b.row(2)
+    b.group = "conv"
     # SYS bulk and the 5 V buck-boost (TPS552892, datasheet section 8.2: 400 kHz, 4.7 uH, PFM at light load)
     for _ in range(4):
         b.c("47u", "SYS", fp=FP_C1210)
@@ -423,10 +436,9 @@ def build_battery():
             for p, n in CHAIN.items()}
     b.part("J", "Connector_Generic:Conn_02x08_Odd_Even", "CHAIN UP (pogo pins)",
            "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical", (40, 24), up,
-           {"MPN": "2x8 pogo pins on a riser, as the rev 8 seam (M3)"})
+           {"MPN": "Samtec DW-08-17-T-D-254 riser to the cap board (Mill-Max 827-22-016-10-004101 spring pins)"})
     b.part("J", "Connector_Generic:Conn_02x08_Odd_Even", "CHAIN DOWN (target pads)",
-           "Connector_PinSocket_2.54mm:PinSocket_2x08_P2.54mm_Vertical", (40, 24), down,
-           {"MPN": "2x8 target pads for the module below (M3)"})
+           FP_TARGET, (40, 24), down, {"MPN": MPN_TARGET})
     b.flag("GND")
     w, h = b.finish(
         "AA battery module (spec section 3): passive. 4 x AA NiMH in series (alkaline tolerated), one PTC in the pack lead.\n"
