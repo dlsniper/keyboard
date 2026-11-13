@@ -6,7 +6,8 @@ modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappabl
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
 battery and power-path rework only). Nothing of the electronics is drawn yet.
 **D10 decided 2026-11-13: key LEDs are an SK6812MINI-E chain** (spec §2: rail off when LEDs are off, level
-shifter at the hub, `ws2812` driver; a European source for the LED is still open).
+shifter at the hub, `ws2812` driver). **Sourcing is parked (user, 2026-11-13)**: no stock, price or distributor
+lookups for now; the user reports parts that cannot be found when building starts and the design adapts then.
 
 **Roadmap: `plans/roadmap.md`** (M0 layout, M1 schematics, M2 PCBs, M3 case, M4 firmware bring-up, M5 firmware,
 M6 wireless; hardware first by the user's choice). **M0 tasks 1 and 2 are done (2026-11-13)**: D1 decided (key set
