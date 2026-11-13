@@ -12878,7 +12878,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_PGUP"
+		(property "KeyID" "R_7"
 			(at 190.5 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -13104,7 +13104,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_HOME"
+		(property "KeyID" "R_8"
 			(at 261.62 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -13330,7 +13330,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_INS"
+		(property "KeyID" "R_9"
 			(at 332.74 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -13556,7 +13556,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_BKSP"
+		(property "KeyID" "R_0"
 			(at 403.86 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -13782,7 +13782,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_EQUAL"
+		(property "KeyID" "R_MINUS"
 			(at 474.98 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -14008,7 +14008,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_MINUS"
+		(property "KeyID" "R_EQUAL"
 			(at 546.1 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -14234,7 +14234,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_0"
+		(property "KeyID" "R_BKSP"
 			(at 48.26 241.2999 0)
 			(effects (hide yes)
 				(font
@@ -14460,7 +14460,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_9"
+		(property "KeyID" "R_INS"
 			(at 119.38 241.2999 0)
 			(effects (hide yes)
 				(font
@@ -14686,7 +14686,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_8"
+		(property "KeyID" "R_HOME"
 			(at 190.5 241.2999 0)
 			(effects (hide yes)
 				(font
@@ -14912,7 +14912,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_7"
+		(property "KeyID" "R_PGUP"
 			(at 261.62 241.2999 0)
 			(effects (hide yes)
 				(font
@@ -17624,7 +17624,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_ENTER"
+		(property "KeyID" "R_H"
 			(at 546.1 271.7799 0)
 			(effects (hide yes)
 				(font
@@ -17850,7 +17850,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_QUOTE"
+		(property "KeyID" "R_J"
 			(at 48.26 302.2599 0)
 			(effects (hide yes)
 				(font
@@ -18076,7 +18076,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_SEMI"
+		(property "KeyID" "R_K"
 			(at 119.38 302.2599 0)
 			(effects (hide yes)
 				(font
@@ -18528,7 +18528,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_K"
+		(property "KeyID" "R_SEMI"
 			(at 261.62 302.2599 0)
 			(effects (hide yes)
 				(font
@@ -18754,7 +18754,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_J"
+		(property "KeyID" "R_QUOTE"
 			(at 332.74 302.2599 0)
 			(effects (hide yes)
 				(font
@@ -18980,7 +18980,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_H"
+		(property "KeyID" "R_ENTER"
 			(at 403.86 302.2599 0)
 			(effects (hide yes)
 				(font
@@ -20788,7 +20788,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_RIGHT"
+		(property "KeyID" "R_RSPACE"
 			(at 403.86 332.7399 0)
 			(effects (hide yes)
 				(font
@@ -21014,7 +21014,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_DOWN"
+		(property "KeyID" "R_RALT"
 			(at 474.98 332.7399 0)
 			(effects (hide yes)
 				(font
@@ -21240,7 +21240,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_LEFT"
+		(property "KeyID" "R_FN"
 			(at 546.1 332.7399 0)
 			(effects (hide yes)
 				(font
@@ -21692,7 +21692,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_FN"
+		(property "KeyID" "R_LEFT"
 			(at 119.38 363.2199 0)
 			(effects (hide yes)
 				(font
@@ -21918,7 +21918,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_RALT"
+		(property "KeyID" "R_DOWN"
 			(at 190.5 363.2199 0)
 			(effects (hide yes)
 				(font
@@ -22144,7 +22144,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "R_RSPACE"
+		(property "KeyID" "R_RIGHT"
 			(at 261.62 363.2199 0)
 			(effects (hide yes)
 				(font

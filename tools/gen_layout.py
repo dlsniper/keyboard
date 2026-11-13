@@ -166,8 +166,8 @@ def assign_leds(keys):
     for p in range(6):
         row = sorted([k for k in keys if k["prow"] == p and k["kind"] != "encoder"],
                      key=lambda k: k["x"])
-        if p % 2 == 1:
-            row.reverse()
+        # every row west to east (M2, 2026-11-13): one routing pattern per key cell, the data line returns
+        # along the row on the board (a serpentine needs a second, mirrored cell that the LED's pin order does not allow)
         for k in row:
             k["led"] = idx
             idx += 1

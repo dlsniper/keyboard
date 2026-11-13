@@ -6874,7 +6874,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_MINUS"
+		(property "KeyID" "N_CLR"
 			(at 332.74 180.3399 0)
 			(effects (hide yes)
 				(font
@@ -7100,7 +7100,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_STAR"
+		(property "KeyID" "N_SLASH"
 			(at 403.86 180.3399 0)
 			(effects (hide yes)
 				(font
@@ -7326,7 +7326,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_SLASH"
+		(property "KeyID" "N_STAR"
 			(at 474.98 180.3399 0)
 			(effects (hide yes)
 				(font
@@ -7552,7 +7552,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_CLR"
+		(property "KeyID" "N_MINUS"
 			(at 546.1 180.3399 0)
 			(effects (hide yes)
 				(font
@@ -8682,7 +8682,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_6"
+		(property "KeyID" "N_4"
 			(at 332.74 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -9134,7 +9134,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_4"
+		(property "KeyID" "N_6"
 			(at 474.98 210.8199 0)
 			(effects (hide yes)
 				(font
@@ -10264,7 +10264,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_KPEQUAL"
+		(property "KeyID" "N_KP0"
 			(at 261.62 241.2999 0)
 			(effects (hide yes)
 				(font
@@ -10716,7 +10716,7 @@
 				(hide yes)
 			)
 		)
-		(property "KeyID" "N_KP0"
+		(property "KeyID" "N_KPEQUAL"
 			(at 403.86 241.2999 0)
 			(effects (hide yes)
 				(font

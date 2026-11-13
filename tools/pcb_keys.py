@@ -8,7 +8,7 @@ Run with KiCad's Python (it needs pcbnew):
 What it does, all from data (a changed layout or decision is a re-run):
 - reads the schematic's netlist (kicad-cli), loads every footprint, sets nets and the schematic link (parity);
 - per key: hotswap socket footprint at the key centre (front side; the socket itself is on the back), and on the
-  back the LED (reverse mount, window south of the switch, as the M0 test cell), the matrix diode east of the LED
+  back the LED (reverse mount, window south of the switch, as the M0 test cell, DIN on the west side), the matrix diode east of the LED
   and the LED's 100 n west of it; stabiliser holes for keys of 2u and more;
 - board outline with straight edges (user, 2026-11-13): outer, front (parallel to the bottom row), inner (along
   the split) and rear (parallel to the F-row chord, REAR mm behind the caps: the full-width rear strip);
@@ -54,7 +54,7 @@ FILLET = 3.0
 LED_AT = (0.0, 4.7)     # as mech/testcell (window south of the switch)
 DIODE_AT = (6.9, 4.2)   # east of the LED, long axis north-south, anode north (towards socket pad 2)
 CAP_AT = (-6.9, 4.2)    # the LED's 100 n, west of it
-TP_AT = (0.0, 8.3)      # LED_DOUT test pad, in the last LED's cell
+TP_AT = (10.0, 4.6)     # LED_DOUT test pad, in the last LED's cell, east of its diode
 STAB_FP = ("Mounting_Keyboard_Stabilizer", "Stabilizer_Cherry_MX_2.00u")   # Cherry: same spacing for 2u-2.75u
 HOLE_FP = ("MountingHole", "MountingHole_2.2mm_M2")
 # Port bay, frozen: local frame (a along the rear edge towards the inner end, t rearwards from the F-row cap
@@ -64,11 +64,17 @@ BAY = {"width": 30.0, "header": (0.0, 7.0), "screws": ((-11.5, 20.0), (9.0, 20.0
 # D6 (user, 2026-11-13): JLCPCB makes and assembles. Their 2-layer limits with margin.
 RULES = {"min_clearance": 0.15, "min_track_width": 0.15, "min_via_diameter": 0.5, "min_via_annular_width": 0.13,
          "min_through_hole_diameter": 0.3, "min_hole_to_hole": 0.5, "min_hole_clearance": 0.25,
-         "min_copper_edge_clearance": 0.3, "min_silk_clearance": 0.0}
+         "min_copper_edge_clearance": 0.3, "min_silk_clearance": 0.0, "min_resolved_spokes": 1}
 DEFAULT_CLASS = {"name": "Default", "clearance": 0.2, "track_width": 0.25, "via_diameter": 0.6, "via_drill": 0.3,
                  "priority": 2147483647, "schematic_color": "rgba(0, 0, 0, 0.000)", "pcb_color": "rgba(0, 0, 0, 0.000)",
                  "bus_width": 12, "wire_width": 6, "line_style": 0, "microvia_diameter": 0.3, "microvia_drill": 0.1,
                  "diff_pair_width": 0.2, "diff_pair_gap": 0.25, "diff_pair_via_gap": 0.25}
+
+# Supply nets: wide tracks for the LED rail (up to 36 mA per LED), larger vias. GND tracks only tie the pads to
+# the GND pours on both sides (tools/route_keys.py), so they stay narrower: 0.8 mm GND tracks wall the router in.
+POWER_CLASS = dict(DEFAULT_CLASS, name="Power", track_width=0.8, via_diameter=0.8, via_drill=0.4, priority=0)
+GND_CLASS = dict(DEFAULT_CLASS, name="Ground", track_width=0.4, priority=1)
+CLASS_OF = {"GND": "Ground", "/+5V": "Power", "/+5V_LED": "Power"}
 
 mm = pcbnew.FromMM
 
@@ -241,14 +247,8 @@ def meet(l1, l2):
     return (e * d - b * f) / det, (a * f - e * c) / det
 
 
-def outline(keys, inner_sign):
-    """Four straight edges. inner_sign = +1 if the split (inner) edge is on the +x side (left), -1 on `right`."""
-    pts = [p for k in keys for p in cap_corners(k)]
-    frow = sorted((k for k in keys if k["prow"] == 0), key=lambda k: k["x"])
-    brow = [k for k in keys if k["prow"] == max(q["prow"] for q in keys)]
-    phi = math.degrees(math.atan2(frow[-1]["y"] - frow[0]["y"], frow[-1]["x"] - frow[0]["x"]))
-    front_rot = sum(k["rot"] for k in brow) / len(brow)
-    # inner edge: the longest convex-hull edge that faces the split
+def inner_normal(pts, inner_sign):
+    """Outward normal of the longest convex-hull edge that faces the split."""
     h = hull(pts)
     best = None
     for i, p in enumerate(h):
@@ -259,9 +259,21 @@ def outline(keys, inner_sign):
             n = (-n[0], -n[1])
         if n[0] * inner_sign > 0.8 and (best is None or ln > best[0]):
             best = (ln, n)
+    return best[1]
+
+
+def outline(keys, inner_sign, inner_n=None):
+    """Four straight edges. inner_sign = +1 if the split (inner) edge is on the +x side (left), -1 on `right`.
+    inner_n: direction of the inner edge's normal if it is not taken from this module's own keys."""
+    pts = [p for k in keys for p in cap_corners(k)]
+    frow = sorted((k for k in keys if k["prow"] == 0), key=lambda k: k["x"])
+    brow = [k for k in keys if k["prow"] == max(q["prow"] for q in keys)]
+    phi = math.degrees(math.atan2(frow[-1]["y"] - frow[0]["y"], frow[-1]["x"] - frow[0]["x"]))
+    front_rot = sum(k["rot"] for k in brow) / len(brow)
+    inner_n = inner_n or inner_normal(pts, inner_sign)
     rear = support(pts, rot(0, -1, phi), 0.0)                 # the F-row cap line; the board edge is REAR behind it
     lines = {"outer": support(pts, (-inner_sign, 0), MARGIN_SIDE), "rear": (rear[0], rear[1] + REAR),
-             "inner": support(pts, best[1], MARGIN_SIDE), "front": support(pts, rot(0, 1, front_rot), MARGIN_FRONT)}
+             "inner": support(pts, inner_n, MARGIN_SIDE), "front": support(pts, rot(0, 1, front_rot), MARGIN_FRONT)}
     order = ["outer", "rear", "inner", "front"]
     corners = [meet(lines[order[i - 1]], lines[order[i]]) for i in range(4)]   # outer/front... each: previous x this
     origin = meet(lines["outer"], rear)                        # strip frame origin: cap line at the outer board edge
@@ -315,19 +327,9 @@ def place_keys(bd, keys):
         at = lambda off: (x + rot(*off, r)[0], y + rot(*off, r)[1])
         led = bd.by_key("LED", k["id"])
         fp = bd.place(led, *at(LED_AT), -r, back=True)
-        # turn the LED so that DIN (2) looks at the previous LED and DOUT (4) at the next one
-        prev, nxt = leds[i - 1] if i else None, leds[i + 1] if i + 1 < len(leds) else None
-        def cost():
-            c = 0.0
-            for pad, other in (("2", prev), ("4", nxt)):
-                if other:
-                    px, py = bd.pad_xy(led, pad)
-                    c += math.hypot(px - other["x"], py - other["y"])
-            return c
-        c0 = cost()
-        fp.SetOrientationDegrees(-r + 180)
-        if cost() > c0:
-            fp.SetOrientationDegrees(-r)
+        # DIN (2) is on the west side: every row runs west to east (tools/route_keys.py)
+        if rot(bd.pad_xy(led, "2")[0] - x, bd.pad_xy(led, "2")[1] - y, -r)[0] > 0:
+            fp.SetOrientationDegrees(-r + 180)
         cap = "CL" + led[3:]
         bd.place(cap, *at(CAP_AT), -r + 90, back=True)
         # self-check: LED centre where the test cell has the window
@@ -361,8 +363,8 @@ def place_strip(bd, lines, origin, phi, inner_sign, keys):
     c = fp.GetBoundingBox(False).Centre()
     want = at(sb + hx, ht)
     fp.Move(vec(want[0] - pcbnew.ToMM(c.x), want[1] - pcbnew.ToMM(c.y)))
-    for a, t in BAY["screws"]:
-        bd.mech(HOLE_FP, "H", *at(sb + a, t))
+    for a, t in BAY["screws"]:                                  # one port board for all modules: the bay itself is
+        bd.mech(HOLE_FP, "H", *at(sb + inner_sign * a, t))      # never mirrored, only its place in the strip is
     # expander(s), outwards of the bay, long axis along s
     s = sb - 33.0
     chips = sorted(r for r in bd.comps if r.startswith("U") and "MCP23S17" in bd.comps[r]["value"])
@@ -389,30 +391,53 @@ def place_strip(bd, lines, origin, phi, inner_sign, keys):
             + bd.find(r, "GND", "LED_EN")]
     for i, r in enumerate(rest):
         bd.place(r, *at(s - 7.0, 5.0 + 3.0 * i), A, back=True)
-    # spare-pin header on the front side, long axis along s
+    # spare-pin header on the front side, long axis along s: outwards of the rail switch, its near pin 14.92 mm
+    # from it; where the strip is too short for that (numpad), along the rear edge outwards of the pull-ups
     j2 = next(r for r, c in bd.comps.items() if r.startswith("J") and c["value"] == "SPARE")
-    fp = bd.place(j2, *at(s - 20.0, 10.0), A + 90)
+    span = (len(bd.comps[j2]["nets"]) - 1) * 2.54
+    want, narrow = (s - 14.92 - span / 2, 10.0), False
+    if not inside(lines, at(want[0] - span / 2, want[1]), 3.0):
+        want, narrow = (12.5 + span / 2, 21.5), True
+    fp = bd.place(j2, *at(*want), A + 90)
     c = fp.GetBoundingBox(False).Centre()
-    want = at(s - 20.0, 10.0)
-    fp.Move(vec(want[0] - pcbnew.ToMM(c.x), want[1] - pcbnew.ToMM(c.y)))
+    w = at(*want)
+    fp.Move(vec(w[0] - pcbnew.ToMM(c.x), w[1] - pcbnew.ToMM(c.y)))
+    # dial connector (right): on the back, in the strip behind the dial
+    for j in (r for r, c in bd.comps.items() if c["value"] == "J_DIAL"):
+        dial = next(k for k in keys if k["kind"] == "encoder")
+        s_dial = inner_sign * rot(dial["x"] - origin[0], dial["y"] - origin[1], -phi)[0]
+        bd.place(j, *at(s_dial + 8.0, 8.0), A, back=True)
     # 220 R in front of the first LED: in the strip behind that key
     first = min((k for k in keys if k.get("led") is not None), key=lambda k: k["led"])
     r220 = bd.find("R", "LED_D0", "LED_DIN")[0]
     fx, fy = first["x"] - origin[0], first["y"] - origin[1]
     s_first = inner_sign * rot(fx, fy, -phi)[0]
+    if abs(s_first - sb) < half + 2.0:                          # the first LED is behind the bay (right): beside the header
+        s_first = sb - half - 2.0
     bd.place(r220, *at(s_first, 4.0), A, back=True)
-    # provisional M2 holes: three in the strip
-    for sh in (7.0, sb - 19.5, (7.0 + sb - 19.5) / 2):
+    # provisional M2 holes in the strip: outer end, beside the bay, and one between them where there is room
+    for sh in (7.0, sb - 19.5) + (() if narrow else ((7.0 + sb - 19.5) / 2,)):
         bd.mech(HOLE_FP, "H", *at(sh, 19.0))
     return sb
 
 
-def front_holes(bd, lines, corners, front_rot, inner_sign):
-    """Two provisional M2 holes in the front margin, 3 mm from the front edge, 12 mm in from the side edges."""
+def front_holes(bd, lines, corners, front_rot, inner_sign, keys):
+    """Two provisional M2 holes in the front margin, 3 mm from the front edge, 12 mm in from the side edges
+    (the nearest spot to that which is clear of a stabiliser's holes)."""
     n, d = lines["front"]
     u = rot(1, 0, front_rot)
+    stabs = [k for k in keys if k["kind"] == "switch" and k["stab"]]
+    def clear(x, y):
+        for k in stabs:
+            kx, ky = rot(x - k["x"], y - k["y"], -k["rot"] - (90 if k["h"] > k["w"] else 0))
+            if abs(kx) < 16.5 and abs(ky) < 14.0:
+                return False
+        return True
     for corner, sgn in ((corners[0], inner_sign), (corners[3], -inner_sign)):   # front-outer, inner-front
-        x, y = corner[0] + u[0] * 12.0 * sgn - n[0] * 3.0, corner[1] + u[1] * 12.0 * sgn - n[1] * 3.0
+        for dist in sorted((6.0 + 0.5 * i for i in range(60)), key=lambda v: abs(v - 12.0)):
+            x, y = corner[0] + u[0] * dist * sgn - n[0] * 3.0, corner[1] + u[1] * dist * sgn - n[1] * 3.0
+            if clear(x, y):
+                break
         bd.mech(HOLE_FP, "H", x, y)
 
 
@@ -434,8 +459,22 @@ def write_rules(name):
     p = HW / name / f"{name}.kicad_pro"
     pro = json.loads(p.read_text())
     pro.setdefault("board", {}).setdefault("design_settings", {}).setdefault("rules", {}).update(RULES)
-    pro.setdefault("net_settings", {})["classes"] = [DEFAULT_CLASS]
+    pro.setdefault("net_settings", {})["classes"] = [DEFAULT_CLASS, POWER_CLASS, GND_CLASS]
+    pro["net_settings"]["netclass_patterns"] = [{"netclass": c, "pattern": n} for n, c in CLASS_OF.items()]
     p.write_text(json.dumps(pro, indent=2) + "\n")
+
+
+def frame(name):
+    """Keys, inner_sign and the outline data of a module (also used by tools/route_keys.py)."""
+    mods = json.loads((ROOT / "layout" / "keys.json").read_text())["modules"]
+    keys = mods[name]["keys"]
+    inner_sign = -1 if name == "right" else 1
+    sw = lambda ks: [k for k in ks if k["kind"] == "switch"]
+    inner_n = None
+    if name == "right":       # user, 2026-11-13: the split edge of `right` mirrors left's angle (its own keys would give 13 deg)
+        ln = inner_normal([p for k in sw(mods["left"]["keys"]) for p in cap_corners(k)], 1)
+        inner_n = (-ln[0], ln[1])
+    return keys, inner_sign, outline(sw(keys), inner_sign, inner_n)
 
 
 def main():
@@ -443,16 +482,13 @@ def main():
     if len(args) != 1:
         sys.exit(__doc__)
     name = args[0]
-    mod = json.loads((ROOT / "layout" / "keys.json").read_text())["modules"][name]
-    keys = mod["keys"]
-    inner_sign = -1 if name == "right" else 1
+    keys, inner_sign, (lines, corners, origin, phi, front_rot) = frame(name)
     bd = Board(name, "--force" in sys.argv)
-    lines, corners, origin, phi, front_rot = outline([k for k in keys if k["kind"] == "switch"], inner_sign)
     # corners come as front x outer, outer x rear, rear x inner, inner x front
     draw_outline(bd, corners)
     errors = place_keys(bd, keys)
     sb = place_strip(bd, lines, origin, phi, inner_sign, keys)
-    front_holes(bd, lines, corners, front_rot, inner_sign)
+    front_holes(bd, lines, corners, front_rot, inner_sign, keys)
     missing = sorted(set(bd.comps) - set(bd.placed))
     if missing:
         errors.append(f"not placed: {missing}")

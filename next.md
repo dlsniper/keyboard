@@ -91,15 +91,13 @@ cannot be placed before that).
 placed by the script, board-only). `sch_hub.py` assigns them; ERC 0, hub checks pass. **BC4AAPC: the drawing does
 not say which pins are + and - nor where the body sits across the pins**; the footprint takes pad 1 = +, pad 2 = -
 (read off the cell symbols), pads 3 and 4 unconnected: **check on a real holder before the battery board is laid out**.
-**`left` is placed and DRC-checked, not routed**: `tools/pcb_keys.py left` (run with KiCad's Python, command in its
+**Placement**: `tools/pcb_keys.py left` (run with KiCad's Python, command in its
 header; `--force` to overwrite a routed board) builds `hardware/left/left.kicad_pcb` from `layout/keys.json` and the
 schematic netlist on a fresh board: outline (four straight edges, 3 mm fillets, about 149 x 165 mm bounding box),
-36 switches, on the back LED (window as the test cell, turned so DIN looks at the previous LED), diode east and
+36 switches, on the back LED (window as the test cell, DIN on the west side), diode east and
 100 n west of it, stabiliser holes, rear strip, 5 + 2 holes, nets, symbol fields; it writes the JLCPCB rules into
 `left.kicad_pro` and `left.kicad_dru` (two footprint-inherent exceptions: LED pads 0.25 mm from their own window,
-MX socket hole 0.44 mm from the peg hole). **DRC with schematic parity: 0 errors, 0 parity issues, 341 unconnected
-(not routed), 19 silkscreen warnings in the rear strip (references overlap; for the silkscreen pass after routing).**
-`tools/kicad-check.sh` therefore exits 1 for `left` until it is routed.
+MX socket hole 0.44 mm from the peg hole). `tools/kicad-check.sh` exits 1 for boards that are not routed yet.
 **Mirror rule for mated headers (checked on the stock footprints)**: lower board = `PinHeader` on its top side,
 upper board = `PinSocket` on its BOTTOM side; KiCad's 2-row PinSocket has the columns swapped, so flipped it puts
 pin 1 on pin 1. Any other arrangement needs one side mirrored by hand. Bay geometry is frozen in `pcb_keys.py`
@@ -107,10 +105,41 @@ pin 1 on pin 1. Any other arrangement needs one side mirrored by hand. Bay geome
 use the same numbers.
 **Script notes**: KiCad's Python crashes at exit after pcbnew work (macOS crash dialog); the script leaves with
 `os._exit`. Emptying a loaded board from Python breaks `FootprintLoad`; always build on `CreateEmptyBoard()`.
-The strip layout in `place_strip` is written for one or two expanders but only run for `left`.
-**Next (M2 session 2)**: run `pcb_keys.py` for `right` (two expanders, dial connector J3, mirrored bay) and
-`numpad` (square, no arc: check the outline rule), DRC both; then routing of `left` as the pattern (matrix, LED
-chain with wide 5 V, SPI), or the hub session (FreeCAD section, parts, footprints, placement).
+**M2 session 2 done (2026-11-13): `right` and `numpad` placed, `left` routed. DRC with parity (`tools/pcb_check.sh left right numpad`,
+new): `left` 0 errors, 0 parity, 0 unconnected; `right` 0 / 0 / 499 open (not routed); `numpad` 0 / 0 / 226 open.** Warnings left
+for the silkscreen pass: silk overlaps in the strips, one dangling track stub on `left`.
+**User decision 2026-11-13 (options UI): the split edge of `right` mirrors left's angle (3.3 deg)** instead of following its own keys
+(13.3 deg). Result: `right` is 240.8 x 170.5 mm, the bay sits behind F7/F8, and there is a wedge of empty board in front of
+N / Space at the inner front corner, about 35 mm wide at the front edge (more than the "about 13 mm" the option text said).
+**Placement fixes in `pcb_keys.py`**: the bay itself is never mirrored (one port board for all modules: screws at -11.5 / +9 mm in
+board x on every module; only the bay's place in the strip mirrors); dial connector J3 on the back of the strip behind the dial
+(the key board continues under the dial, no cut-out: to settle with the dial board's mounting at M3); spare header placed from its
+near pin (15 pins on `right`), along the rear edge on `numpad` where the strip is too short (then two strip holes, not three);
+front holes step aside from stabiliser holes (`numpad` 0 key); 220 R beside the bay header when the first LED is behind the bay;
+LED_DOUT test pad at (10.0, 4.6) in the last key's frame; `frame(name)` gives keys and outline to other scripts.
+**LED chain order changed: every row runs west to east** (`gen_layout.py` `assign_leds`, `keys.json` and the three schematics
+regenerated, 0 failed assertions; LED index to key is still read from `keys.json`). Reason: the LED's supply pins are diagonal, so
+a serpentine needs a second, mirrored cell pattern that cannot be routed on one side; with one direction every cell is the same
+and the data line returns west under the row.
+**Routing = `tools/route_keys.py <name> --strip`** (KiCad's Python, KiCad closed, on a board fresh from `pcb_keys.py --force`;
+about 10 minutes). The key field is scripted, one pattern per cell (documented in the script header): row trunk and LED return
+line south of the LED, columns on the front along the cell borders, LED data and 0.8 mm +5V_LED through the gap between the
+diode's pads and under the 100 n, GND by a via per cell to the pours on both sides, a 1 mm +5V_LED bus along the outer edge fed
+from the rail switch along the rear edge of the strip, the bottom row's line to the expander along the inner edge. Stabilised
+keys: trunk and return dip south of the wire holes. Net classes are written by `pcb_keys.py` (Default 0.25, Power 0.8 for +5V
+and +5V_LED, Ground 0.4), `min_resolved_spokes` 1. **Only the rear strip is autorouted** (Freerouting 2.5.0 headless, field
+locked, GND limited to the strip's pads, rule areas over the LED windows), then GND stitching vias beside the strip's GND pads
+and the pours. **Freerouting 2.5.0 alone does not route these boards** (stalls at 35-45 open, later passes get worse, it reports
+"unrouted" and "violations" that KiCad's DRC does not confirm): trust only `pcb_check.sh`. The strip result differs from run to
+run (seen: 0, 1, 4 and 8 open); scripted risers for all six rows fenced the expander in and are not used.
+**Not carried over to `right` and `numpad` yet (route_keys.py is written and run for `left` only)**: on `right` the rows start at
+the inner (west) end, so the +5V bus, the return descents and the feed must go to that side and the row riser to the other, and
+the strip has two expanders (rows on U2) and the dial nets; `numpad`'s spare header sits on the rear-edge line the +5V feed uses,
+and it has vertical stabilisers (`+`, maybe Enter: `lane()` and `stab()` only handle horizontal ones); rows with gaps (`right`
+nav block) get straight links that may cross holes: read the DRC.
+**Next (M2 session 3)**: carry `route_keys.py` over to `right` and `numpad` (above list), DRC 0 on both; a look at `left` in KiCad by
+the user (strip routing is autorouted: tidy by hand only if wanted); then the hub session (FreeCAD section, parts, footprints,
+placement) and the port board layout.
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet could not be
 downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
