@@ -1360,7 +1360,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "MF-MSMF125/16X"
+		(property "Value" "MF-LSMF500/16X"
 			(at 99.06 58.42 90)
 			(effects
 				(font
@@ -1369,7 +1369,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Fuse:Fuse_1812_4532Metric_Pad1.30x3.40mm_HandSolder"
+		(property "Footprint" "Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder"
 			(at 97.79 53.34 0.0000)
 			(effects
 				(font
@@ -1378,7 +1378,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "Bourns MF-MSMF125/16X-2"
+		(property "MPN" "Bourns MF-LSMF500/16X-2"
 			(at 99.06 63.4999 0)
 			(effects (hide yes)
 				(font

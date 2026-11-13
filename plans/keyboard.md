@@ -289,9 +289,8 @@ tables and the boards against each other).
   written and checked by `tools/sch_hub.py`.
 - **Module port (x3).** 24-pin receptacle wired per the hub column of §1.
   **TPS25810** (user, 2026-11-13, over the 1.5 A TPS25821): advertises 3 A, limit
-  3.4 A; a strap changes it to 1.5 A / 1.7 A. Three ports at 3 A exceed the 2 A
-  buck-boost, so firmware's LED cap and the port fault line are what keep the rail
-  up (O3). **One 74LVC125A per port** (user, 2026-11-13): SCK and MOSI reach the
+  3.4 A; a strap changes it to 1.5 A / 1.7 A. Confirmed by the user after the M1
+  review; the 5 V rail is raised to match (§3b, M1 task 5). **One 74LVC125A per port** (user, 2026-11-13): SCK and MOSI reach the
   cable, and MISO comes back, only while that port's CS is low; the CS line itself
   is driven only while `DET_x` is low. So each cable is driven point to point, a
   dead module cannot hold MISO, and a phone or an unpowered module sees no SPI.
@@ -345,6 +344,54 @@ tables and the boards against each other).
   about 3-6 uA per pack; the LM74610 runs the pack through the FET's body diode for
   about 2 % of the time (25 ms every 1.2 s, about 0.5 V dip on the battery rail).
 
+## 3b. Sizing (M1 task 3, 2026-11-13)
+
+From the datasheets in `build/ds/` (tables with sources were gathered by look-up
+agents and spot-checked). "Graph" = read from a datasheet plot.
+
+- **Loads at 5 V.** SK6812MINI-E: 12 mA per colour, so 36 mA per LED at full white
+  and 1 mA dark: `left` 1.30 A, `right` 1.87 A, `numpad` 0.79 A, all 110 LEDs 3.96 A;
+  0.11 A with the rails on and the LEDs dark. Expander 1 mA, port-board regulator
+  0.06 mA. Pico 2 W: not in its datasheet, 0.1 A allowed, to measure at M4.
+- **Module cable and port.** Receptacle: 4 VBUS and 4 GND contacts at 1.25 A, other
+  contacts 0.25 A; a 3 A cable drops at most 0.25 V on VBUS and 0.25 V on GND (Type-C
+  figures from memory, not from a file). TPS25810: limit 3.16 / 3.40 / 3.64 A at the
+  3 A setting, 37 mOhm max. At `right`'s 1.87 A the module still sees about 4.5 V;
+  LEDs work down to 3.7 V and the AP2112K (0.4 V dropout at 0.6 A) needs 3.7 V.
+  Ground shift up to 0.16 V, harmless for 3.3 V SPI.
+- **LED rail switch (key boards).** TPS22918: 2 A at 70 C, 59 mOhm max; firmware
+  caps `right` at 1.8 A.
+- **Ports stay at 3 A and the hub rail is raised to 3 A or more (user, 2026-11-13).**
+  The drawn TPS630701 is a 2 A part (graph: 3.4 A at 5.0 V in and 25 C, 2.1 A at
+  125 C), so three 3.4 A ports could pull the rail down (the M1 review's one
+  must-fix finding). Decided: replace it with a **TPS552892** (no I2C needed; 7 A
+  minimum inductor limit, about 4.5 A at 5 V from 3.6 V in, calculated; quiescent
+  0.8 mA against 0.05 mA and about 77 % against about 90 % at 50 mA, graph, so idle
+  battery life drops by roughly 15 %, to measure at M4). **Not drawn yet: M1 task 5**
+  (roadmap), with what follows from it: inductor and capacitors, a larger
+  ideal-diode FET (CSD17313Q2 is package-limited to 5 A and loses 0.5 W at 4 A), the
+  host-port limit, the +5 V bulk capacitor the TPS25810 asks for (120 uF).
+  Limits no converter removes: on USB the host gives at most 3 A (about 2.7 A at the
+  rail for all ports together); on battery 3 A at 5 V takes about 3.8 A from one pack.
+- **Host port (`hardware/usb-port`, still as rev 8).** KTS1693 ISET 4.99 k trips at
+  1.82-2.18 A and latches off (OC_MODE low): too low for a 3 A host. To change in
+  task 5: about 2.86 k (3.19 / 3.50 / 3.82 A) and OC_MODE high (auto-restart). The
+  cable header carries VBUS and GND on three JST GH contacts each, 1 A per contact:
+  3 A is its limit.
+- **Battery path.** Pack fuse **MF-LSMF500/16X (user, 2026-11-13)**: holds 5.0 A at
+  23 C, 4.2 A at 40 C, 3.3 A at 60 C, trips at 10 A, 25 mOhm max, 2920 size (was
+  MF-MSMF125, 1.25 A, which capped the battery at about 0.8 A at 5 V). Note: it needs
+  10 A to trip, which NiMH cells deliver into a short and alkalines may not. Chain
+  seam: pack lines doubled, Mill-Max spring pins 4.8 A or more each (derated), 20 to
+  40 mOhm; headers 4.6 A or more per pin. Battery switch CSD25402Q3A: 8.9 mOhm max at
+  -4.5 V, 15.9 at -2.5 V.
+- **Core layer.** +5 V over two stack pins feeds only the Pico (MBR120: 0.28 V at
+  0.1 A, VSYS about 4.7 V). The connector layer takes a few mA from the Pico's 3V3
+  (limit 300 mA).
+- **Firmware budget (O3), until measured:** LED current is capped from what the
+  source offers: host 0.5 / 1.5 / 3 A (CC) less the Pico and conversion loss; on
+  battery the cap is a setting (pack current 4.2 A is the hardware ceiling).
+
 ## 4. Firmware
 
 - Go, built with TinyGo, one program, on the hub's Pico 2 W. Based on
@@ -388,7 +435,8 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
   protection, how ports and cables are marked.
 - **O2** SPI at 4 MHz over a 1 m full-featured USB-C cable: prove on the bench at M4
   before PCBs are ordered, or order after M4.
-- **O3** LED current caps per source: sized at M1, measured at M4.
+- **O3** LED current caps per source: sized at M1 (§3b), measured at M4.
+- **O11** 5 V rail at 3 A or more: TPS552892 rework of the power path (M1 task 5, §3b).
 - **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
 - O7 closed 2026-11-13: SK6812MINI-E chain (D10, §2). Open under it: a European source for the LED.
 - O8 closed 2026-11-13: 2x8 chain, five pack inputs, lowest-first priority (§3a). Priority hand-over simulated and the re-arm level tuned at the M1 review (§3a).

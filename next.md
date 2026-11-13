@@ -34,10 +34,6 @@ netlists also checked independently by the main session (expander pins, addresse
 receptacle nets). New project symbols: `MCP23S17-E_SO` (SO tri-state so two chips can share MISO),
 `TPS22918DBV`, `USB_C_Receptacle_24P` (in `gen_kicad.py`). The dial push (row 0, col 10) is on the dial board, so
 `right` has 52 switches; `J3` matches the dial board's 5-pin `J901`.
-**Open from task 1, for the M1 review (task 4) against datasheets**: TPS22918 pin-out and CT value ("1n (tbd)");
-SK6812MINI-E stock symbol/footprint pad order; the JAE DX07S024WJ1R350 receptacle footprint (only stock one with
-all 24 pads); no ESD array on the port board yet; port-board socket must sit on the side where pin 1 mates pin 1;
-stabiliser footprints not placed; sheets never opened in KiCad (numpad and port-module are on oversized A1).
 **M1 task 2 done (2026-11-13)**: `python3 tools/sch_hub.py` generates `hardware/hub-core` (Pico 2 W on sockets,
 pogo pins to TP2/TP3/TP6, buttons, frozen 2x25 stack connector, expansion header), `hardware/hub-conn` (three
 module ports: TPS25810 + 74LVC125A SPI buffer gated by the port's CS + ESD; 74AHCT125 for LED data; host-port
@@ -50,17 +46,37 @@ buffer per port; **lowest-module-first pack priority in hardware** (supervisor +
 the gap-free fallback). New symbols in `gen_kicad.py`: `Pico2W`, `LM74610QDGK`, `TPS630701RNM`,
 `TPS3840PLxxDBV`, `74x125_SO14`, `DMN63D8LDW`, `CSD17313Q2`, `CSD25483F4`. Datasheets are in `build/ds/`
 (git-ignored; `tps25810.pdf` added this session).
-**Open from task 2, for the M1 review (task 4)**: pack-priority circuit is new and **not simulated** (hand-over
-when the active pack is pulled or empties, the 820 k re-arm level, start-up from one pack); TPS25810 details
-(REF_RTN, CC and VBUS capacitors, IN2/AUX for VCONN, UFP/FAULT levels) and three 3.4 A ports on a 2 A converter
-(O3); CSD25483F4 pin order (1 G, 2 S, 3 D assumed); Pico pads TP2/TP3/TP6 (which side of the 27 R, BOOTSEL to
-GND) and pogo pin part; SW_SPDT common pin and the latching switch part; `J_USB` on hub-conn copies usb-port
-`J502` by hand (not covered by `check_interconnect.py`); **port-module needs a CS pull-up** (the hub leaves CS
-undriven until DET) and a MISO series resistor would belong on the key board; footprints missing: TPS630701,
-CSD17313Q2, CSD25483F4, inductor, BC4AAPC holder, pogo pins and chain parts, buttons; hub-conn sheet is A0.
-**Next: M1 task 3** (hub pin map exported as data for the firmware from `sch_hub.py`; rails, cable and fuses
-sized from datasheets) **and task 4** (independent review of all schematics against the datasheets, Opus, given
-the files and not the conclusions; plus the priority simulation). M3 may also start (D2 is done).
+**M1 tasks 3 and 4 done (2026-11-13), except one finding that became task 5.**
+Task 3: `tools/sch_hub.py` writes and checks `firmware/hub-pinmap.json` (GPIO, ports, SPI, expander addresses,
+active levels); sizing is spec **§3b**. Task 4: independent Opus review against the datasheets (17 findings) and
+the pack-priority simulation `python3 tools/sim_priority.py` (ngspice, decks in `build/sim/`, results in spec §3a).
+**Fixed in the generators, ERC 0 on all boards** (`tools/kicad-check.sh`; it exits 1 only for the known usb-port
+"no board outline" DRC item): matrix diodes are Schottky (BAT43W class; values from memory, read its datasheet at
+the parts list); port-module has ESD arrays + VBUS TVS, CS 1 k + 100 k pull-up, INT 10 k pull-up, 33 R in MISO
+(receptacle net `MISO_CONN`); hub has no INT pull-up (firmware: Pico pull-up while DET is low), LED data 330 R at
+the hub + 220 R before LED1 (`LED_D0`), pack divider fed from `SENSE_K` + 100 n, `USB_PRESENT` 10 k / 12 k,
+TPS630701 EN through 100 k; pack priority: 910 k re-arm (about 5.0 V), **22 k bleeders on pack inputs 2-5 switched
+by +3V3** (the simulation found that an empty slot floats up through the LM74610 leakage and reads as healthy),
+Schottky clamps for a reversed pack; LED_CT 1 n confirmed.
+**User decisions 2026-11-13**: ports stay at 3 A and the **5 V rail goes to 3 A or more with a TPS552892**
+(accepted: about 15 % less idle battery life, to measure at M4); **pack fuse MF-LSMF500/16X** (drawn).
+**Next: M1 task 5** (roadmap; the M1 exit check waits for it): TPS552892 on hub-conn in place of the TPS630701
+(datasheet `build/ds/conv3a/`; MODE low = PFM, EXTVCC floating, ISP/ISN to VOUT, FB divider, COMP, two BOOT
+capacitors, RFSW, 4.7 uH class inductor with Isat above the 9 A limit; new symbol in `gen_kicad.py`); ideal-diode
+FET larger than CSD17313Q2 (5 A package limit, 0.5 W at 4 A); 150-220 uF bulk on +5V for the TPS25810 (inside the
+converter's output-capacitance range); `usb-port`: ISET 4.99 k -> about 2.86 k (3.5 A), OC_MODE (B4) high, OVLO
+may go back to the internal threshold, stale rev 8 notes (MDBT50Q, LM66200); then a focused Opus review of the
+changed power path and the USB/battery switchover. Reviewer's note: XFL4020-152 would have been marginal anyway.
+**Carried to M2 (layout), from the review**: SK6812MINI-E footprint is right only on B.Cu (stock symbol numbers
+pins differently from the datasheet; pad geometry checked); **mirror one side of every mated header pair** (bay
+2x6, stack 2x25, battery chain 2x8: unmirrored, the chain shorts PACK1 to GND through the fuse; reversal-safe
+covers rotation only); port-board socket side so pin 1 mates pin 1; footprints missing: TPS552892, ideal-diode
+FET, CSD25483F4, inductor, BC4AAPC holder, pogo pins and chain parts, buttons, stabilisers; PEC11R lug span
+13.2 mm in the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet
+could not be downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0).
+**Carried to M4 (firmware)**: rules in spec §4 (HAEN first, ODR before interrupts, one CS at a time, ADC pins
+without digital input); RP2350-E9 only matters on A2 silicon; cable: passive full-featured only.
+`build/ds/samtec_{ssq,tsw,tlw}.pdf` are error pages, not PDFs. M3 may also start (D2 is done).
 Matrices follow physical rows and columns (right is 6x11: 8 alpha + 3 nav columns).
 `.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
 Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3.14 side still imports its

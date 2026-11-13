@@ -72,11 +72,17 @@ matrix sizes in the spec are final.
 3. Hub pin map written into the spec and exported as data for the firmware. Pull-up
    scanning. Rails, cable and fuses sized from datasheets.
 4. ERC clean; an independent review of the schematics against the datasheets.
+   Done 2026-11-13: all findings fixed except the 5 V rail (task 5).
+5. **5 V rail at 3 A or more (user, 2026-11-13)**: TPS552892 in place of the
+   TPS630701 on `hub-conn` (application circuit from its datasheet, light-load mode),
+   larger ideal-diode FET, +5 V bulk capacitor, host-port limit and auto-restart on
+   `usb-port`, stale notes on `usb-port`; then a focused review of the changed power
+   path (Opus) and the switchover re-checked.
 
 **Decisions:** D10 key LED type is decided (SK6812MINI-E chain). D3 is decided
 (full-featured USB-C cable, port board in a pod bay; spec §1).
 
-**Exit check:** ERC 0, the review's findings closed, pin map exported.
+**Exit check:** ERC 0, the review's findings closed (open: task 5), pin map exported (done).
 
 ## M2, PCBs
 

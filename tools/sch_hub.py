@@ -384,8 +384,9 @@ def build_conn():
 def build_battery():
     b = Board(120)
     b.part("BT", "Device:Battery", "4xAA NiMH", "", (20, 22), {1: "CELL+", 2: "GND"}, {"MPN": "MPD BC4AAPC"})
-    b.part("F", "Device:Polyfuse", "MF-MSMF125/16X", "Fuse:Fuse_1812_4532Metric_Pad1.30x3.40mm_HandSolder", (12, 22),
-           {1: "CELL+", 2: "PACK1"}, {"MPN": "Bourns MF-MSMF125/16X-2"})
+    # 5 A hold (4.2 A at 40 C, 3.3 A at 60 C), 10 A trip, 25 mOhm max: one pack feeds a 3 A port (user, 2026-11-13)
+    b.part("F", "Device:Polyfuse", "MF-LSMF500/16X", "Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder", (12, 22),
+           {1: "CELL+", 2: "PACK1"}, {"MPN": "Bourns MF-LSMF500/16X-2"})
     # up: own pack on PACK1, packs from below shifted by one; down: what the modules below deliver
     up = dict(CHAIN)
     down = {p: {"PACK1": "PACK2", "PACK2": "PACK3", "PACK3": "PACK4", "PACK4": "PACK5", "PACK5": None}.get(n, n)
