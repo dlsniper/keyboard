@@ -22,11 +22,25 @@ four checks good (14.1 mm cutout, cap gap, socket seating, LED window), no param
 counts and matrix sizes in the spec §2 are final.**
 **M1 started; D3 decided (user, 2026-11-13), spec §1**: module cable is a **full-featured USB-C cable used as plain
 wiring**; the receptacle sits on a **swappable port board** in a rear bay, on a frozen through-hole **2x6 header**
-on each key board (a future pod takes the port board's place). The spec holds a flip-proof wire plan (proposal, not
-yet checked against the USB-C cable wiring) and the consequences: different hub-side and module-side pin-outs,
-3.3 V made on the port board, LED rail switched on the key board by a spare expander pin, CC used for detect.
-**Next: M1 task 1** (`tools/sch_keys.py` for the three key boards, and the port board), starting by checking the
-wire plan against the USB Type-C cable wiring and fixing the 2x6 header pin order. M3 may also start (D2 is done).
+on each key board (a future pod takes the port board's place). Spec §1 holds the flip-proof wire plan (hub and
+module pin-outs differ; from memory of the Type-C cable wiring, **buzz out a real cable before M4**), CC used as
+real USB-C (hub port = source that powers only on Rd, module = sink; any module in any port, told apart by expander
+address) and the 2x6 pin order; spec §2 holds the key-board circuit and expander pin maps (rows driven, columns
+read, external 10 k column pull-ups, LED rail load switch on an expander pin, off by default).
+**M1 task 1 done (2026-11-13)**: `python3 tools/sch_keys.py` generates `hardware/{left,right,numpad}` and
+`hardware/port-module` (module-side port board) from `layout/keys.json`, then self-checks the netlists against
+keys.json and the spec tables (`--verify` checks only); `tools/kicad-check.sh` runs it too. ERC 0 on all four;
+netlists also checked independently by the main session (expander pins, addresses, diode direction, bay header,
+receptacle nets). New project symbols: `MCP23S17-E_SO` (SO tri-state so two chips can share MISO),
+`TPS22918DBV`, `USB_C_Receptacle_24P` (in `gen_kicad.py`). The dial push (row 0, col 10) is on the dial board, so
+`right` has 52 switches; `J3` matches the dial board's 5-pin `J901`.
+**Open from task 1, for the M1 review (task 4) against datasheets**: TPS22918 pin-out and CT value ("1n (tbd)");
+SK6812MINI-E stock symbol/footprint pad order; the JAE DX07S024WJ1R350 receptacle footprint (only stock one with
+all 24 pads); no ESD array on the port board yet; port-board socket must sit on the side where pin 1 mates pin 1;
+stabiliser footprints not placed; sheets never opened in KiCad (numpad and port-module are on oversized A1).
+**Next: M1 task 2, hub schematics** (core layer, connector layer with three hub-side ports: 24-pin receptacle with
+the hub column of the wire plan, Type-C source switch per port (TPS25810 class), 74AHCT125 for LED data, series
+resistors, INT pull-up; power path and AA module for 5 packs from rev 8.1). M3 may also start (D2 is done).
 Matrices follow physical rows and columns (right is 6x11: 8 alpha + 3 nav columns).
 `.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
 Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3.14 side still imports its

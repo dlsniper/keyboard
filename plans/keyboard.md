@@ -42,27 +42,61 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 - **Cable, hub to each module (D3, user, 2026-11-13): a full-featured USB-C cable
   (USB 3 / Thunderbolt class, all wires present) used as plain wiring, not as USB.**
   A USB 2.0 or charge-only USB-C cable does not work; ports and cables get marked.
-  Chosen over RJ45, GX16 and a ribbon header. Wire plan, flip-proof without a mux
-  (both lanes of each kind tied together on the boards; to be checked against the
-  USB-C cable wiring when drawn at M1):
-  - high-speed pairs, hub TX to module RX: SCK, with the other conductor grounded;
-  - high-speed pairs, module TX to hub RX: MISO and INT;
-  - D+ / D-: MOSI and CS;
-  - SBU1 = SBU2: LED data (5 V level);
-  - VBUS: 5 V, GND: ground, shell: shield;
-  - CC: module detect, wired so that plugging a module or the hub into a real USB
-    device does no harm (M1).
-  Consequences for M1: hub side and module side have different pin-outs (the cable
-  is symmetric); there is no 3.3 V wire, so 3.3 V is made on the module's port
-  board; there is one 5 V wire, so the LED rail is switched **on the key board** by a
-  spare expander pin (the hub still switches each module's VBUS); the 24-pin
-  receptacle is reflow-only, which is why it sits on the small port board.
+  Chosen over RJ45, GX16 and a ribbon header. **Wire plan (M1, 2026-11-13)**,
+  flip-proof without a mux: on every receptacle the two lanes of each kind are tied
+  together (A2=B2, A3=B3, A10=B10, A11=B11, A6=B6, A7=B7, A8=B8), so each signal
+  runs on two cable wires in parallel and either plug orientation gives the same
+  circuit. Pairs are chosen by what tolerates crosstalk inside a pair:
+
+  | Signal | Hub receptacle | Module receptacle | Why there |
+  | --- | --- | --- | --- |
+  | SCK | TX1+/TX2+ (A2, B2) | RX1+/RX2+ (B11, A11) | shielded, alone |
+  | GND (SCK return) | TX1-/TX2- (A3, B3) | RX1-/RX2- (B10, A10) | clock gets its own return |
+  | MOSI | RX1+/RX2+ (B11, A11) | TX1+/TX2+ (A2, B2) | data with data: both settle before the SCK edge |
+  | MISO | RX1-/RX2- (B10, A10) | TX1-/TX2- (A3, B3) | as above |
+  | CS | D+ (A6, B6) | D+ | slow; RC filter at the module |
+  | INT | D- (A7, B7) | D- | open drain, pull-up at the hub only |
+  | LED data, 5 V level | SBU1 = SBU2 (A8, B8) | SBU1 = SBU2 | series resistor at the hub |
+  | 5 V | VBUS x 4 | VBUS x 4 | 3 A cable |
+  | GND | GND x 4, shell | GND x 4, shell | |
+  | CC1, CC2 (separate) | Rp each | Rd 5.1 k each | real USB-C roles, below |
+
+  The cable crosses TX to RX, so **hub side and module side have different
+  pin-outs**. The table is from the USB Type-C cable wiring as I know it (TX1 to RX1,
+  TX2 to RX2, SBU1 to SBU2, one CC wire, the other CC pin is the cable's own VCONN /
+  e-marker); **buzz out the real cable before M4's bench test** (O2).
+- **CC is used as USB-C means it**: every hub port is a plain 5 V source (Rp, VBUS
+  switched on only when Rd is seen, current-limited; one Type-C source-switch chip
+  per port, TPS25810 class, chosen with the hub schematic), every module is a plain
+  sink (Rd). That gives module detect and the per-module rail switch, and makes
+  mis-plugs harmless: a module in a charger or laptop is just powered and idle
+  (INT is open drain, MISO is off while CS is high); a phone in a hub port is
+  charged at the default current. The hub drives no signal on a port until an
+  expander has answered there, and holds LED data low while a module's LED rail
+  is off.
+- Modules are told apart by expander address, so **any module works in any hub
+  port**: `left` 0, `numpad` 1, `right` 2 and 3 (MCP23S17 address pins, HAEN).
+- Other consequences: there is no 3.3 V wire, so 3.3 V is made on the module's port
+  board; there is one 5 V wire, so the LED rail is switched **on the key board** by
+  an expander pin; the 24-pin receptacle is reflow-only, which is why it sits on
+  the small port board.
 - **Port bay (D3, user, 2026-11-13):** the USB-C receptacle is not on the key board.
   Each key board has a frozen through-hole **2x6 header** in a rear bay (about
-  30 x 25 mm): SCK, MOSI, MISO, CS, INT, LED data, 2 x 5 V, 2 x GND, 3.3 V in,
-  detect. A small **port board** (receptacle, 3.3 V regulator, protection) plugs
-  onto it, held by two M2 screws. A worn port is a two-screw swap, and a different
-  cable later needs only new port boards.
+  30 x 25 mm), 2.54 mm pitch, pins on the key board, socket on the port board:
+
+  | Pin | Net | Pin | Net |
+  | --- | --- | --- | --- |
+  | 1 | 5 V | 2 | 5 V |
+  | 3 | GND | 4 | LED data in |
+  | 5 | 3.3 V in | 6 | spare (to the spare-pin header) |
+  | 7 | INT | 8 | CS |
+  | 9 | MISO | 10 | MOSI |
+  | 11 | GND | 12 | SCK |
+
+  (Detect needs no pin: it is done on CC, on the port board.) A small **port board**
+  (receptacle, Rd, 3.3 V regulator, CS filter, ESD protection) plugs onto it, held
+  by two M2 screws placed off-centre so it cannot go on reversed. A worn port is a
+  two-screw swap, and a different cable later needs only new port boards.
 - **Cable-free modules are a wanted upgrade (user, 2026-11-13), not rev 9's first
   build.** The module's cable connector doubles as a **pod socket**: a later pod
   (its own controller with radio, its own AA pack and converter) plugs in where the
@@ -107,6 +141,25 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   (`mech/testcell/`: switch in the 14.1 mm cutout, cap gap at the tightest rotated
   spot, socket seating, LED window under the switch slot); **signed off by the user,
   D2, 2026-11-13**. The file is independent of where the controller sits.
+- **Key board circuit (M1, 2026-11-13).** Rows are driven low one at a time,
+  columns are read; diode anode towards the column, cathode on the row. Each column
+  has an **external 10 k pull-up to 3.3 V**: the expander's internal 100 k is too
+  slow to let a column recover between two rows at 1 kHz+. The same for the two dial
+  phases. Expander pins (MCP23S17, `GPA`/`GPB`):
+
+  | | left (addr 0) | numpad (addr 1) | right U1 (addr 2) | right U2 (addr 3) |
+  | --- | --- | --- | --- | --- |
+  | Columns | GPA0-6 | GPA0-3 | GPA0-7 = col 0-7, GPB0-2 = col 8-10 | |
+  | Rows | GPB0-5 | GPB0-5 | | GPA0-5 |
+  | Dial A, B | | | GPB3, GPB4 | |
+  | LED rail enable | GPB7 | GPB7 | | GPB7 |
+  | Spare, on the header | GPA7, GPB6 | GPA4-7, GPB6 | GPB5-7 | GPA6-7, GPB0-6 |
+
+  On `right` one 4-byte read of U1 returns all columns and the dial, so a full scan
+  is 6 row writes and 6 reads. INT outputs are open drain, wired together. The LED
+  rail goes through a load switch with slew control (TPS22918 class, 2 A) whose
+  enable is pulled down, so LEDs are off until firmware turns them on. LED chain:
+  100 nF per LED, bulk capacitor at the switch output.
 - Stabilisers: Cherry MX plate/PCB 2U footprint from the vendored kiswitch subset.
 - Plate: 1.5 mm FR4, no copper (as rev 8).
 - **Key LEDs: SK6812MINI-E chain (D10, user, 2026-11-13)**, one per key, reverse

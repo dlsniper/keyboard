@@ -1,0 +1,18 @@
+{
+  "board": {
+    "design_settings": {
+      "rules": {
+        "min_clearance": 0.127,
+        "min_track_width": 0.127,
+        "min_through_hole_diameter": 0.2
+      }
+    }
+  },
+  "meta": {
+    "filename": "port-module.kicad_pro",
+    "version": 3
+  },
+  "schematic": {
+    "annotate_start_num": 1
+  }
+}

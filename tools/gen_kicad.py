@@ -26,7 +26,13 @@ LIBNAME = "keyboard"
 PROJECTS = [
     ("usb-port", 500, 1.6),
     ("dial", 900, 1.6),
+    ("left", 1, 1.6),
+    ("right", 1, 1.6),
+    ("numpad", 1, 1.6),
+    ("port-module", 1, 1.6),
 ]
+# Key boards (tools/sch_keys.py) carry the vendored kiswitch footprint libraries
+KEY_BOARDS = {"left", "right", "numpad"}
 
 # Design-rule minimums from the spec (§12): JLCPCB economy 0.127 mm track/space,
 # 0.2 mm drill; the USB port and link boards carry the KTS1693 0.4 mm WLCSP and
@@ -184,6 +190,48 @@ SYMBOLS = [
         left=[("B1", "VIN", "power_in"), ("A1", "ON", "input"), ("C2", "ILIM", "passive")],
         right=[("B2", "VOUT", "power_out"), ("A2", "~{FLT}", "open_collector")],
         bottom=[("C1", "GND", "power_in")],
+    ),
+    # TI TPS22918 SLVSCY5 (DBV, SOT-23-6): key-board LED rail switch
+    symbol(
+        "TPS22918DBV", "U", f"{LIBNAME}:TI_SOT-23-6_DBV0006A",
+        "https://www.ti.com/lit/ds/symlink/tps22918.pdf",
+        "Load switch, 1-5.5 V, 2 A, 60 mOhm, adjustable rise time (CT), quick output discharge (QOD), SOT-23-6 (DBV)",
+        "load switch slew rate",
+        left=[("1", "VIN", "power_in"), ("3", "ON", "input"), ("4", "CT", "passive")],
+        right=[("6", "VOUT", "power_out"), ("5", "QOD", "passive")],
+        bottom=[("2", "GND", "power_in")],
+    ),
+    # Microchip MCP23S17 (DS20001952), SOIC-28 wide. Stock Interface_Expansion symbol types SO as output, which
+    # fails ERC when two chips share MISO (right); SO is tri-state (high-Z while CS is high).
+    symbol(
+        "MCP23S17-E_SO", "U", "Package_SO:SOIC-28W_7.5x17.9mm_P1.27mm",
+        "https://ww1.microchip.com/downloads/en/DeviceDoc/20001952C.pdf",
+        "16-bit SPI I/O expander, 10 MHz, hardware address pins A0-A2, SOIC-28 wide",
+        "gpio expander spi",
+        left=[(str(1 + i), f"GPB{i}", "bidirectional") for i in range(8)]
+        + [("15", "A0", "input"), ("16", "A1", "input"), ("17", "A2", "input"),
+           ("18", "~{RESET}", "input"), ("11", "~{CS}", "input"), ("12", "SCK", "input"), ("13", "SI", "input")],
+        right=[(str(21 + i), f"GPA{i}", "bidirectional") for i in range(8)]
+        + [("14", "SO", "tri_state"), ("20", "INTA", "tri_state"), ("19", "INTB", "tri_state")],
+        top=[("9", "VDD", "power_in")],
+        bottom=[("10", "VSS", "power_in")],
+        width=17.78,
+    ),
+    # 24-pin full-featured USB-C receptacle for the port board (GCT USB4085 and the stock 16P symbols have no TX/RX).
+    # Same pin names as KiCad's Connector:USB_C_Receptacle, all passive: the board ties RX/TX/SBU/D to signal nets,
+    # and a bidirectional pin on GND trips ERC against PWR_FLAG.
+    symbol(
+        "USB_C_Receptacle_24P", "J", "Connector_USB:USB_C_Receptacle_JAE_DX07S024WJ1R350",
+        "https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification",
+        "USB Type-C receptacle, all 24 contacts plus shield (full-featured)",
+        "usb type-c receptacle full featured",
+        left=[("A4", "VBUS", "passive"), ("A9", "VBUS", "passive"), ("B4", "VBUS", "passive"), ("B9", "VBUS", "passive"),
+              ("A1", "GND", "passive"), ("A12", "GND", "passive"), ("B1", "GND", "passive"), ("B12", "GND", "passive"),
+              ("A5", "CC1", "passive"), ("B5", "CC2", "passive"), ("A6", "D+", "passive"), ("B6", "D+", "passive"),
+              ("A7", "D-", "passive"), ("B7", "D-", "passive"), ("A8", "SBU1", "passive"), ("B8", "SBU2", "passive")],
+        right=[("A2", "TX1+", "passive"), ("A3", "TX1-", "passive"), ("B2", "TX2+", "passive"), ("B3", "TX2-", "passive"),
+               ("B11", "RX1+", "passive"), ("B10", "RX1-", "passive"), ("A11", "RX2+", "passive"), ("A10", "RX2-", "passive"),
+               ("SH", "SHIELD", "passive")],
     ),
     # TI TPS61023 SLVSF14B, Pin Functions; DRL = SOT-563
     symbol(
@@ -831,7 +879,7 @@ def write_projects():
             f"{name}.kicad_sch": sch_text(name),
             f"{name}.kicad_pcb": pcb_text(thickness, name in FOUR_LAYER),
         }
-        sym, fp, fp_libs = lib_tables(depth, name.startswith("keys-"))
+        sym, fp, fp_libs = lib_tables(depth, name in KEY_BOARDS)
         files["sym-lib-table"] = sym
         files["fp-lib-table"] = fp
         for fname, text in files.items():

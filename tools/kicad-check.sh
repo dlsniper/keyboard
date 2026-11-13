@@ -21,6 +21,9 @@ while IFS= read -r pro; do
   "$KICAD_CLI" pcb drc --exit-code-violations --output "$OUT/$name-drc.rpt" "$dir/$name.kicad_pcb" || status=1
 done < <(find "$ROOT/hardware" -name '*.kicad_pro' -not -path '*/lib/*' | sort)
 
+echo "== key boards: netlist self-check against layout/keys.json and the spec"
+"$ROOT/.venv/bin/python" "$ROOT/tools/sch_keys.py" --verify || status=1
+
 echo "== interconnect"
 "$ROOT/.venv/bin/python" "$ROOT/tools/check_interconnect.py" > "$OUT/interconnect.rpt" || status=1
 grep "^ERR" "$OUT/interconnect.rpt" || true
