@@ -340,7 +340,7 @@ SYMBOLS = [
     ),
     # TI TPS552892 SLVSH28A, Table 5-1 (RYQ, 21-pin VQFN-HR 3 x 5 mm, no exposed pad pin). Footprint at M2.
     symbol(
-        "TPS552892RYQ", "U", "",
+        "TPS552892RYQ", "U", "keyboard:TI_VQFN-HR-21_5x3mm_RYQ0021A",
         "https://www.ti.com/lit/ds/symlink/tps552892.pdf",
         "Buck-boost converter, 3-36 V in, 0.8-22 V out by FB divider, 8 A average inductor current limit, PFM, VQFN-HR-21 (RYQ)",
         "buck-boost converter TI",
@@ -395,7 +395,7 @@ SYMBOLS = [
     ),
     # TI CSD25483F4 SLPS449 (FemtoFET, 1.0 x 0.6 mm LGA): 1 G, 2 S, 3 D, to be confirmed in the M1 review
     symbol(
-        "CSD25483F4", "Q", "",
+        "CSD25483F4", "Q", "keyboard:TI_PicoStar-3_1.0x0.6mm_YJC0003A",
         "https://www.ti.com/lit/ds/symlink/csd25483f4.pdf",
         "P-channel FemtoFET, -20 V, VGS -12 V, IDSS <= 100 nA, LGA 1.0 x 0.6 mm",
         "P-MOSFET FemtoFET low leakage",
@@ -551,6 +551,90 @@ def bc2aapc():
     return footprint("BatteryHolder_MPD_BC2AAPC_2xAA_RevP",
                      "MPD BC2AAPC 2xAA series holder, PC pins, 15.0 mm above board (drawing rev P, 2024-06-21: pin spacing 13.00 mm)",
                      "battery holder AA 2xAA MPD BC2AAPC", "through_hole", body, y1 - 1.5, y2 + 1.5)
+
+
+def vqfn_hr21_ryq():
+    """TI RYQ0021A VQFN-HR 21-pin 5 x 3 mm (TPS552892 SLVSH28A p. 33, land pattern example 4226658/A).
+
+    Top view, long axis along X. Pins 1-4 down the left side, 5-13 along the bottom
+    (left to right), 14-17 up the right side, 18-21 along the top (right to left).
+    Pins 7-11 are 3.4 mm strips across the package (VIN, SW1, PGND, SW2, VOUT).
+    Row X positions: +/-2.04, 1.54, 1.04, 0.54 and 0 (the two steps beside the centre
+    are 0.54 mm, the others 0.5 mm). Pads 0.25 mm wide; the centre strip's lead is
+    0.28-0.38 mm, drawn 0.3 mm. No thermal pad: heat leaves through the strips.
+    """
+    def pad(name, x, y, sx, sy):
+        return (f'\t(pad {q(str(name))} smd roundrect (at {n(x)} {n(y)}) (size {n(sx)} {n(sy)})'
+                f' (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.2))\n')
+    body = ""
+    for i in range(4):
+        y = -0.75 + 0.5 * i
+        body += pad(1 + i, -2.4, y, 0.6, 0.25)
+        body += pad(17 - i, 2.4, y, 0.6, 0.25)
+    xs = [-2.04, -1.54, -1.04, -0.54, 0.0, 0.54, 1.04, 1.54, 2.04]
+    for i, x in enumerate(xs):
+        num = 5 + i
+        if 7 <= num <= 11:
+            body += pad(num, x, 0, 0.3 if num == 9 else 0.25, 3.4)
+        elif num in (5, 13):
+            body += pad(num, x, 1.375, 0.25, 0.65)
+        else:
+            body += pad(num, x, 1.4, 0.25, 0.6)
+    for num, x, y, sy in ((21, -2.04, -1.375, 0.65), (20, -1.54, -1.4, 0.6), (19, 1.54, -1.4, 0.6), (18, 2.04, -1.375, 0.65)):
+        body += pad(num, x, y, 0.25, sy)
+    body += rect("F.Fab", -2.5, -1.5, 2.5, 1.5, 0.1)
+    body += rect("F.CrtYd", -2.95, -1.95, 2.95, 1.95, 0.05)
+    body += circle("F.SilkS", -3.15, -0.75, 0.08, 0.1, fill=True)
+    return footprint("TI_VQFN-HR-21_5x3mm_RYQ0021A",
+                     "TI RYQ0021A VQFN-HR 21-pin 5 x 3 mm, flip-chip leads, no thermal pad (TPS552892 SLVSH28A p. 33)",
+                     "VQFN-HR RYQ TI TPS552892", "smd", body, -2.7, 2.7)
+
+
+def picostar_yjc3():
+    """TI YJC0003A PicoStar / FemtoFET F4, 1.0 x 0.6 mm, 3 lands (CSD25483F4 SLPS449F section 7.2).
+
+    Pins 1 and 2 (0.25 x 0.15 mm) at x = -0.325, y = -/+0.175; pin 3 (0.25 x 0.5 mm) at
+    x = +0.325. The datasheet's pattern is solder mask defined (copper larger than the
+    opening); here the copper is the land and the mask is opened 0.05 mm around it.
+    Reflow only. CSD25483F4: 1 gate, 2 source, 3 drain.
+    """
+    body = ""
+    for name, x, y, sy in (("1", -0.325, -0.175, 0.15), ("2", -0.325, 0.175, 0.15), ("3", 0.325, 0.0, 0.5)):
+        body += (f'\t(pad {q(name)} smd roundrect (at {n(x)} {n(y)}) (size 0.25 {n(sy)}) (layers "F.Cu" "F.Paste" "F.Mask")'
+                 f' (roundrect_rratio 0.2) (solder_mask_margin 0.05))\n')
+    body += rect("F.Fab", -0.5, -0.3, 0.5, 0.3, 0.05)
+    body += rect("F.CrtYd", -0.75, -0.55, 0.75, 0.55, 0.05)
+    body += circle("F.SilkS", -0.9, -0.45, 0.06, 0.1, fill=True)
+    return footprint("TI_PicoStar-3_1.0x0.6mm_YJC0003A",
+                     "TI YJC0003A PicoStar (FemtoFET F4) 1.0 x 0.6 mm, 3 lands, 0.35 mm pitch (CSD25483F4 SLPS449F p. 8)",
+                     "PicoStar FemtoFET YJC TI", "smd", body, -1.3, 1.3)
+
+
+def bc4aapc():
+    """MPD BC4AAPC 4xAA series holder, PC pins: drawing BC4AAPC rev F (2020-02-14) PCB layout.
+
+    Four 1.17 mm holes, origin on pad 1: pad 1 is 3.00 mm from one outside edge, pad 2
+    55.00 mm away (3.30 mm from the other edge), pads 3 and 4 are 26.10 mm across,
+    8.10 mm and 24.70 mm from that second edge. Body 61.3 mm (this axis) x 57.2 mm.
+    NOT IN THE DRAWING, to check on a real holder before the battery board is laid out:
+    which pins are + and - (taken here as pad 1 = +, pad 2 = -, read off the cell
+    symbols and springs in the top view; pads 3 and 4 are left unconnected), and where
+    the body sits along X (drawn with pads 3 and 4 on the centre line, 28.6 mm in).
+    """
+    body = ""
+    for name, x, y, shape in (("1", 0, 0, "rect"), ("2", 0, 55.0, "circle"), ("3", 26.1, 50.2, "circle"), ("4", 26.1, 33.6, "circle")):
+        body += (f'\t(pad {q(name)} thru_hole {shape} (at {n(x)} {n(y)}) (size 2.17 2.17) (drill 1.17)'
+                 f' (layers "*.Cu" "*.Mask"))\n')
+    x1, y1, x2, y2 = -2.5, -3.0, 54.7, 58.3
+    body += rect("F.Fab", x1, y1, x2, y2, 0.1)
+    body += rect("F.SilkS", x1 - 0.12, y1 - 0.12, x2 + 0.12, y2 + 0.12, 0.12)
+    body += rect("F.CrtYd", x1 - 1.5, y1 - 0.5, x2 + 1.5, y2 + 0.5, 0.05)
+    for text, y in (("+?", 0.0), ("-?", 55.0)):
+        body += (f'\t(fp_text user {q(text)} (at 3 {n(y)} 0) (layer "F.SilkS")'
+                 f' (effects (font (size 1.5 1.5) (thickness 0.15))))\n')
+    return footprint("BatteryHolder_MPD_BC4AAPC_4xAA",
+                     "MPD BC4AAPC 4xAA series holder, PC pins (drawing rev F). Polarity and body position along X are not in the drawing: check on the part",
+                     "battery holder AA 4xAA MPD BC4AAPC", "through_hole", body, y1 - 1.5, y2 + 1.5)
 
 
 def sod123fl_littelfuse():
@@ -822,6 +906,9 @@ FOOTPRINTS = {
     "Fuse_1206_Eaton_PTSLR1206": ptslr1206(),
     "D_SOD-123FL_Littelfuse": sod123fl_littelfuse(),
     "BatteryHolder_MPD_BC2AAPC_2xAA_RevP": bc2aapc(),
+    "BatteryHolder_MPD_BC4AAPC_4xAA": bc4aapc(),
+    "TI_VQFN-HR-21_5x3mm_RYQ0021A": vqfn_hr21_ryq(),
+    "TI_PicoStar-3_1.0x0.6mm_YJC0003A": picostar_yjc3(),
     "RotaryEncoder_Bourns_PEC11R-4xxxF-Sxxxx_Vertical": pec11r_switch(),
     "Kinetic_WLCSP-20_1.935x2.16mm_Layout4x5_P0.4mm": csp(
         "Kinetic_WLCSP-20_1.935x2.16mm_Layout4x5_P0.4mm",

@@ -371,7 +371,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "keyboard:TI_PicoStar-3_1.0x0.6mm_YJC0003A"
 			(at 0 -6.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5939,7 +5939,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "keyboard:TI_VQFN-HR-21_5x3mm_RYQ0021A"
 			(at 0 -25.4 0)
 			(show_name no)
 			(do_not_autoplace no)

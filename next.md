@@ -75,17 +75,48 @@ Opus review of the changed path: 9 findings, all closed (EN/UVLO divider, VCC ca
 battery LED cap follows the pack voltage, firmware); pulling USB while a nearly empty pack is the only other source
 restarts the hub above about 3 W (the LM74610 needs 25-140 ms to wake; O12, to measure at M4, matters from M6).
 An LM74700-Q1 was looked at as the way out and not drawn: its minimum input is 4 V, the packs go to 4.0 V.
-**Next: the user's sign-off of the M1 exit check** (ERC 0, review closed, pin map exported: all met), then **M2**
-(PCBs; main session) and/or M3 and M4.
-**Carried to M2 (layout), from the review**: SK6812MINI-E footprint is right only on B.Cu (stock symbol numbers
-pins differently from the datasheet; pad geometry checked); **mirror one side of every mated header pair** (bay
-2x6, stack 2x25, battery chain 2x8: unmirrored, the chain shorts PACK1 to GND through the fuse; reversal-safe
-covers rotation only); port-board socket side so pin 1 mates pin 1; footprints missing: TPS552892 (VQFN-HR
-RYQ0021A, land pattern on datasheet p. 33), CSD25483F4, inductor (XAL7070), 220 uF polymer can (8 x 10 assumed), BC4AAPC holder, pogo pins and chain parts, buttons, stabilisers; PEC11R lug span
-13.2 mm in the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet
-could not be downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0 and full: new parts need
-smaller cells or a second sheet); `usb-port.kicad_pcb` is still rev 8's layout (OC_MODE ball B4 was on GND, now open;
-R502, R503 values); TPS552892: AGND and PGND join only at the VCC capacitor.
+**M1 signed off by the user (2026-11-13). M2 started, session 1 done (2026-11-13):**
+**Decisions (user, options UI): D6 = JLCPCB makes and assembles** (rules in `tools/pcb_keys.py` `RULES`: 0.15 mm
+minimum track/gap, default class 0.25 / 0.2 mm, via 0.6 / 0.3, 0.3 mm to the edge; all SMD parts on the back);
+key-board outline with **straight edges**; a **full-width rear strip** (25 mm behind the F-row caps) for expander,
+LED rail switch, headers; **port bay at the inner (split) end**, `right` mirrors; port board plugs on the **top
+side, pins up**; **provisional M2 holes now** (three in the strip, two in the front margin, which is 6 mm; M3 may
+move them before routing is final); **pogo pins, 2x8 chain seam parts and the three hub buttons are chosen at the
+hub-board session, with a first hub tower section in FreeCAD** (no footprints yet; hub-core, hub-conn and battery
+cannot be placed before that).
+**Footprints added** (`tools/gen_kicad.py`, drawn from the datasheets by the main session): `TI_VQFN-HR-21_5x3mm_RYQ0021A`
+(TPS552892), `TI_PicoStar-3_1.0x0.6mm_YJC0003A` (CSD25483F4; 1 G, 2 S, 3 D confirmed on the datasheet),
+`BatteryHolder_MPD_BC4AAPC_4xAA`; the inductor uses the stock `L_Coilcraft_XAL7070-XXX`, the 220 uF can the stock
+`CP_Elec_8x10` (part still assumed), stabilisers the vendored `Stabilizer_Cherry_MX_2.00u` (same spacing 2u-2.75u,
+placed by the script, board-only). `sch_hub.py` assigns them; ERC 0, hub checks pass. **BC4AAPC: the drawing does
+not say which pins are + and - nor where the body sits across the pins**; the footprint takes pad 1 = +, pad 2 = -
+(read off the cell symbols), pads 3 and 4 unconnected: **check on a real holder before the battery board is laid out**.
+**`left` is placed and DRC-checked, not routed**: `tools/pcb_keys.py left` (run with KiCad's Python, command in its
+header; `--force` to overwrite a routed board) builds `hardware/left/left.kicad_pcb` from `layout/keys.json` and the
+schematic netlist on a fresh board: outline (four straight edges, 3 mm fillets, about 149 x 165 mm bounding box),
+36 switches, on the back LED (window as the test cell, turned so DIN looks at the previous LED), diode east and
+100 n west of it, stabiliser holes, rear strip, 5 + 2 holes, nets, symbol fields; it writes the JLCPCB rules into
+`left.kicad_pro` and `left.kicad_dru` (two footprint-inherent exceptions: LED pads 0.25 mm from their own window,
+MX socket hole 0.44 mm from the peg hole). **DRC with schematic parity: 0 errors, 0 parity issues, 341 unconnected
+(not routed), 19 silkscreen warnings in the rear strip (references overlap; for the silkscreen pass after routing).**
+`tools/kicad-check.sh` therefore exits 1 for `left` until it is routed.
+**Mirror rule for mated headers (checked on the stock footprints)**: lower board = `PinHeader` on its top side,
+upper board = `PinSocket` on its BOTTOM side; KiCad's 2-row PinSocket has the columns swapped, so flipped it puts
+pin 1 on pin 1. Any other arrangement needs one side mirrored by hand. Bay geometry is frozen in `pcb_keys.py`
+`BAY` (30 mm wide, header 7 mm behind the cap line, screws at -11.5 and +9 mm, 20 mm back): the port board must
+use the same numbers.
+**Script notes**: KiCad's Python crashes at exit after pcbnew work (macOS crash dialog); the script leaves with
+`os._exit`. Emptying a loaded board from Python breaks `FootprintLoad`; always build on `CreateEmptyBoard()`.
+The strip layout in `place_strip` is written for one or two expanders but only run for `left`.
+**Next (M2 session 2)**: run `pcb_keys.py` for `right` (two expanders, dial connector J3, mirrored bay) and
+`numpad` (square, no arc: check the outline rule), DRC both; then routing of `left` as the pattern (matrix, LED
+chain with wide 5 V, SPI), or the hub session (FreeCAD section, parts, footprints, placement).
+**Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
+the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet could not be
+downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
+is still rev 8's layout (OC_MODE ball B4 was on GND, now open; R502, R503 values); TPS552892: AGND and PGND join
+only at the VCC capacitor, no thermal pad (heat leaves through the strips); stack 2x25 and chain 2x8 pairs follow
+the mirror rule above (unmirrored, the chain shorts PACK1 to GND through the fuse).
 **Carried to M4 (firmware)**: rules in spec §4 (HAEN first, ODR before interrupts, one CS at a time, ADC pins
 without digital input); RP2350-E9 only matters on A2 silicon; cable: passive full-featured only.
 `build/ds/samtec_{ssq,tsw,tlw}.pdf` are error pages, not PDFs. M3 may also start (D2 is done).

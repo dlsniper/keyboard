@@ -1268,7 +1268,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "keyboard:BatteryHolder_MPD_BC4AAPC_4xAA"
 			(at 55.88 59.944 90)
 			(effects
 				(font

@@ -328,7 +328,7 @@ def build_conn():
     b.c("1u", "UVLO_VDD")
     b.supervisor("TPS3840PL40", "UVLO_VDD", "PWR_SW_A")
     # pack voltage to the ADC: 200k / 100k switched on the high side
-    b.part("Q", "keyboard:CSD25483F4", "CSD25483F4", "", (26, 12), {1: "DIV_G", 2: "SENSE_K", 3: "DIV_TOP"},
+    b.part("Q", "keyboard:CSD25483F4", "CSD25483F4", "keyboard:TI_PicoStar-3_1.0x0.6mm_YJC0003A", (26, 12), {1: "DIV_G", 2: "SENSE_K", 3: "DIV_TOP"},
            {"MPN": "TI CSD25483F4"})
     b.r("470k", "SENSE_K", "DIV_G")
     b.r("200k", "DIV_TOP", "VBAT_SENSE")
@@ -364,11 +364,11 @@ def build_conn():
     b.c("10u", "SYS")
     b.c("100n", "SYS")
     b.bulk("SYS")  # carries the hub over the USB-to-battery hand-over
-    b.part("U", "keyboard:TPS552892RYQ", "TPS552892", "", (40, 24),
+    b.part("U", "keyboard:TPS552892RYQ", "TPS552892", "keyboard:TI_VQFN-HR-21_5x3mm_RYQ0021A", (40, 24),
            {7: "SYS", 1: "CONV_EN", 2: "GND", 5: "GND", 6: "FSW", 21: None, 18: "VCC5", 20: "BOOT1", 8: "L1",
             11: "+5V", 12: "+5V", 13: "+5V", 14: "FB", 15: "COMP", 16: None, 3: None, 4: None, 19: "BOOT2", 10: "L2",
             17: "GND", 9: "GND"}, {"MPN": "TI TPS552892RYQR"})
-    b.part("L", "Device:L", "4.7u", "", (10, 22), {1: "L1", 2: "L2"},
+    b.part("L", "Device:L", "4.7u", "Inductor_SMD:L_Coilcraft_XAL7070-XXX", (10, 22), {1: "L1", 2: "L2"},
            {"MPN": "Coilcraft XAL7070-472ME (Isat 15 A, 14.3 mOhm)"})
     # EN/UVLO: on above about 3.5 V, off below about 2.95 V (5 uA hysteresis current in the 100k), so the converter
     # never runs under its 3.0 V minimum when a pack sags
@@ -413,7 +413,7 @@ def build_conn():
 
 def build_battery():
     b = Board(120)
-    b.part("BT", "Device:Battery", "4xAA NiMH", "", (20, 22), {1: "CELL+", 2: "GND"}, {"MPN": "MPD BC4AAPC"})
+    b.part("BT", "Device:Battery", "4xAA NiMH", "keyboard:BatteryHolder_MPD_BC4AAPC_4xAA", (20, 22), {1: "CELL+", 2: "GND"}, {"MPN": "MPD BC4AAPC"})
     # 5 A hold (4.2 A at 40 C, 3.3 A at 60 C), 10 A trip, 25 mOhm max: one pack feeds a 3 A port (user, 2026-11-13)
     b.part("F", "Device:Polyfuse", "MF-LSMF500/16X", "Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder", (12, 22),
            {1: "CELL+", 2: "PACK1"}, {"MPN": "Bourns MF-LSMF500/16X-2"})

@@ -84,13 +84,15 @@ matrix sizes in the spec are final.
 (full-featured USB-C cable, port board in a pod bay; spec §1).
 
 **Exit check:** ERC 0, the review's findings closed, pin map exported. All three
-met 2026-11-13; waiting for the user's sign-off.
+met 2026-11-13; signed off by the user 2026-11-13.
 
 ## M2, PCBs
 
 **Goal:** key boards, plates, hub boards and battery module boards ready to order.
 
 1. Footprint placement from `layout/keys.json` by script; outlines shared with the case.
+   `tools/pcb_keys.py`: `left` placed and DRC-checked 2026-11-13 (straight edges, rear strip, bay at the split,
+   port board on top; user). `right`, `numpad`, then the hub boards (parts chosen with a hub CAD section).
 2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source.
 3. DRC with schematic parity; a second independent review, including every Pico pin
    against the RP2350 and Pico 2 W datasheets.
@@ -183,7 +185,7 @@ whoever delegates verifies what comes back.
 | D3 | Module cable and connector: decided 2026-11-13, full-featured USB-C cable, receptacle on a swappable port board in a pod bay | done |
 | D4 | Host USB port: decided, USB-C port board on `right` | done |
 | D5 | Retired rev 8 folders: decided, moved to `archive/rev8/` | done |
-| D6 | Board house and assembly | M2 |
+| D6 | Board house and assembly: decided 2026-11-13, JLCPCB makes and assembles | done |
 | D7 | Place the order | M2 end |
 | D8 | Tenting, tilt, palm rest | M3 |
 | D9 | Keymap and layers | M5 |

@@ -1,0 +1,10 @@
+(version 1)
+# Written by tools/pcb_keys.py. Two places where the footprint itself is closer than the board-wide rule:
+# the reverse-mount LED's pads sit 0.25 mm from its own window, and the MX socket's hole is 0.44 mm from the
+# switch's locating-peg hole (fixed by the switch; every hotswap board has it).
+(rule "LED window to its own pads"
+  (condition "A.Type == 'Pad' && A.memberOfFootprint('LED*')")
+  (constraint edge_clearance (min 0.2mm)))
+(rule "MX switch holes"
+  (condition "A.memberOfFootprint('SW*') && B.memberOfFootprint('SW*')")
+  (constraint hole_to_hole (min 0.4mm)))

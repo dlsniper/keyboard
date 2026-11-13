@@ -1,0 +1,142 @@
+(footprint "BatteryHolder_MPD_BC4AAPC_4xAA"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "MPD BC4AAPC 4xAA series holder, PC pins (drawing rev F). Polarity and body position along X are not in the drawing: check on the part")
+	(tags "battery holder AA 4xAA MPD BC4AAPC")
+	(property "Reference" "REF**"
+		(at 0 -4.5 0)
+		(layer "F.SilkS")
+		(uuid "e66fb85d-3549-4473-82e9-a82d480a68c9")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "BatteryHolder_MPD_BC4AAPC_4xAA"
+		(at 0 59.8 0)
+		(layer "F.Fab")
+		(uuid "a3343dcc-cbeb-435d-983c-26d2d6645330")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8fb56493-3a5d-4c30-9022-e76cb96049d1")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "51a4d379-ebfa-4b19-a9c1-bfc83008f9a2")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start -2.62 -3.12)
+		(end 54.82 58.42)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "b5d7fe46-bf19-4555-bf27-0cd20a98b0ed")
+	)
+	(fp_rect
+		(start -4 -3.5)
+		(end 56.2 58.8)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "ad4cad73-2c54-4c70-96fc-777bcc57b6b6")
+	)
+	(fp_rect
+		(start -2.5 -3)
+		(end 54.7 58.3)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "4b415382-13e0-4c5c-9207-bf358a7bf2bc")
+	)
+	(fp_text user "+?"
+		(at 3 0 0)
+		(layer "F.SilkS")
+		(uuid "4f75b5cb-ae0d-4c6c-973d-cb11fbf176bd")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text user "-?"
+		(at 3 55 0)
+		(layer "F.SilkS")
+		(uuid "0da27310-7885-42a6-8ceb-c02018ddf063")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole rect
+		(at 0 0)
+		(size 2.17 2.17)
+		(drill 1.17)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "7f242e1b-54e3-4ca4-8b98-80322be724fe")
+	)
+	(pad "2" thru_hole circle
+		(at 0 55)
+		(size 2.17 2.17)
+		(drill 1.17)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "a48ab0d3-0f1f-4fc6-86f9-4ed631221a25")
+	)
+	(pad "3" thru_hole circle
+		(at 26.1 50.2)
+		(size 2.17 2.17)
+		(drill 1.17)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "18bc26f9-1a62-4e3a-860e-37d5361ed57c")
+	)
+	(pad "4" thru_hole circle
+		(at 26.1 33.6)
+		(size 2.17 2.17)
+		(drill 1.17)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "30fccc0d-1381-4c0a-bd72-a8da8a5f8361")
+	)
+	(embedded_fonts no)
+)
