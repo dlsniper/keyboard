@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "5df71f4c-4877-4d09-9e6c-325b9dea0539")
+	(uuid "535ebd09-4b48-474a-bce9-5c5bac401f0e")
 	(paper "A4")
 	(title_block
 		(title "Dial board")
@@ -1518,26 +1518,26 @@
 			)
 		)
 		(pin "A"
-			(uuid "880a8f7c-2aa5-4335-bd18-1b612d98696a")
+			(uuid "075e9084-d14d-4377-9d1e-0e4bda0d2afa")
 		)
 		(pin "B"
-			(uuid "9379e760-64f9-4a1c-a890-09de47a1dfb7")
+			(uuid "202d5d1c-c108-40f2-8994-1800d30b45ac")
 		)
 		(pin "C"
-			(uuid "cc8ece55-fcc7-41d8-b762-7633f9f8fffc")
+			(uuid "54c3db27-b276-4223-bd47-6b88e0c14b44")
 		)
 		(pin "MP"
-			(uuid "c3a2ff85-2e15-4aa9-8bb6-958007d93d33")
+			(uuid "065fe05b-dc85-46a3-bd54-5ebe3899e689")
 		)
 		(pin "S1"
-			(uuid "4e0c1f4d-4e18-4ec9-a313-81a40e73a6e1")
+			(uuid "cd39960d-3f09-4540-a6b0-986feadfa356")
 		)
 		(pin "S2"
-			(uuid "ef47ca04-25cf-4647-aa11-957000f03be0")
+			(uuid "645e739b-9711-4f16-a7cc-f6d960c2826a")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "SW901")
 					(unit 1)
 				)
@@ -1553,7 +1553,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "71f3064d-49f5-45b2-9cc7-9c86dc6aac2d")
+		(uuid "01fed84a-274b-4960-8748-0f5e2c2be2bd")
 		(property "Reference" "#PWR0901"
 			(at 20.32 64.77 0.0000)
 			(effects
@@ -1573,11 +1573,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ee937850-7185-4c35-9e0d-10aa004b46bc")
+			(uuid "dc315b0a-0bd8-4c2d-8c41-5470e3c1badf")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0901")
 					(unit 1)
 				)
@@ -1593,7 +1593,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ec8f0137-fe6c-4e3e-a25f-60fc93c81cb4")
+		(uuid "9ba9d8e6-4fe6-441b-b548-c82b3b51c376")
 		(property "Reference" "#PWR0902"
 			(at 35.56 85.09 0.0000)
 			(effects
@@ -1613,11 +1613,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "9da8bdcb-418e-4651-8430-7be5970ac8b2")
+			(uuid "d5f00dbf-ab84-4a06-9697-670aecc982a3")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0902")
 					(unit 1)
 				)
@@ -1671,14 +1671,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "7a337526-a8b1-45b5-93b1-2916dd79d715")
+			(uuid "acb08d9a-bd11-4422-b48c-0dac299ca10b")
 		)
 		(pin "2"
-			(uuid "354729d3-2e5c-4d6e-927d-11d8d8f5fddb")
+			(uuid "9a31998f-d723-4025-acee-554567c30318")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "R901")
 					(unit 1)
 				)
@@ -1741,14 +1741,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "b86319f0-f516-4dc9-99c5-d3f36e8873ba")
+			(uuid "d48275c0-7ecb-4511-a280-ca8e8191e488")
 		)
 		(pin "2"
-			(uuid "2a1d706c-c1ad-40cf-bd58-15aa9dd919e4")
+			(uuid "4b7c49aa-ea2c-49e0-975b-a7852d03790f")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "C901")
 					(unit 1)
 				)
@@ -1764,7 +1764,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6fb3b6cf-61fe-42b9-855a-cab7857eb2a5")
+		(uuid "30cbf2ff-1356-43cc-bc1c-af3bb15218cd")
 		(property "Reference" "#PWR0903"
 			(at 121.92 68.58 0.0000)
 			(effects
@@ -1784,11 +1784,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "27b9f526-ba00-4b03-b0c1-58e7046dd939")
+			(uuid "bce5a936-373d-4997-ab48-19bdec2915f7")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0903")
 					(unit 1)
 				)
@@ -1842,14 +1842,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "eca9a12e-6dc6-4750-a6c0-1021d548da43")
+			(uuid "88dd3331-0a64-4ae5-8983-203db5ab9536")
 		)
 		(pin "2"
-			(uuid "cafdac7f-b24d-4fc2-90b2-8c9d87b0a9a3")
+			(uuid "2b31b3f0-bcae-434a-9010-11896ca241d7")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "R902")
 					(unit 1)
 				)
@@ -1912,14 +1912,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "10becdbb-17da-411b-ba64-ce8746cb63c2")
+			(uuid "6178ad28-614e-44d7-a61f-b35e1b60dd3d")
 		)
 		(pin "2"
-			(uuid "e4e860e8-7e59-4fcf-b7f4-d459eaf40f72")
+			(uuid "98466acb-bc23-449f-a3b8-b52bdde6e8c7")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "C902")
 					(unit 1)
 				)
@@ -1935,7 +1935,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0992fb22-2754-40a4-b6ff-9960b716f33b")
+		(uuid "94ee7b36-e4d2-488c-a919-b5706b8edbd2")
 		(property "Reference" "#PWR0904"
 			(at 121.92 119.38 0.0000)
 			(effects
@@ -1955,11 +1955,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "0e2a47f6-5395-441a-8632-94dbff32037b")
+			(uuid "74c099f8-bf5b-4a86-85f0-37f25b336250")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0904")
 					(unit 1)
 				)
@@ -1985,7 +1985,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "BAT43W"
 			(at 91.44 144.78 0.0000)
 			(effects
 				(font
@@ -2003,7 +2003,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "Diodes Inc 1N4148W-7-F"
+		(property "MPN" "Schottky, SOD-123: BAT43W (VF 0.33 V max at 2 mA)"
 			(at 93.98 152.3999 0)
 			(effects (hide yes)
 				(font
@@ -2013,14 +2013,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "e86c2c04-abb2-4eaf-b42c-38422b9950eb")
+			(uuid "a85076c3-0bdd-4388-a802-2b318e0c401e")
 		)
 		(pin "2"
-			(uuid "005e4300-dd5a-4c1d-ac94-adb830b311df")
+			(uuid "302e015a-e6ff-468f-bfa3-86b4deb05e98")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "D901")
 					(unit 1)
 				)
@@ -2083,26 +2083,26 @@
 			)
 		)
 		(pin "1"
-			(uuid "dc8e93c6-38e7-47e1-9a57-432639b19f49")
+			(uuid "4db25dff-77b5-4c37-9b20-50d6ae506e24")
 		)
 		(pin "2"
-			(uuid "ed126035-8a9f-4ece-aca5-70f271459893")
+			(uuid "1b75f2c0-2a84-4b61-9a0d-d6ef07485fde")
 		)
 		(pin "3"
-			(uuid "9710822e-e223-445c-b696-a338bae4eca6")
+			(uuid "fc51720a-8b68-4b6c-8d19-64da4e007971")
 		)
 		(pin "4"
-			(uuid "1190e92e-444c-40a1-93ab-c72b85c2f28d")
+			(uuid "579fb78f-48d8-4da1-b631-58363e3b9876")
 		)
 		(pin "5"
-			(uuid "abd534da-0d82-4adf-adf4-99615a6bf77b")
+			(uuid "343cdbd5-029f-4661-8193-0ab74c9d1f98")
 		)
 		(pin "6"
-			(uuid "f4043e15-da95-4bef-a6ee-46248530e4c6")
+			(uuid "2f23159f-cef2-423b-b2fa-61ed7bef88ea")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "U901")
 					(unit 1)
 				)
@@ -2118,7 +2118,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "5fa17e0c-aa0c-4050-b594-e9b95d0d861f")
+		(uuid "de8bf017-ca55-410e-b70c-e9cf54115b55")
 		(property "Reference" "#PWR0905"
 			(at 35.56 130.81 0.0000)
 			(effects
@@ -2138,11 +2138,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "5fd4149a-ff72-4ee7-8a35-25e28aa0d56d")
+			(uuid "a809c1f7-4797-404e-a508-1c24fa60f839")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0905")
 					(unit 1)
 				)
@@ -2196,23 +2196,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "5440ff5c-bc84-483c-b45b-61b46b1d2d74")
+			(uuid "016df490-9718-444a-bb5e-e0d11ae68dcf")
 		)
 		(pin "2"
-			(uuid "cdb5f370-079e-410a-abe4-de63f760cbef")
+			(uuid "85aeddfd-db91-4212-847a-d3c50c6c0275")
 		)
 		(pin "3"
-			(uuid "0c3b77f8-0f21-47fa-9a83-8e52add62828")
+			(uuid "585f7344-0f08-47b3-8868-555161d2df99")
 		)
 		(pin "4"
-			(uuid "f0f325d0-54f9-405d-aa2a-24d7b46dee94")
+			(uuid "b6b77f17-ebde-469f-a504-e24152a81bfc")
 		)
 		(pin "5"
-			(uuid "fc430856-c4b6-46d4-88e0-d14c7d8c1193")
+			(uuid "24dcd8e3-41ae-4201-b647-aa5ef918fa5b")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "J901")
 					(unit 1)
 				)
@@ -2228,7 +2228,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9c979ffe-41c8-453f-8cd6-3a85fa74180c")
+		(uuid "9c13fad4-d3a6-43ec-9a92-e77c95feed88")
 		(property "Reference" "#PWR0906"
 			(at 167.64 80.01 0.0000)
 			(effects
@@ -2248,11 +2248,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "f753ef0a-056a-45cc-9d49-2e8037427ff1")
+			(uuid "bccf33df-cdd7-4027-af35-1c912acf9dc9")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0906")
 					(unit 1)
 				)
@@ -2298,7 +2298,7 @@
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "H901")
 					(unit 1)
 				)
@@ -2344,7 +2344,7 @@
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "H902")
 					(unit 1)
 				)
@@ -2360,7 +2360,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "588c44fc-720f-4d97-8f54-688ea6e919a6")
+		(uuid "9e99adc8-8957-4fbc-a03f-c654550128f0")
 		(property "Reference" "#FLG0901"
 			(at 157.48 133.985 0.0000)
 			(effects
@@ -2380,11 +2380,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "fd77b7c8-1a65-4b6b-8a26-f4186287219b")
+			(uuid "d7f510e0-3674-4993-ae59-f32cd1e12a94")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#FLG0901")
 					(unit 1)
 				)
@@ -2400,7 +2400,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "567bd0f9-45fa-4c34-adac-8866a8693418")
+		(uuid "206f67ea-ba2e-41b8-acf6-950980519847")
 		(property "Reference" "#PWR0907"
 			(at 157.48 128.27 0.0000)
 			(effects
@@ -2420,11 +2420,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b9b45dcc-10cc-47eb-9137-247a1e2c08ab")
+			(uuid "525d206e-40f2-4b11-a702-967df060e313")
 		)
 		(instances
 			(project "dial"
-				(path "/5df71f4c-4877-4d09-9e6c-325b9dea0539"
+				(path "/535ebd09-4b48-474a-bce9-5c5bac401f0e"
 					(reference "#PWR0907")
 					(unit 1)
 				)
@@ -2439,7 +2439,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5e612a2d-fe6c-472c-9f7f-6b77ace04288")
+		(uuid "20e38c62-9342-4a63-9308-e45cb483deb1")
 	)
 	(wire
 		(pts
@@ -2449,7 +2449,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9ac61c91-dada-4d53-9859-9b6aad24919f")
+		(uuid "3eaab40c-c2ac-49a0-8cca-2cb69f399457")
 	)
 	(wire
 		(pts
@@ -2459,7 +2459,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "00ec00ea-e64a-4a6a-88a9-15d0d3bb463c")
+		(uuid "236c4dde-9fcf-4977-9af8-fa1ba8a082a6")
 	)
 	(wire
 		(pts
@@ -2469,7 +2469,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a63a72cd-d95a-4bc9-9763-8429f0a97896")
+		(uuid "7a0e0b34-5c76-4258-857e-5b2549527eab")
 	)
 	(wire
 		(pts
@@ -2479,7 +2479,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0931ca83-8343-405e-85cb-87aa4ffad1e8")
+		(uuid "d3e2ca57-8b01-4113-a41f-493021cee5fc")
 	)
 	(wire
 		(pts
@@ -2489,7 +2489,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "10f69a94-c44a-47d6-9fa7-fc0925757e38")
+		(uuid "e149bad6-93d5-402c-906c-dbb8a2534fb5")
 	)
 	(wire
 		(pts
@@ -2499,7 +2499,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ffebd2fd-1843-4714-8289-51ab4631ba98")
+		(uuid "66bf7340-1f9f-48c2-8b99-0694c932559a")
 	)
 	(wire
 		(pts
@@ -2509,7 +2509,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c0072b12-5f65-4343-b890-e55c3c44327f")
+		(uuid "ec2d2327-6f93-4828-afd1-33e390d6cac1")
 	)
 	(wire
 		(pts
@@ -2519,7 +2519,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a2d084e0-8f9d-43bd-b17a-09bb490b50b5")
+		(uuid "4bac572b-30a6-4685-bc30-ddede0a68d94")
 	)
 	(wire
 		(pts
@@ -2529,7 +2529,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8e3ad406-afb5-42b7-80ca-5242f135df14")
+		(uuid "14315412-946b-47e1-9111-f98fbb2d7da9")
 	)
 	(wire
 		(pts
@@ -2539,7 +2539,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d0440868-9431-43c2-bb1f-ea3845bf120d")
+		(uuid "394d6323-7584-43cc-adc6-8175a29910f3")
 	)
 	(wire
 		(pts
@@ -2549,7 +2549,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d09a55be-18eb-4883-bffd-1b6f0dc2520e")
+		(uuid "7bdde558-b11f-4b48-8879-07e2878533f1")
 	)
 	(wire
 		(pts
@@ -2559,7 +2559,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "3384e6a7-2b0f-49c8-ba91-c5fb2209d144")
+		(uuid "fec745ed-a689-4dfd-abd6-11e7dfbc765f")
 	)
 	(wire
 		(pts
@@ -2569,7 +2569,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "934ce3ea-a3f6-40fd-b2e2-a80725195ea0")
+		(uuid "f498dd02-3215-490b-a48c-2d94d5f0b41e")
 	)
 	(wire
 		(pts
@@ -2579,7 +2579,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "00cffefb-c6ae-4074-9f65-0a31e1345447")
+		(uuid "fb3858fc-c93d-4c4f-a93e-f0566817820a")
 	)
 	(wire
 		(pts
@@ -2589,7 +2589,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ae0da974-5246-4376-aa6e-8908f68af3dd")
+		(uuid "b430ef14-6dd9-4f76-80c8-3d2888d8d763")
 	)
 	(wire
 		(pts
@@ -2599,7 +2599,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "55ef1ff4-aed0-4d32-a9b1-33b5ac3da9f3")
+		(uuid "b6a99895-a8be-4f14-a52a-352b792d3fe4")
 	)
 	(wire
 		(pts
@@ -2609,7 +2609,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "791ba2f6-7108-4db5-8e66-90e35d4b1fc6")
+		(uuid "d39f6ba4-f355-4cfb-8a38-4d94c4c37ee2")
 	)
 	(wire
 		(pts
@@ -2619,7 +2619,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f215132d-2799-4ea2-8cfc-ac39fb8b34ec")
+		(uuid "3b51ffb4-2992-4ac3-8976-3c6db08ad812")
 	)
 	(wire
 		(pts
@@ -2629,7 +2629,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "42a7769c-12fb-4f8e-9006-73538db656ab")
+		(uuid "23f0bf68-0f3e-4dde-add4-f06e2c192fb0")
 	)
 	(wire
 		(pts
@@ -2639,7 +2639,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e79edde8-bf54-4dce-a56c-ccdb611358c9")
+		(uuid "4577d576-f7a8-40ec-ba79-734517ebceac")
 	)
 	(wire
 		(pts
@@ -2649,7 +2649,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a44ccae8-77ce-40cb-8ba2-0cdd8def4777")
+		(uuid "e93bc83c-0ccb-49ec-a237-16caf172da49")
 	)
 	(wire
 		(pts
@@ -2659,7 +2659,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "efde7204-8996-407d-b87f-c77a89eb4eb9")
+		(uuid "fbc337ed-d51a-4894-b79a-ae95886f1c3e")
 	)
 	(wire
 		(pts
@@ -2669,7 +2669,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "17d7a9db-09e7-4844-bf37-50f85cfd1e1f")
+		(uuid "ddd57504-4bed-4a91-b306-96a5f959b965")
 	)
 	(wire
 		(pts
@@ -2679,7 +2679,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f7d56513-7aaa-4e0e-af5f-71b0482d2783")
+		(uuid "a1448b83-1cac-4d62-b2d4-cd3897aaa59d")
 	)
 	(wire
 		(pts
@@ -2689,7 +2689,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "83de9a25-1d4f-437a-a43f-e98ab1c38fe2")
+		(uuid "0aa6f2b0-93c1-4c34-9871-83cca7309396")
 	)
 	(wire
 		(pts
@@ -2699,7 +2699,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a181a0a2-3f14-4871-9bd7-eccb9a888bf1")
+		(uuid "40be3cd4-96b6-447b-abe5-e11a82453f82")
 	)
 	(label "ENC_A_SW"
 		(at 20.32 68.58 180)
@@ -2709,7 +2709,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c524e857-2178-4e13-b8cf-3d6226096991")
+		(uuid "15e14d60-35b5-451b-8df3-cb678c355bae")
 	)
 	(label "ENC_B_SW"
 		(at 20.32 73.66 180)
@@ -2719,7 +2719,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "ddb0591d-07a8-4183-96d8-55892571916f")
+		(uuid "9adedad5-1d71-4a13-8d29-efee13ec60f3")
 	)
 	(label "SW_COL"
 		(at 50.8 68.58 0)
@@ -2729,7 +2729,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "1fb4e886-e19d-49c7-b822-9b46906b5120")
+		(uuid "1b871ebc-10f8-4a37-bd09-6a598de0168a")
 	)
 	(label "SW_D"
 		(at 50.8 71.12 0)
@@ -2739,7 +2739,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "00108b46-c416-4ff5-ba25-490132629545")
+		(uuid "11912751-f797-4784-9dd3-4f653ff5d1cb")
 	)
 	(label "ENC_A_SW"
 		(at 91.44 41.91 90)
@@ -2749,7 +2749,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "4a442303-bb39-4e36-8b9d-f2f09eaa044a")
+		(uuid "dc466cea-0c44-4331-b618-09f31b52021e")
 	)
 	(label "ENC_A"
 		(at 91.44 59.69 270)
@@ -2759,7 +2759,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c763b694-b8b4-4d7b-8ab1-b695983028a6")
+		(uuid "992e6287-9949-403d-a80c-229f407efe31")
 	)
 	(label "ENC_A"
 		(at 121.92 57.15 90)
@@ -2769,7 +2769,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "109ccefb-0797-4589-ab14-b78597a71c65")
+		(uuid "56a91b1e-8cde-44af-b6ba-8627312dcb90")
 	)
 	(label "ENC_B_SW"
 		(at 91.44 92.71 90)
@@ -2779,7 +2779,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "235e04e5-a86f-49f4-a544-a1f75289843f")
+		(uuid "d7715609-e0ea-4c22-9f7b-54909b15b680")
 	)
 	(label "ENC_B"
 		(at 91.44 110.49 270)
@@ -2789,7 +2789,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "13bc265d-fc40-47ab-b10f-2faad08b01a8")
+		(uuid "720cd66d-0545-443f-a9e6-82e3b698f30c")
 	)
 	(label "ENC_B"
 		(at 121.92 107.95 90)
@@ -2799,7 +2799,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "559d173e-1923-4917-b6aa-45bbf6e573a6")
+		(uuid "5fd7546b-5dce-4221-8326-bf921ea842f3")
 	)
 	(label "SW_ROW"
 		(at 82.55 147.32 180)
@@ -2809,7 +2809,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "7755571f-fe01-4684-b994-99071ad053e4")
+		(uuid "4815b109-be48-46ba-8cdf-a7e9ab9de605")
 	)
 	(label "SW_D"
 		(at 100.33 147.32 0)
@@ -2819,7 +2819,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "230828f0-9ebe-45a6-9cee-319589603df9")
+		(uuid "35a5debe-84dc-434d-a4ee-1e13041fc1cf")
 	)
 	(label "ENC_A_SW"
 		(at 20.32 114.3 180)
@@ -2829,7 +2829,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "be58ff02-2f33-46ca-bd20-c9e4440f5482")
+		(uuid "181a1e93-45f3-44c2-b533-d088e9660f0a")
 	)
 	(label "ENC_B_SW"
 		(at 20.32 116.84 180)
@@ -2839,7 +2839,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "0be70d47-6b9d-4251-aa28-04e1c8f8ab2e")
+		(uuid "51f8a530-6adc-4055-b2f0-92a0589604dc")
 	)
 	(label "SW_D"
 		(at 50.8 116.84 0)
@@ -2849,7 +2849,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "97e60c4f-e51c-4b07-8b43-5c9f635d1dd0")
+		(uuid "5700947a-5ffb-49f3-9f66-142f35cd9709")
 	)
 	(label "SW_COL"
 		(at 50.8 114.3 0)
@@ -2859,7 +2859,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "17d40122-9c0e-432d-996e-b449815cc057")
+		(uuid "dae335e5-ab2b-4167-a565-c3dbc5333441")
 	)
 	(label "SW_ROW"
 		(at 167.64 81.28 180)
@@ -2869,7 +2869,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "799698b5-e51f-4e4c-b467-7ee50154cb81")
+		(uuid "741b1dce-32d5-48f0-a197-0483a83c3651")
 	)
 	(label "ENC_A"
 		(at 167.64 83.82 180)
@@ -2879,7 +2879,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "948b3c8e-79a5-46ca-85d5-244ab27d209d")
+		(uuid "efe4d8a4-0bc5-48b4-91e2-fc78ee5e62b5")
 	)
 	(label "ENC_B"
 		(at 167.64 88.9 180)
@@ -2889,7 +2889,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "a1d7b1a4-fdb0-4250-a1b3-5fe992a959bc")
+		(uuid "ac498f56-8ff3-4d14-9726-c1f9ac2f4d5f")
 	)
 	(label "SW_COL"
 		(at 167.64 91.44 180)
@@ -2899,13 +2899,13 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "be536d8f-9c8d-4014-8b7c-8b828394385c")
+		(uuid "252a4538-28ba-4174-9416-d031ebb7e9b9")
 	)
 	(no_connect
 		(at 25.4 119.38)
-		(uuid "1fa1c596-d426-4081-adb2-c34ee1858d36")
+		(uuid "83f8dae8-ad09-4659-af2a-4bf2b506d32d")
 	)
-	(text "Dial board per spec §2a/§8. PEC11R 24 detents / 24 ppr with push switch (datasheet rev D04/26); shaft TBD in Phase 1.\nA/B: pull-ups are the core's internal ones (~13k, range unverified). 1k series + 10 nF to GND on the connector side:\nclosed-contact level ~0.24 V (< 0.3 VDD), discharge peak 3.3 mA (contact rating 10 mA at 5 V), rise ~0.2 ms vs >= 10 ms\nbetween edges at 60 RPM max. Bourns' own filter (10k pull-up, 10k, 10 nF) needs a supply J_DIAL does not carry.\nPush switch is a matrix key, col2row (ZMK: columns drive, rows read): SW_COL -> S1-S2 -> D901 anode -> cathode -> SW_ROW.\nMounting lugs (MP) to GND; lug-to-bushing continuity is not stated by Bourns. U901 TPD4E1U06 is a DNP footprint.\nJ_DIAL 1 SW_ROW, 2 ENC_A, 3 GND, 4 ENC_B, 5 SW_COL: end-reversed, A/B swap (direction) and the push diode\nreverses (press not seen); nothing is damaged. Bourns: hand soldering 'not recommended'; see the build guide."
+	(text "Dial board (spec section 2). PEC11R 24 detents / 24 ppr with push switch (datasheet rev D04/26); shaft TBD in Phase 1.\nA/B: 10k pull-ups to 3.3 V on the right key board (rev 9). 1k series + 10 nF to GND on the connector side:\nclosed-contact level ~0.30 V (< 0.2 VDD of the MCP23S17 is 0.66 V), discharge peak 3.3 mA (contact rating 10 mA at 5 V), rise ~0.2 ms vs >= 10 ms\nbetween edges at 60 RPM max. Bourns' own filter (10k pull-up, 10k, 10 nF) needs a supply J_DIAL does not carry.\nPush switch is a matrix key (rows driven low, columns read, Schottky diode as on the key boards): SW_COL -> S1-S2 -> D901 anode -> cathode -> SW_ROW.\nMounting lugs (MP) to GND; lug-to-bushing continuity is not stated by Bourns. U901 TPD4E1U06 is a DNP footprint.\nJ_DIAL 1 SW_ROW, 2 ENC_A, 3 GND, 4 ENC_B, 5 SW_COL: end-reversed, A/B swap (direction) and the push diode\nreverses (press not seen); nothing is damaged. Bourns: hand soldering 'not recommended'; see the build guide."
 		(exclude_from_sim no)
 		(at 10.16 157.48 0.0000)
 		(effects
@@ -2913,7 +2913,7 @@
 				(size 1.27 1.27)
 			) (justify left top)
 		)
-		(uuid "5114e109-98f9-4314-9aac-74322f697b20")
+		(uuid "b87b0079-fb11-4657-b2d8-6bc0bff072b9")
 	)
 	(sheet_instances
 		(path "/"

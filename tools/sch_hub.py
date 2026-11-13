@@ -19,6 +19,7 @@ ERC:   tools/kicad-check.sh
 """
 
 import argparse
+import json
 import sys
 import uuid
 
@@ -235,12 +236,11 @@ def build_port(b, p):
     b.r("100k", f("MOSI_{p}"), "GND")
     b.r("100k", f("MISO_{p}"), "GND")
     b.r("10k", "+3V3", f("CS_{p}"))
-    b.r("10k", "+3V3", f("INTO_{p}"))
     b.r("1k", f("INTO_{p}"), f("INT_{p}"))
     b.r("10k", "+3V3", f("DET_{p}"))
     b.r("10k", f("EN_{p}"), "GND")
     b.r("100k", f("REF_{p}"), f("REFR_{p}"))
-    b.r("100", f("LEDB_{p}"), f("LEDO_{p}"))
+    b.r("330", f("LEDB_{p}"), f("LEDO_{p}"))
     b.r("100k", f("LED_{p}"), "GND")
     b.c("10u", "+5V")
     b.c("100n", "+5V")
@@ -269,11 +269,15 @@ def build_pack_input(b, i):
         b.r("2.2M", "VBAT", f"PEN{i}")
         b.r("4.7M", f"BLK{i}", "GND")
     if i > 1:
-        # "healthy" supervisor of this pack: falls at 4.3 V, re-arms only above about 5.05 V (820k feedback)
+        # "healthy" supervisor of this pack: falls at 4.3 V, re-arms only above about 5.0 V (910k feedback;
+        # tools/sim_priority.py). The bleeder (on while the hub runs) keeps an empty slot's input low against
+        # the ideal diode's reverse leakage, which would otherwise read as a healthy pack.
         b.supervisor("TPS3840PL43", f"PVDD{i}", f"OK{i}")
         b.r("100k", pk, f"PVDD{i}")
-        b.r("820k", f"PVDD{i}", f"OK{i}")
+        b.r("910k", f"PVDD{i}", f"OK{i}")
+        b.schottky("GND", f"PVDD{i}")  # a reversed pack must not pull the supervisor below -0.3 V
         b.c("1u", f"PVDD{i}")
+        b.r("22k", pk, f"BLD{i}")
     if i != 1:  # compact rows
         b.row(2)
 
@@ -305,6 +309,9 @@ def build_conn():
         build_port(b, p)
     for i in (2, 3, 4, 1, 5):  # 1 and 5 are the short ones and share a row
         build_pack_input(b, i)
+    # bleeder switches for pack inputs 2-5, on with the logic rail
+    b.dual_nfet("+3V3", "BLD2", "GND", "+3V3", "BLD3", "GND")
+    b.dual_nfet("+3V3", "BLD4", "GND", "+3V3", "BLD5", "GND")
     # UVLO (rev 8.1): supervisor on the highest pack through Schottkys, 10k, 1u
     b.bat54c("PACK1", "PACK2", "SENSE_K")
     b.bat54c("PACK3", "PACK4", "SENSE_K")
@@ -313,11 +320,12 @@ def build_conn():
     b.c("1u", "UVLO_VDD")
     b.supervisor("TPS3840PL40", "UVLO_VDD", "PWR_SW_A")
     # pack voltage to the ADC: 200k / 100k switched on the high side
-    b.part("Q", "keyboard:CSD25483F4", "CSD25483F4", "", (26, 12), {1: "DIV_G", 2: "UVLO_VDD", 3: "DIV_TOP"},
+    b.part("Q", "keyboard:CSD25483F4", "CSD25483F4", "", (26, 12), {1: "DIV_G", 2: "SENSE_K", 3: "DIV_TOP"},
            {"MPN": "TI CSD25483F4"})
-    b.r("470k", "UVLO_VDD", "DIV_G")
+    b.r("470k", "SENSE_K", "DIV_G")
     b.r("200k", "DIV_TOP", "VBAT_SENSE")
     b.r("100k", "VBAT_SENSE", "GND")
+    b.c("100n", "VBAT_SENSE")
     b.r("100k", "BAT_DIV_EN", "GND")
     b.dual_nfet("BAT_DIV_EN", "DIV_G", "GND", "GND", "GND", "GND")
     b.row(2)
@@ -337,8 +345,8 @@ def build_conn():
     b.schottky("USB_DLY", "USB_OK")
     b.r("100k", "VBUS_IN", "GND")
     b.c("100n", "VBUS_IN")
-    b.r("100k", "USB_OK", "USB_PRESENT")
-    b.r("120k", "USB_PRESENT", "GND")
+    b.r("10k", "USB_OK", "USB_PRESENT")  # 5.5k source: pulls an RP2350-E9 pad low
+    b.r("12k", "USB_PRESENT", "GND")
     b.r("0R", "AUX_5V", "VBUS_IN", dnp=True)
     b.row(2)
     # SYS bulk and the 5 V buck-boost
@@ -346,9 +354,10 @@ def build_conn():
         b.c("47u", "SYS", fp=FP_C1210)
     b.c("10u", "SYS")
     b.part("U", "keyboard:TPS630701RNM", "TPS630701", "", (36, 24),
-           {12: "SYS", 13: "SYS", 14: "SYS", 1: "SYS", 15: "GND", 11: "L1", 9: "L2", 7: "+5V", 8: "+5V", 5: "+5V",
+           {12: "SYS", 13: "SYS", 14: "CONV_EN", 1: "CONV_EN", 15: "GND", 11: "L1", 9: "L2", 7: "+5V", 8: "+5V", 5: "+5V",
             6: None, 2: None, 3: "VAUX", 4: "GND", 10: "GND"}, {"MPN": "TI TPS630701RNMR"})
     b.part("L", "Device:L", "1.5u", "", (10, 22), {1: "L1", 2: "L2"}, {"MPN": "Coilcraft XFL4020-152ME"})
+    b.r("100k", "SYS", "CONV_EN")
     b.c("100n", "VAUX")
     for _ in range(3):
         b.c("22u", "+5V", fp=FP_C1210)
@@ -362,7 +371,8 @@ def build_conn():
         "so an empty or unpowered port, or a phone that never answers, sees no SPI. CS idles high through 10k. One 74AHCT125 shifts LED data to 5 V.\n"
         "Pack inputs 1 (next to the hub) to 5 (lowest module): SMF4L9.0CA, LM74610-Q1 + CSD17313Q2 ideal diode; inputs 1-4 then pass a CSD25402Q3A\n"
         "that is on only while no healthy pack sits below (BLKn low); otherwise the pack waits behind the FET's body diode and takes over without a gap.\n"
-        "Healthy = TPS3840PL43 on the pack through 100k / 1u, 820k from VDD to its output: falls at about 4.35 V, re-arms above about 5.05 V (a swapped-in charged pack).\n"
+        "Healthy = TPS3840PL43 on the pack through 100k / 1u, 910k from VDD to its output: falls at about 4.3 V, re-arms above about 5.0 V (a swapped-in charged pack).\n"
+        "22k bleeder per pack input 2-5, switched by +3V3: an empty slot floats up through the ideal diode's leakage and must not read as healthy (tools/sim_priority.py).\n"
         "UVLO, battery switch, USB switch, detect and delay, pack divider: rev 8.1 values (TPS3840PL40, 10k / 1u, 1M, 4.7M, 2.2M / 22n, 200k / 100k).\n"
         "TPS630701 makes +5V from SYS on USB and on battery (PS/SYNC high = power save); +5V feeds the ports and the Pico's VSYS.\n"
         "DNP 0R from AUX_5V to VBUS_IN: reserved for a later Qi module. Footprints still open (M2): TPS630701, CSD17313Q2, CSD25483F4, inductor.")
@@ -449,11 +459,55 @@ def cross_checks(boards):
     cross = {"A2": "B11", "B2": "A11", "A3": "B10", "B3": "A10", "B11": "A2", "A11": "B2", "B10": "A3", "A10": "B3"}
     mod = {pin: net for net, pins in sch_keys.RECEPTACLE.items() for pin in pins}
     hub = {pin: net for net, pins in RECEPTACLE_HUB.items() for pin in pins}
-    same = {"SCK_{p}": "SCK", "MOSI_{p}": "MOSI", "MISO_{p}": "MISO", "GND": "GND"}
+    same = {"SCK_{p}": "SCK", "MOSI_{p}": "MOSI", "MISO_{p}": "MISO_CONN", "GND": "GND"}
     for hp, mp in cross.items():
         if same.get(hub[hp]) != mod[mp]:
             err.append(f"wire plan: hub {hp} {hub[hp]} meets module {mp} {mod[mp]}")
     return err
+
+
+# ---- hub pin map as data for the firmware ----------------------------------------------------------------
+
+PINMAP = schlib.ROOT / "firmware" / "hub-pinmap.json"
+# what the firmware needs to know about each net: direction seen from the Pico, active level, state at reset
+SIGNALS = {
+    "EN": ("out", "high", "port power on; 10k pull-down, off at reset"),
+    "DET": ("in", "low", "sink (Rd) attached and VBUS on; 10k pull-up"),
+    "INT": ("in", "low", "module's open-drain interrupt; pull-up is on the module, enable the internal pull-up while DET is low"),
+    "CS": ("out", "low", "expander chip select; 10k pull-up; reaches the cable only while DET is low"),
+    "LED": ("out", "data", "SK6812 data, shifted to 5 V; 100k pull-down, keep low while the module's LED rail is off"),
+    "MISO": ("in", "spi0", "SPI0 RX; 100k pull-up"), "SCK": ("out", "spi0", "SPI0 SCK"),
+    "MOSI": ("out", "spi0", "SPI0 TX"),
+    "PORT_FLT": ("in", "low", "a port is in current limit or too hot (wired-OR); 10k pull-up"),
+    "USB_PRESENT": ("in", "high", "host VBUS present; 10k / 12k divider, no pull needed"),
+    "BAT_DIV_EN": ("out", "high", "switches the pack divider on; 100k pull-down"),
+    "CC1_SENSE": ("adc", "analog", "host CC1 through 100k / 10n; Rp level gives the current cap"),
+    "CC2_SENSE": ("adc", "analog", "host CC2 through 100k / 10n"),
+    "VBAT_SENSE": ("adc", "analog", "highest pack (less a Schottky drop) x 1/3 while BAT_DIV_EN is high; 100n, wait 50 ms"),
+    "SDA": ("i2c", "i2c0", "reserved, expansion; 4.7k pull-up"), "SCL": ("i2c", "i2c0", "reserved, expansion; 4.7k pull-up"),
+}
+
+
+def pinmap():
+    import sch_keys
+    gpio = {}
+    for g, net in sorted(PICO_GPIO.items()):
+        base, _, port = net.partition("_") if net.split("_")[-1] in PORTS and net.count("_") == 1 else (net, "", "")
+        kind, active, note = SIGNALS[base]
+        gpio[f"GP{g}"] = {"gpio": g, "net": net, "kind": kind, "active": active, "note": note,
+                          **({"port": port} if port else {})}
+    ports = {p: {base.lower(): g for g, net in PICO_GPIO.items() for base in ("EN", "DET", "INT", "CS", "LED")
+                 if net == f"{base}_{p}"} for p in PORTS}
+    spi = {k.lower(): g for g, net in PICO_GPIO.items() for k in ("SCK", "MOSI", "MISO") if net == k}
+    return {"_": "Generated by tools/sch_hub.py from its tables; do not edit. Spec: plans/keyboard.md section 3a.",
+            "board": "Raspberry Pi Pico 2 W", "spi": {"bus": 0, **spi}, "ports": ports, "gpio": gpio,
+            "adc": {"vbat_ratio": 3, "vref": 3.3},
+            "expander_address": {name: [addr for _ref, addr, _roles in spec["chips"]]
+                                 for name, spec in sch_keys.SPEC.items()}}
+
+
+def pinmap_text():
+    return json.dumps(pinmap(), indent=2) + "\n"
 
 
 def main():
@@ -471,7 +525,12 @@ def main():
         comps, _, _ = read_netlist(HW / name / f"{name}.kicad_sch")
         if set(comps) != {p[0] for p in b.parts}:
             sys.exit(f"{name}: parts on the sheet differ from the table")
+    if not args.verify:
+        PINMAP.write_text(pinmap_text())
+        print("wrote", PINMAP)
     err = cross_checks(built)
+    if not PINMAP.exists() or PINMAP.read_text() != pinmap_text():
+        err.append(f"{PINMAP.name} differs from the tables (run tools/sch_hub.py)")
     for e in err:
         print("FAIL", e)
     print(f"cross checks: {len(err)} failed")

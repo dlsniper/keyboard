@@ -54,26 +54,27 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   | GND (SCK return) | TX1-/TX2- (A3, B3) | RX1-/RX2- (B10, A10) | clock gets its own return |
   | MOSI | RX1+/RX2+ (B11, A11) | TX1+/TX2+ (A2, B2) | data with data: both settle before the SCK edge |
   | MISO | RX1-/RX2- (B10, A10) | TX1-/TX2- (A3, B3) | as above |
-  | CS | D+ (A6, B6) | D+ | slow; RC filter at the module |
-  | INT | D- (A7, B7) | D- | open drain, pull-up at the hub only |
-  | LED data, 5 V level | SBU1 = SBU2 (A8, B8) | SBU1 = SBU2 | series resistor at the hub |
+  | CS | D+ (A6, B6) | D+ | slow; 1 k + 100 pF and a 100 k pull-up at the module |
+  | INT | D- (A7, B7) | D- | open drain, 10 k pull-up on the module's port board (none at the hub, so a port that is off is not back-fed) |
+  | LED data, 5 V level | SBU1 = SBU2 (A8, B8) | SBU1 = SBU2 | 330 R at the hub, 220 R in front of the first LED |
   | 5 V | VBUS x 4 | VBUS x 4 | 3 A cable |
   | GND | GND x 4, shell | GND x 4, shell | |
   | CC1, CC2 (separate) | Rp each | Rd 5.1 k each | real USB-C roles, below |
 
   The cable crosses TX to RX, so **hub side and module side have different
-  pin-outs**. The table is from the USB Type-C cable wiring as I know it (TX1 to RX1,
-  TX2 to RX2, SBU1 to SBU2, one CC wire, the other CC pin is the cable's own VCONN /
-  e-marker); **buzz out the real cable before M4's bench test** (O2).
+  pin-outs**. Checked at the M1 review against the Type-C cable wiring (A2 to B11,
+  A3 to B10, B2 to A11, B3 to A10, D+/D- straight, SBU1 to SBU2, one CC wire): right
+  for passive full-featured cables; **active or redriver cables do not pass DC and
+  do not work**. Still buzz out the real cable before M4's bench test (O2).
 - **CC is used as USB-C means it**: every hub port is a plain 5 V source (Rp, VBUS
   switched on only when Rd is seen, current-limited; one **TPS25810** Type-C source
   switch per port, user, 2026-11-13, §3a), every module is a plain
   sink (Rd). That gives module detect and the per-module rail switch, and makes
   mis-plugs harmless: a module in a charger or laptop is just powered and idle
-  (INT is open drain, MISO is off while CS is high); a phone in a hub port is
-  charged at the default current. The hub drives no signal on a port until an
-  expander has answered there, and holds LED data low while a module's LED rail
-  is off.
+  (INT is open drain, MISO is off while CS is high, CS is held high by the port
+  board's pull-up); a phone in a hub port is charged, sees CS (3.3 V) on D+ and no
+  clock or data. The hub drives SCK and MOSI on a port only while that port's CS is
+  low, and holds LED data low while a module's LED rail is off.
 - Modules are told apart by expander address, so **any module works in any hub
   port**: `left` 0, `numpad` 1, `right` 2 and 3 (MCP23S17 address pins, HAEN).
 - Other consequences: there is no 3.3 V wire, so 3.3 V is made on the module's port
@@ -94,7 +95,7 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   | 11 | GND | 12 | SCK |
 
   (Detect needs no pin: it is done on CC, on the port board.) A small **port board**
-  (receptacle, Rd, 3.3 V regulator, CS filter, ESD protection) plugs onto it, held
+  (receptacle, Rd, 3.3 V regulator, CS filter and pull-up, INT pull-up, 33 R in MISO, ESD arrays and a VBUS TVS) plugs onto it, held
   by two M2 screws placed off-centre so it cannot go on reversed. A worn port is a
   two-screw swap, and a different cable later needs only new port boards.
 - **Cable-free modules are a wanted upgrade (user, 2026-11-13), not rev 9's first
@@ -116,8 +117,11 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 | LEDs (SK6812MINI-E, D10) | 36 | 52 (none under the dial) | 22 |
 | Dial | none | PEC11R, 24 detents, push switch in the matrix, on the separate dial board | none |
 
-- Switches: MX, Kailh hotswap sockets (CPG151101S11). One `1N4148W` per key, so
-  every module has full n-key rollover.
+- Switches: MX, Kailh hotswap sockets (CPG151101S11). One **Schottky diode (BAT43W
+  class, SOD-123)** per key, so every module has full n-key rollover. Not a 1N4148W
+  (M1 review): at the 0.3 mA of a 10 k pull-up its drop (up to about 0.68 V) leaves
+  the column above the expander's guaranteed input-low level (0.2 x VDD = 0.66 V).
+  BAT43W values are from memory; its datasheet is to be read when the parts list is made.
 - **Latency target: that of a proper keyboard.** The hub scans all three matrices
   at 1 kHz or faster (about 0.1 ms per module pass at 4 MHz SPI). A keypad-scanner
   chip was rejected for this: the TCA8418 datasheet gives a fixed 25-40 ms.
@@ -158,8 +162,9 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   On `right` one 4-byte read of U1 returns all columns and the dial, so a full scan
   is 6 row writes and 6 reads. INT outputs are open drain, wired together. The LED
   rail goes through a load switch with slew control (TPS22918 class, 2 A) whose
-  enable is pulled down, so LEDs are off until firmware turns them on. LED chain:
-  100 nF per LED, bulk capacitor at the switch output.
+  enable is pulled down, so LEDs are off until firmware turns them on (CT 1 nF:
+  about 2.5 ms rise, about 0.2 A inrush). LED chain: 100 nF per LED, bulk capacitor
+  at the switch output, 220 R in front of the first LED's data input.
 - Stabilisers: Cherry MX plate/PCB 2U footprint from the vendored kiswitch subset.
 - Plate: 1.5 mm FR4, no copper (as rev 8).
 - **Key LEDs: SK6812MINI-E chain (D10, user, 2026-11-13)**, one per key, reverse
@@ -275,10 +280,13 @@ tables and the boards against each other).
 
   `EN_x` high powers port x (10 k pull-down: off at reset). `DET_x` low = a sink
   (Rd) is attached and VBUS is on. `PORT_FLT` low = a port is in current limit or
-  too hot (wired-OR). `INT_x` is the module's open-drain interrupt (10 k pull-up at
-  the hub). `USB_PRESENT` high = host VBUS above about 4.5 V. `CC1/CC2_SENSE` read the
-  host's Rp for the current cap (§3). `VBAT_SENSE` is 1/3 of the highest pack while
-  `BAT_DIV_EN` is high.
+  too hot (wired-OR). `INT_x` is the module's open-drain interrupt (pull-up on the module; firmware
+  enables the Pico's pull-up on it only while `DET_x` is low). `USB_PRESENT` high = host VBUS above about 4.5 V. `CC1/CC2_SENSE` read the
+  host's Rp for the current cap (§3). `VBAT_SENSE` is 1/3 of the highest pack (less a Schottky drop) while
+  `BAT_DIV_EN` is high; the divider hangs before the UVLO supervisor's 10 k so a
+  measurement cannot trip the UVLO. `USB_PRESENT` is a 10 k / 12 k divider (stiff
+  enough for RP2350-E9). **Exported for the firmware: `firmware/hub-pinmap.json`**,
+  written and checked by `tools/sch_hub.py`.
 - **Module port (x3).** 24-pin receptacle wired per the hub column of §1.
   **TPS25810** (user, 2026-11-13, over the 1.5 A TPS25821): advertises 3 A, limit
   3.4 A; a strap changes it to 1.5 A / 1.7 A. Three ports at 3 A exceed the 2 A
@@ -288,7 +296,7 @@ tables and the boards against each other).
   is driven only while `DET_x` is low. So each cable is driven point to point, a
   dead module cannot hold MISO, and a phone or an unpowered module sees no SPI.
   33 R in series at the buffer outputs, 100 k pull-downs on the cable side. LED
-  data: one 74AHCT125 at 5 V for the three ports, 100 R in series, low by default.
+  data: one 74AHCT125 at 5 V for the three ports, 330 R in series, low by default.
   ESD arrays (TPD4E1U06) on the six signals and CC, TVS0500 on the port's VBUS.
 - **Battery chain, 2x8 pogo seam** (user, 2026-11-13), reversal-safe (pin k meets
   17-k): 1 PACK1, 2 GND, 3 PACK2, 4 PACK3, 5 GND, 6 PACK4, 7 PACK5, 8 AUX_5V, 9 AUX_5V, 10 PACK5, 11 PACK4, 12 GND, 13 PACK3, 14 PACK2, 15 GND, 16 PACK1. Each module puts its own pack on `PACK1` upwards and passes
@@ -306,14 +314,36 @@ tables and the boards against each other).
   only while no healthy pack sits below; otherwise that pack waits behind the FET's
   body diode (about 0.7 V handicap) and takes over with no gap when the pack below
   is pulled or empties. "Healthy" is one TPS3840PL43 per pack (inputs 2-5) on the
-  pack through 100 k / 1 uF, with 820 k from its VDD to its output: it drops out at
-  about 4.35 V and re-arms only above about 5.05 V, so an emptied pack cannot bounce
-  back to "healthy" when its load is removed; it then shares with the packs above.
-  Limits, accepted: a pack above still helps through the diode in roughly the last
-  10-15 % of the pack below; a half-used pack put back in (resting under 5.05 V) is
-  not preferred, it just shares; about 2-5 uA more idle drain per pack. **Not yet
-  simulated** (rev 8.1's switchover sim did not have it): to do at the M1 review,
-  with the 820 k re-arm level as the value to tune.
+  pack through 100 k / 1 uF, with **910 k** from its VDD to its output: it drops out
+  at about 4.3 V (4.3-4.5 V over tolerance) and re-arms only above about 5.0 V
+  (4.9-5.2 V), so an emptied NiMH pack (rests at 4.8 V or less) does not bounce back
+  to "healthy" when its load is removed, and a charged pack (5.2 V or more) is
+  recognised; an emptied pack then shares with the packs above. A Schottky from GND
+  to each supervisor's VDD protects it from a pack put in reversed.
+- **Simulated at the M1 review** (`python3 tools/sim_priority.py`, ngspice, three
+  inputs, decks in `build/sim/`):
+  - *Empty slots read as healthy without a bleeder.* The LM74610's reverse leakage
+    (60 uA typ at 13.5 V) lifts an empty input to the battery rail, its supervisor
+    then reports "healthy" and the pack above stays behind its body diode for good.
+    Fix: **22 k bleeder on pack inputs 2-5, switched by `+3V3`** (two DMN63D8LDW), so
+    it costs nothing while the hub is off and about 0.25 mA per pack while it runs.
+  - Active pack pulled (0.5 W and 5 W load): no gap; the pack above carries the load
+    through the body diode for about 15-25 ms (lowest rail 3.9 V at 5 W), then its
+    FET turns on. On the real board the LM74610 can hold the pulled input up for up
+    to about 1.2 s (charge-pump capacitor) before the bleeder wins; the body diode
+    carries the load for that time (about 1 W at 1.3 A, harmless).
+  - Pack emptying under 0.3 W and 2.5 W: one clean hand-over at 4.3 V, no chatter;
+    in the last stretch the packs above already help through their body diodes.
+  - Start-up from a single pack in any slot, 4.6 V or 5.2 V: its FET turns on.
+  - Load steps up to 10 W with aged packs (0.9 Ohm): no bouncing, because the packs
+    above share through the body diodes before the active pack reaches 4.3 V.
+  - A 4.9 V pack put in below a running pack is not preferred (stays idle until the
+    pack above falls under it); a 5.3 V pack takes over after about 0.25 s.
+  Limits, accepted: alkaline packs recover to about 4.9-5.1 V at rest and can swap
+  back in for a while after dropping out (gap-free, it just uses them up); a
+  half-used pack put back in is not preferred; idle drain of the priority stages is
+  about 3-6 uA per pack; the LM74610 runs the pack through the FET's body diode for
+  about 2 % of the time (25 ms every 1.2 s, about 0.5 V dip on the battery rail).
 
 ## 4. Firmware
 
@@ -323,6 +353,11 @@ tables and the boards against each other).
 - **Rollover:** hardware is n-key. TinyGo's USB keyboard report is to be checked
   at M4; if it is 6-key only we add an n-key report and send it upstream.
 - Dial: turn = volume, read through the `right` expander at the scan rate.
+- **Rules from the hardware (M1 review):** on `right`, write IOCON.HAEN to address 0
+  before any read (both chips answer to address 0 until HAEN is set); set IOCON.ODR
+  before enabling interrupts (INTA is push-pull at power-on and the two are tied);
+  never assert two CS lines at once (the port buffers share MISO); disable the
+  digital input on the three ADC pins; pin data in `firmware/hub-pinmap.json`.
 - Bluetooth (M6): `tinygo.org/x/bluetooth` pairs only on Nordic chips today; we add
   what the Pico 2 W needs and contribute it.
 
@@ -356,8 +391,8 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
 - **O3** LED current caps per source: sized at M1, measured at M4.
 - **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
 - O7 closed 2026-11-13: SK6812MINI-E chain (D10, §2). Open under it: a European source for the LED.
-- O8 closed 2026-11-13: 2x8 chain, five pack inputs, lowest-first priority (§3a). Open under it: simulate the
-  priority hand-over and tune the re-arm level; pogo parts for 2x8.
+- O8 closed 2026-11-13: 2x8 chain, five pack inputs, lowest-first priority (§3a). Priority hand-over simulated and the re-arm level tuned at the M1 review (§3a).
+  Open under it: pogo parts for 2x8.
 - **O9** n-key USB report in TinyGo (M4).
 - **O10** cable-free pods: they take the port board's place in the bay (2x6 header,
   two M2 screws; D3); bay size and header position frozen at M1; the pods themselves (controller, radio link to the hub, latency
