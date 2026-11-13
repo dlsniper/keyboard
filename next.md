@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-13, branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14, branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -190,10 +190,53 @@ about half of hub-conn is free; the converter (input and output capacitors at th
 port clusters and the pack inputs are to be arranged for routing in the routing session, and 2 layers may not be enough for hub-conn.
 **pcbnew notes**: `Flip()` on a footprint that is not on a board crashes KiCad's Python (macOS crash dialog; the user saw three);
 for a flipped footprint a local point (x, y) lands at (x, -y) turned by the orientation.
-**Not done**: the cap board (riser to spring-pin strip, 26 x 18 mm, pin n to pin n; no project yet), the port board layouts
-(`port-module` with the new receptacle, bay numbers from `pcb_keys.py` `BAY`; `usb-port` still rev 8's layout), hub routing.
-**Next (M2 session 5)**: the user's remarks on the key boards; arrange and route hub-core, battery and hub-conn; cap board; then the
-port boards. Plates (roadmap M2 step 4) and the independent PCB review (step 3) come after.
+**M2 session 5 done (2026-11-14): hub-conn arranged, hub boards routed, cap board added.**
+**`tools/pcb_check.sh hub-core battery chain-cap hub-conn`: 0 errors, 0 parity, 0 unconnected on each.** hub-conn came out clean
+on the second try of `tools/route_hub.sh hub-conn 3`; no track is on its GND plane layer. Warnings left on hub-conn: 4 dangling
+vias and 10 dangling track ends (autorouter leftovers, harmless, to tidy), 11 `hole_to_hole` (vias under 0.5 mm hole to hole:
+tidy or check against JLCPCB's own limit), silkscreen.
+**The user has still not looked at the three key boards** (asked through the options UI: "not looked at yet"); remarks stay owed.
+**User decision (options UI): `hub-conn` has 4 copper layers** (top parts and signals, inner 1 an unbroken GND plane, inner 2 power
+trunks and signals, bottom signals; all SMD still on top). `hub-core`, `battery`, `chain-cap` stay 2-layer.
+**Arrangement of hub-conn = `tools/pcb_hub.py` `hub_conn()`** (numbers at `CONV`, `COL_*`, `TRUNK_Y`, `PLUG_ZONE`; described in spec
+§3a): fixed parts by name (`put`, `sel` picks a part by its nets), the small rest packed into zones (`pack_k`, wider gaps for SOT
+parts, a part that does not fit is tried turned). Converter as the TPS552892 datasheet layout; five pack columns (west to east
+packs 3, 2, 1, 4, 5: the order the chain comb gives); port clusters behind the receptacles; the pack bleeder resistors sit at
+the rear beside their FETs; a strip in front of the host-port header is kept free for its plug.
+**Routing = `tools/route_hub.sh <board> [tries]`** (or `route_hub.py <board>` on a board fresh from `pcb_hub.py --force`; KiCad
+closed; hub-conn about 10 minutes a try). hub-core and battery: Freerouting alone, then GND pours. chain-cap: 64 scripted
+segments, no autorouter. hub-conn, in this order: (1) the heavy copper, scripted and locked (chain comb, pack columns, VBAT bus,
+SYS node, VBUS_IN, converter, +5V trunk, port VBUS, receptacle escape; the script header explains each); (2) a GND via beside every
+SMD GND pad; (3) Freerouting for the thin nets on F, In2 and B; (4) GND plane on In1, GND pours on F, In2, B; (5) the finishing
+pass, repeated until nothing changes: `drop_violators()` removes autorouted segments KiCad's DRC reports for clearance, then
+`finish()`, a small maze router (0.1 mm grid, 0.05 mm for short gaps, 0.2 mm tracks, 0.6 / 0.3 vias), closes what DRC lists as
+open (Freerouting leaves 3 to 12 connections open on every run, different ones each time). `route_hub.py hub-conn --finish`
+runs only step 5 on a routed board.
+**What cost time, so it is not found again**: a track keep-out over In1 makes Freerouting place no via at all; In1 as `type power`
+is ignored (it routed 623 segments there); **taking In1 out of the DSN** (layer entry and every pad / via shape on it) works and
+KiCad still imports the vias as through vias. Imported vias get the net class drill (0.4 mm in a 0.6 mm via): reset after import.
+Freerouting's 0.15 mm lands a hair under KiCad's: 0.16 in the DSN. It knows neither KiCad's edge clearance nor the receptacle
+pegs' hole clearance: `RT_` rule areas for the run, removed afterwards. A second Freerouting run on its own result starts over.
+`id()` of a pcbnew pad is not stable between loops (use reference + pad number). **Tried and switched off, both still in the
+script**: `fanout()` (a stub out of every fine-pitch pin: Freerouting then leaves about 30 open) and rip-up in `finish()`
+(`RIPUP`: it tore up the tracks round the stack connector, 9 open became 18). Wider gaps between SOT parts at the rear helped;
+in the pack columns a wider gap shuts a supervisor's GND pin in (`STAGE_GAP_IC`). **At the receptacles two things decided it**: the port's VBUS bar on In2 has to run close in front of the A
+row (under a bar no via fits, and the A row's signals need their vias between the row and the ESD arrays, which now sit 1 mm
+further back), and a lone pad may end on any other pad of its net in `finish()`. The east-end pad A11 (MOSI) is still the one
+that fails most often; a failed try shows it as 1 or 2 open. The receptacle's B pins stand 0.15 mm apart:
+of the rear row only the pins beside the two wide gaps get out north, LED data and CC2 go south round the shell pin and the peg.
+**Limits and open points on hub-conn (also in the spec)**: AGND is not a separate island (own vias to the plane; to judge at the
+PCB review); inner copper is 0.5 oz by default, the 1.2 mm pack trunks on In2 want 1 oz (order option, D7); the +5V trunk crosses
+the whole board on In2, so signals to the ports cross it on F or B; hub boards have no silkscreen pass yet (`silk_overlap` and
+`silk_over_copper` warnings on hub-conn; `silk_keys.py` is written for the key boards); **none of the four boards has been
+opened in KiCad**, only two rendered images were looked at; the autorouted parts will look untidy.
+**Cap board = `hardware/chain-cap`** (new project; `.venv/bin/python tools/sch_hub.py --only chain-cap` writes one schematic and
+verifies the rest; nets `LINE1`-`LINE16`; `pcb_hub.py` checks its holes against the battery board's riser pins and its spring
+pins against the target pads). Still to confirm: the Mill-Max 827 strip's drawing (the footprint is a plain 2x8 header pattern).
+**Not done**: the port board layouts (`port-module` with the Amphenol receptacle, bay numbers from `pcb_keys.py` `BAY`, and its
+receptacle needs the same escape as `route_hub.py` `receptacle()` with the module-side nets; `usb-port` still rev 8's layout).
+**Next (M2 session 6)**: the user's remarks on the key boards and on the hub boards; port boards; silkscreen pass on the hub
+boards; then plates (roadmap M2 step 4) and the independent PCB review (step 3).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`

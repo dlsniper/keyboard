@@ -230,7 +230,36 @@ tables and the boards against each other).
   (1.15 mm of 1.40 mm stroke used: check on the real socket stack). Buttons: NKK UB16 (power, latching) and UB15 on
   leads to JST XH plugs on the core board. Module ports: Amphenol 12401548E4-2A on the connector layer's front edge.
   Chain seam: riser (Samtec DW-08-17-T-D-254) and cap board with a Mill-Max 827 2x8 spring-pin strip on each battery
-  board, Mill-Max 1578 target discs under the board above. All three boards placed, DRC 0 errors, parity 0, not routed.
+  board, Mill-Max 1578 target discs under the board above. Placed and routed (next point).
+- **Hub board layouts (M2 session 5, 2026-11-14)**, `tools/pcb_hub.py` (placement) and `tools/route_hub.py` (routing):
+  - **`hub-conn` has 4 copper layers (user, 2026-11-13)**: top = parts and signals, inner 1 = unbroken GND plane (no
+    tracks), inner 2 = power trunks and signals, bottom = signals. All SMD parts stay on top. The heavy copper is
+    drawn by the script; the autorouter adds only the thin nets and never touches the plane layer.
+  - Arrangement: host-port header rear left with a clear strip for its plug; USB switch, battery switch and the SYS
+    bulk capacitors around one SYS node behind it; the converter under them at the left edge; the five pack inputs as
+    five columns across the middle (west to east packs 3, 2, 1, 4, 5), each entry vias, TVS, ideal-diode FET, priority
+    FET, VBAT vias; the three ports along the front, each ESD arrays and series resistors behind the receptacle, the
+    buffer behind them, the TPS25810 at the receptacle's east side; the +5V 220 uF at the front left.
+  - Converter as the TPS552892 datasheet layout: input and output capacitors at the VIN and VOUT strips with PGND
+    between them, a GND via row behind the capacitors, inductor on the other side with the boot capacitors on the
+    switch strips, VCC capacitor at its pin. **Not as the datasheet: AGND is not a separate island**; pins 2, 5, 17
+    and the FSW, FB, COMP and EN parts go to the GND plane by their own vias (to judge at the PCB review).
+  - **Chain seam comb**: every pack line has one target pad in the north row and one in the south row, in mirrored
+    order, so no two can be joined on one layer between the rows. The north pads cross the pad block on inner 2; on
+    the bottom all ten ends then lie in one row and the pairs nest (PACK1 outermost), joined by five 1.2 mm lanes.
+    Each lane leaves through two vias and a 1.2 mm trunk on inner 2 to its column (PACK1 straight on the bottom).
+  - Supply copper: SYS 2.2 mm on top (USB switch to the input capacitors); VBUS_IN 2.5 mm on the bottom under the
+    header; VBAT 3 mm on inner 2 along the columns and up to the battery switch; +5V 3 mm on inner 2 from the output
+    capacitors along the front to the three ports (3 mm branch and three vias at each TPS25810) and the 220 uF; port
+    VBUS through two vias and an inner-2 bar to the receptacle's two VBUS through-pins. All four hub boards: DRC
+    0 errors, 0 unconnected, parity 0 (2026-11-14).
+  - **Limit to know: the inner layers are 0.5 oz at JLCPCB by default.** A 1.2 mm pack trunk then warms by roughly
+    20 K at 2.2 A (one pack at its 8-10 W) and more at the fuse's 5 A; the 3 mm trunks are fine at 3.5 A. 1 oz inner
+    copper is an order option and is the better choice (to settle at D7).
+  - `hub-core` and `battery` are plain 2-layer boards, routed by the autorouter (battery pack lines 1.5 mm).
+  - **Cap board `hardware/chain-cap`** (26 x 18 mm, 2 layers, no parts but the riser's upper end and the spring-pin
+    strip): riser pin n to spring pin n, nets `LINE1`-`LINE16`. Every line passes one row of foreign pins through the
+    0.84 mm gap between two pads as a 0.4 mm neck 2.5 mm long (about 3 mOhm), 1.2 mm wide otherwise.
 - **Buttons:** power is a latching switch in the battery-switch gate line (microamps;
   on USB the hub is always on), reset pulls RUN low, boot pulls BOOTSEL low.
 - **Stack connector, frozen: 2x25, 2.54 mm**, pins on the core, socket on the

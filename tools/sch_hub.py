@@ -13,6 +13,7 @@ hub-conn: three module ports (24-pin USB-C receptacle, TPS25810 Type-C source sw
           diode, priority P-FET), pack-priority supervisors, UVLO, battery and USB switches, 5 V buck-boost
           (TPS552892, 3.5 A).
 battery:  passive 4xAA module: holder, PTC, chain in / chain out with the one-line shift.
+chain-cap: the small board on a battery module's riser that carries the spring-pin strip (pin n to pin n).
 
 Run:   .venv/bin/python tools/sch_hub.py            (generate + verify)
 Check: .venv/bin/python tools/sch_hub.py --verify   (verify the files on disk only)
@@ -448,10 +449,29 @@ def build_battery():
     return b, w, h
 
 
+# ---- cap board of the chain seam --------------------------------------------------------------------------
+
+def build_cap():
+    """Small board on top of each battery module's riser: riser pin n to spring pin n, nothing else."""
+    b = Board(120)
+    line = {p: f"LINE{p}" for p in CHAIN}
+    b.part("J", "Connector_Generic:Conn_02x08_Odd_Even", "RISER (from the battery board)",
+           "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical", (40, 24), line,
+           {"MPN": "upper end of the Samtec DW-08-17-T-D-254 on the battery board, soldered"})
+    b.part("J", "Connector_Generic:Conn_02x08_Odd_Even", "SPRING PINS (to the board above)",
+           "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical", (40, 24), line,
+           {"MPN": "Mill-Max 827-22-016-10-004101 spring-pin strip [check its drawing]"})
+    w, h = b.finish(
+        "Cap board of the battery chain seam (spec section 3a): sits on the riser of a battery board and carries the spring-pin\n"
+        "strip that presses on the target pads of the board above. Pin n to pin n, 16 lines, no parts. Nets are numbered by\n"
+        "pin (LINE1-LINE16), not by pack: the two pins of a pack line are joined on the battery board and the connector layer.")
+    return b, w, h
+
+
 # ---- generate and verify ---------------------------------------------------------------------------------
 
 BOARDS = {"hub-core": ("Hub core layer", build_core), "hub-conn": ("Hub connector layer", build_conn),
-          "battery": ("AA battery module", build_battery)}
+          "battery": ("AA battery module", build_battery), "chain-cap": ("Chain seam cap board", build_cap)}
 
 
 def table_nets(b):
@@ -556,19 +576,20 @@ def pinmap_text():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--verify", action="store_true", help="only verify the schematics on disk")
+    ap.add_argument("--only", help="generate this board only (the others are verified)")
     args = ap.parse_args()
     built = {}
     for name, (title, fn) in BOARDS.items():
         b, w, h = fn()
         built[name] = b
-        if not args.verify:
+        if not args.verify and args.only in (None, name):
             generate(name, title, b, w, h)
         print(f"{name}: {len(b.parts)} parts")
         schlib.check_netlist(HW / name / f"{name}.kicad_sch", table_nets(b))
         comps, _, _ = read_netlist(HW / name / f"{name}.kicad_sch")
         if set(comps) != {p[0] for p in b.parts}:
             sys.exit(f"{name}: parts on the sheet differ from the table")
-    if not args.verify:
+    if not args.verify and not args.only:
         PINMAP.write_text(pinmap_text())
         print("wrote", PINMAP)
     err = cross_checks(built)

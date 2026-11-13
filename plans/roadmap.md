@@ -94,10 +94,14 @@ met 2026-11-13; signed off by the user 2026-11-13.
    `tools/pcb_keys.py`: `left` placed and DRC-checked 2026-11-13 (straight edges, rear strip, bay at the split,
    port board on top; user). `right` (split edge mirrors left's angle; user) and `numpad` placed 2026-11-13, DRC 0 errors.
    Hub boards: FreeCAD section (`mech/hub/`), parts chosen (user), `tools/pcb_hub.py` placed hub-core, hub-conn and battery
-   2026-11-13 (DRC 0 errors, parity 0, not routed). Open: cap board of the chain seam, port boards.
+   2026-11-13; `hub-conn` arranged for routing 2026-11-14 (4 layers, user; converter per its datasheet layout, port
+   clusters, pack columns); cap board `hardware/chain-cap` added. Open: port boards (`port-module`, `usb-port`).
 2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source. `tools/route_keys.py`: `left`, `right` and
    `numpad` routed 2026-11-13 (DRC 0 errors, 0 unconnected, parity 0 on each; `tools/route_board.sh` repeats the strip
-   autorouter until clean), silkscreen pass by `tools/silk_keys.py`. Hub boards and port board next.
+   autorouter until clean), silkscreen pass by `tools/silk_keys.py`. Hub boards: `tools/route_hub.py` (`tools/route_hub.sh`
+   repeats until clean): `hub-core`, `battery` and `chain-cap` routed 2026-11-14 (DRC 0 errors, 0 unconnected, parity 0);
+   `hub-conn` (4 layers: scripted power copper, autorouter for the thin nets, a finishing maze router) routed 2026-11-14 too,
+   DRC 0 errors, 0 unconnected, parity 0. Port boards next.
 3. DRC with schematic parity; a second independent review, including every Pico pin
    against the RP2350 and Pico 2 W datasheets.
 4. Plates (1.5 mm FR4) from the same file.
