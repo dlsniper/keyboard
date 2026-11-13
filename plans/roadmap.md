@@ -161,7 +161,7 @@ whoever delegates verifies what comes back.
 | Work | Model |
 | --- | --- |
 | Design decisions, pin maps, integration, anything the user signs off | Fable (main session) |
-| **PCB design work (placement, routing, outlines) and the overall layout** (user, 2026-11-13); FreeCAD and KiCad used freely for it | Fable (main session), not delegated |
+| **PCB design work (placement, routing, outlines), the overall layout and the keyboard body (case and hub CAD)** (user, 2026-11-13: no tokens spent on fixing a cheaper model's mistakes); FreeCAD and KiCad used freely for it | Fable (main session), not delegated |
 | Independent reviews: schematics against datasheets (M1), PCBs (M2) | Opus 5.5, given the files, not the conclusions |
 | Bulk, well-specified work: data entry, render scripts, schematic script bodies written to the main session's pin maps, keymaps | Sonnet 5.5 |
 | Lookups: stock and price at Mouser Europe, datasheet dimensions | Haiku 5.5 |

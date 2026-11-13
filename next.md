@@ -52,8 +52,9 @@ current, read it only for the hub/battery rework, and no tool touches it** (`gen
 Decisions go to the user as options with pros and cons.
 
 ## Working rules
-- **PCB design work and the overall layout are done by the main session, not delegated** (user, 2026-11-13); FreeCAD
-  and KiCad (CLI and MCPs) may be used freely for it.
+- **PCB design work, the overall layout and the keyboard body (case, hub CAD) are done by the main session, not
+  delegated** (user, 2026-11-13: no tokens spent on fixing a cheaper model's mistakes); FreeCAD and KiCad (CLI and
+  MCPs) may be used freely for it. Delegate only work where a mistake is cheap to catch.
 - One clean session per milestone, split at a task boundary if it grows. End every session by updating this file and
   committing. Read only what the task needs; bulk work goes to cheaper models (table in the roadmap);
   subagents may nest up to five levels, results are verified by whoever delegated.
