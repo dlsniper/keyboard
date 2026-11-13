@@ -38,9 +38,29 @@ receptacle nets). New project symbols: `MCP23S17-E_SO` (SO tri-state so two chip
 SK6812MINI-E stock symbol/footprint pad order; the JAE DX07S024WJ1R350 receptacle footprint (only stock one with
 all 24 pads); no ESD array on the port board yet; port-board socket must sit on the side where pin 1 mates pin 1;
 stabiliser footprints not placed; sheets never opened in KiCad (numpad and port-module are on oversized A1).
-**Next: M1 task 2, hub schematics** (core layer, connector layer with three hub-side ports: 24-pin receptacle with
-the hub column of the wire plan, Type-C source switch per port (TPS25810 class), 74AHCT125 for LED data, series
-resistors, INT pull-up; power path and AA module for 5 packs from rev 8.1). M3 may also start (D2 is done).
+**M1 task 2 done (2026-11-13)**: `python3 tools/sch_hub.py` generates `hardware/hub-core` (Pico 2 W on sockets,
+pogo pins to TP2/TP3/TP6, buttons, frozen 2x25 stack connector, expansion header), `hardware/hub-conn` (three
+module ports: TPS25810 + 74LVC125A SPI buffer gated by the port's CS + ESD; 74AHCT125 for LED data; host-port
+cable header; the whole power path) and `hardware/battery` (passive 4xAA, PTC, 2x8 chain with the line shift).
+ERC 0 on all nine boards; netlists match the script's tables; cross-board checks (stack pins, Pico nets, chain
+shift, wire plan against the module side) pass; `tools/kicad-check.sh` runs them (`--verify`). Spec **§3a** holds
+the stack pin-out, the hub pin map and the circuits. **User decisions 2026-11-13**: pogo pins for Pico USB and
+BOOTSEL; power path on the connector layer; 2x8 chain with doubled pack lines; **TPS25810 (3 A)** per port;
+buffer per port; **lowest-module-first pack priority in hardware** (supervisor + P-FET per pack, body diode as
+the gap-free fallback). New symbols in `gen_kicad.py`: `Pico2W`, `LM74610QDGK`, `TPS630701RNM`,
+`TPS3840PLxxDBV`, `74x125_SO14`, `DMN63D8LDW`, `CSD17313Q2`, `CSD25483F4`. Datasheets are in `build/ds/`
+(git-ignored; `tps25810.pdf` added this session).
+**Open from task 2, for the M1 review (task 4)**: pack-priority circuit is new and **not simulated** (hand-over
+when the active pack is pulled or empties, the 820 k re-arm level, start-up from one pack); TPS25810 details
+(REF_RTN, CC and VBUS capacitors, IN2/AUX for VCONN, UFP/FAULT levels) and three 3.4 A ports on a 2 A converter
+(O3); CSD25483F4 pin order (1 G, 2 S, 3 D assumed); Pico pads TP2/TP3/TP6 (which side of the 27 R, BOOTSEL to
+GND) and pogo pin part; SW_SPDT common pin and the latching switch part; `J_USB` on hub-conn copies usb-port
+`J502` by hand (not covered by `check_interconnect.py`); **port-module needs a CS pull-up** (the hub leaves CS
+undriven until DET) and a MISO series resistor would belong on the key board; footprints missing: TPS630701,
+CSD17313Q2, CSD25483F4, inductor, BC4AAPC holder, pogo pins and chain parts, buttons; hub-conn sheet is A0.
+**Next: M1 task 3** (hub pin map exported as data for the firmware from `sch_hub.py`; rails, cable and fuses
+sized from datasheets) **and task 4** (independent review of all schematics against the datasheets, Opus, given
+the files and not the conclusions; plus the priority simulation). M3 may also start (D2 is done).
 Matrices follow physical rows and columns (right is 6x11: 8 alpha + 3 nav columns).
 `.venv` note: it already existed (Python 3.14, KiCad helper tools); the render run added a
 Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3.14 side still imports its

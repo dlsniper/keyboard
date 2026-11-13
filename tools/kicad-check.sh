@@ -24,6 +24,9 @@ done < <(find "$ROOT/hardware" -name '*.kicad_pro' -not -path '*/lib/*' | sort)
 echo "== key boards: netlist self-check against layout/keys.json and the spec"
 "$ROOT/.venv/bin/python" "$ROOT/tools/sch_keys.py" --verify || status=1
 
+echo "== hub boards: netlist check against the tools/sch_hub.py tables, cross-board checks"
+"$ROOT/.venv/bin/python" "$ROOT/tools/sch_hub.py" --verify 2>&1 | grep -v "^INFO\|^WARNING" || status=1
+
 echo "== interconnect"
 "$ROOT/.venv/bin/python" "$ROOT/tools/check_interconnect.py" > "$OUT/interconnect.rpt" || status=1
 grep "^ERR" "$OUT/interconnect.rpt" || true

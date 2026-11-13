@@ -66,8 +66,8 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   TX2 to RX2, SBU1 to SBU2, one CC wire, the other CC pin is the cable's own VCONN /
   e-marker); **buzz out the real cable before M4's bench test** (O2).
 - **CC is used as USB-C means it**: every hub port is a plain 5 V source (Rp, VBUS
-  switched on only when Rd is seen, current-limited; one Type-C source-switch chip
-  per port, TPS25810 class, chosen with the hub schematic), every module is a plain
+  switched on only when Rd is seen, current-limited; one **TPS25810** Type-C source
+  switch per port, user, 2026-11-13, §3a), every module is a plain
   sink (Rd). That gives module detect and the per-module rail switch, and makes
   mis-plugs harmless: a module in a charger or laptop is just powered and idle
   (INT is open drain, MISO is off while CS is high); a phone in a hub port is
@@ -179,16 +179,141 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 - Sources: host USB (priority) or **AA battery modules, up to 5** stacked under the
   hub (user, 2026-11-13; rev 8.1 planned 3). Each is passive: 4 x AA NiMH (alkaline
   tolerated), holder, PTC; charged outside the keyboard. No Li-ion, no charging.
-- Power path in the hub, starting from rev 8.1's design (ideal-diode OR of the
-  packs, USB priority switch, under-voltage cut-off at about 1.0 V per cell, 5 V
-  rail converter, pack voltage read by the controller). It was specified but never
-  drawn; M1 draws it, reworked for 5 packs and the Pico 2 W.
+- Power path in the hub, on the connector layer, from rev 8.1's design (ideal diode
+  per pack, USB priority switch, under-voltage cut-off at about 1.0 V per cell, 5 V
+  buck-boost, pack voltage read by the controller), drawn at M1 for 5 packs and the
+  Pico 2 W, with **lowest-module-first pack priority** (user, 2026-11-13). Details
+  in §3a.
 - The hub switches each module's rail, so LEDs draw nothing when off and on battery.
 - Firmware caps LED current from what the source offers (USB 500 mA / 1.5 A / 3 A
   from the CC pins; battery: its own cap). Values by measurement (O3).
 - Batteries only pay off with Bluetooth (M6). Expect days to weeks per pack on a
   Pico 2 W, to be measured; the swappable core layer is the way out if that is not
   enough.
+
+## 3a. Hub boards (M1, 2026-11-13)
+
+Source of every table here: `tools/sch_hub.py` (generates `hardware/hub-core`,
+`hardware/hub-conn`, `hardware/battery`; the script checks the netlists against its
+tables and the boards against each other).
+
+- **Two hub boards.** Core layer `hub-core`: Pico 2 W on sockets, buttons, stack
+  connector, expansion header. Connector layer `hub-conn`: three module ports, the
+  cable header to the host port board (`hardware/usb-port`, unchanged), and the
+  whole power path (user, 2026-11-13: not a separate power board).
+- **Pico USB and BOOTSEL by pogo pins** (user, 2026-11-13): the Pico 2 W has USB
+  D+/D- and BOOTSEL only on underside pads (TP3, TP2, TP6); three spring pins on the
+  core board reach them. Pin height and positions are set at M2 from the Pico
+  drawing. The Pico's VSYS is fed from +5V through a Schottky; its 3V3 output is the
+  hub's logic rail.
+- **Buttons:** power is a latching switch in the battery-switch gate line (microamps;
+  on USB the hub is always on), reset pulls RUN low, boot pulls BOOTSEL low.
+- **Stack connector, frozen: 2x25, 2.54 mm**, pins on the core, socket on the
+  connector layer. `SDA`/`SCL` (GP0/GP1), `RUN` and `SP1`-`SP4` are reserved for
+  later boards and also sit on the core's 2x5 expansion header.
+
+  | Pin | Net | Pin | Net |
+  | --- | --- | --- | --- |
+  | 1 | +5V | 2 | +5V |
+  | 3 | GND | 4 | GND |
+  | 5 | +3V3 | 6 | +3V3 |
+  | 7 | USB_DP | 8 | GND |
+  | 9 | USB_DN | 10 | GND |
+  | 11 | SCK | 12 | GND |
+  | 13 | MOSI | 14 | MISO |
+  | 15 | CS_A | 16 | CS_B |
+  | 17 | CS_C | 18 | GND |
+  | 19 | INT_A | 20 | INT_B |
+  | 21 | INT_C | 22 | PORT_FLT |
+  | 23 | LED_A | 24 | LED_B |
+  | 25 | LED_C | 26 | GND |
+  | 27 | EN_A | 28 | EN_B |
+  | 29 | EN_C | 30 | USB_PRESENT |
+  | 31 | DET_A | 32 | DET_B |
+  | 33 | DET_C | 34 | GND |
+  | 35 | CC1_SENSE | 36 | CC2_SENSE |
+  | 37 | VBAT_SENSE | 38 | GND |
+  | 39 | BAT_DIV_EN | 40 | RUN |
+  | 41 | PWR_SW_A | 42 | PWR_SW_B |
+  | 43 | SDA | 44 | SCL |
+  | 45 | SP1 | 46 | SP2 |
+  | 47 | SP3 | 48 | SP4 |
+  | 49 | GND | 50 | GND |
+
+- **Hub pin map (Pico 2 W).** SPI0 on GP16/18/19; everything else is plain GPIO.
+  No internal pull-downs are relied on (RP2350-E9): every input has an external
+  pull-up or a divider.
+
+  | GPIO | Net |
+  | --- | --- |
+  | GP0 | SDA |
+  | GP1 | SCL |
+  | GP2 | EN_A |
+  | GP3 | DET_A |
+  | GP4 | INT_A |
+  | GP5 | CS_A |
+  | GP6 | LED_A |
+  | GP7 | EN_B |
+  | GP8 | DET_B |
+  | GP9 | INT_B |
+  | GP10 | CS_B |
+  | GP11 | LED_B |
+  | GP12 | EN_C |
+  | GP13 | DET_C |
+  | GP14 | INT_C |
+  | GP15 | CS_C |
+  | GP16 | MISO |
+  | GP17 | LED_C |
+  | GP18 | SCK |
+  | GP19 | MOSI |
+  | GP20 | PORT_FLT |
+  | GP21 | USB_PRESENT |
+  | GP22 | BAT_DIV_EN |
+  | GP26 | CC1_SENSE |
+  | GP27 | CC2_SENSE |
+  | GP28 | VBAT_SENSE |
+
+  `EN_x` high powers port x (10 k pull-down: off at reset). `DET_x` low = a sink
+  (Rd) is attached and VBUS is on. `PORT_FLT` low = a port is in current limit or
+  too hot (wired-OR). `INT_x` is the module's open-drain interrupt (10 k pull-up at
+  the hub). `USB_PRESENT` high = host VBUS above about 4.5 V. `CC1/CC2_SENSE` read the
+  host's Rp for the current cap (§3). `VBAT_SENSE` is 1/3 of the highest pack while
+  `BAT_DIV_EN` is high.
+- **Module port (x3).** 24-pin receptacle wired per the hub column of §1.
+  **TPS25810** (user, 2026-11-13, over the 1.5 A TPS25821): advertises 3 A, limit
+  3.4 A; a strap changes it to 1.5 A / 1.7 A. Three ports at 3 A exceed the 2 A
+  buck-boost, so firmware's LED cap and the port fault line are what keep the rail
+  up (O3). **One 74LVC125A per port** (user, 2026-11-13): SCK and MOSI reach the
+  cable, and MISO comes back, only while that port's CS is low; the CS line itself
+  is driven only while `DET_x` is low. So each cable is driven point to point, a
+  dead module cannot hold MISO, and a phone or an unpowered module sees no SPI.
+  33 R in series at the buffer outputs, 100 k pull-downs on the cable side. LED
+  data: one 74AHCT125 at 5 V for the three ports, 100 R in series, low by default.
+  ESD arrays (TPD4E1U06) on the six signals and CC, TVS0500 on the port's VBUS.
+- **Battery chain, 2x8 pogo seam** (user, 2026-11-13), reversal-safe (pin k meets
+  17-k): 1 PACK1, 2 GND, 3 PACK2, 4 PACK3, 5 GND, 6 PACK4, 7 PACK5, 8 AUX_5V, 9 AUX_5V, 10 PACK5, 11 PACK4, 12 GND, 13 PACK3, 14 PACK2, 15 GND, 16 PACK1. Each module puts its own pack on `PACK1` upwards and passes
+  `PACK1`-`PACK4` from below on as `PACK2`-`PACK5`, so hub input n is the n-th
+  module from the hub and input 5 is the lowest. Modules stay passive (holder, PTC).
+- **Power path** (rev 8.1 parts and values unless said): per pack input SMF4L9.0CA,
+  LM74610-Q1 + CSD17313Q2; the packs meet on `VBAT`; CSD25402Q3A battery switch to
+  `SYS` (power switch AND TPS3840PL40 UVLO AND no USB); second CSD25402Q3A from
+  `VBUS_IN` with TPS3840PL43 detect and the 2.2 M / 22 n delay; 4 x 47 uF on `SYS`;
+  TPS630701 makes +5V for the ports and the Pico. Dropped against rev 8.1: the
+  TPS70933 (the Pico has its own regulator; `SYS` reaches 6.4 V, above the Pico's
+  5.5 V VSYS limit, which is why the Pico runs from +5V).
+- **Pack priority: lowest module first** (user, 2026-11-13), in hardware, no
+  firmware. Inputs 1-4 pass a second CSD25402Q3A after the ideal diode. It is on
+  only while no healthy pack sits below; otherwise that pack waits behind the FET's
+  body diode (about 0.7 V handicap) and takes over with no gap when the pack below
+  is pulled or empties. "Healthy" is one TPS3840PL43 per pack (inputs 2-5) on the
+  pack through 100 k / 1 uF, with 820 k from its VDD to its output: it drops out at
+  about 4.35 V and re-arms only above about 5.05 V, so an emptied pack cannot bounce
+  back to "healthy" when its load is removed; it then shares with the packs above.
+  Limits, accepted: a pack above still helps through the diode in roughly the last
+  10-15 % of the pack below; a half-used pack put back in (resting under 5.05 V) is
+  not preferred, it just shares; about 2-5 uA more idle drain per pack. **Not yet
+  simulated** (rev 8.1's switchover sim did not have it): to do at the M1 review,
+  with the 820 k re-arm level as the value to tune.
 
 ## 4. Firmware
 
@@ -231,7 +356,8 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
 - **O3** LED current caps per source: sized at M1, measured at M4.
 - **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
 - O7 closed 2026-11-13: SK6812MINI-E chain (D10, §2). Open under it: a European source for the LED.
-- **O8** five battery modules: chain connector and power path rework from rev 8.1's three.
+- O8 closed 2026-11-13: 2x8 chain, five pack inputs, lowest-first priority (§3a). Open under it: simulate the
+  priority hand-over and tune the re-arm level; pogo parts for 2x8.
 - **O9** n-key USB report in TinyGo (M4).
 - **O10** cable-free pods: they take the port board's place in the bay (2x6 header,
   two M2 screws; D3); bay size and header position frozen at M1; the pods themselves (controller, radio link to the hub, latency

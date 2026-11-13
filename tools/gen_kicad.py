@@ -30,6 +30,9 @@ PROJECTS = [
     ("right", 1, 1.6),
     ("numpad", 1, 1.6),
     ("port-module", 1, 1.6),
+    ("hub-core", 100, 1.6),
+    ("hub-conn", 200, 1.6),
+    ("battery", 800, 1.6),
 ]
 # Key boards (tools/sch_keys.py) carry the vendored kiswitch footprint libraries
 KEY_BOARDS = {"left", "right", "numpad"}
@@ -323,6 +326,96 @@ SYMBOLS = [
         top=[("6", "VDD", "power_in"), ("48", "VCORE", "power_out")],
         bottom=[("7", "VSS", "power_in")],
         width=30.48,
+    ),
+    # ---- hub (rev 9.1, tools/sch_hub.py) ------------------------------------------------------------
+    # TI LM74610-Q1 SNOSCZ1B, section 5 (DGK, VSSOP-8). Floating: no ground pin.
+    symbol(
+        "LM74610QDGK", "U", "Package_SO:VSSOP-8_3x3mm_P0.65mm",
+        "https://www.ti.com/lit/ds/symlink/lm74610-q1.pdf",
+        "Zero-Iq ideal-diode controller for one external N-FET, reverse polarity to -45 V, VSSOP-8",
+        "ideal diode controller OR-ing reverse polarity",
+        left=[("4", "ANODE", "passive"), ("1", "VCAPL", "passive"), ("3", "NC3", "passive")],
+        right=[("8", "CATHODE", "passive"), ("7", "VCAPH", "passive"), ("6", "GATE", "passive"),
+               ("2", "PULLDN", "passive"), ("5", "NC5", "passive")],
+    ),
+    # TI TPS63070 SLVSC58B, Pin Functions (RNM, 15-pin VQFN 2.5 x 3 mm); TPS630701 = fixed 5.0 V. Footprint at M2.
+    symbol(
+        "TPS630701RNM", "U", "",
+        "https://www.ti.com/lit/ds/symlink/tps63070.pdf",
+        "Buck-boost converter, 2-16 V in, fixed 5.0 V out, 2 A at 4 V in, power save mode, VQFN-15 (RNM)",
+        "buck-boost converter TI",
+        left=[("12", "VIN", "power_in"), ("13", "VIN", "power_in"), ("14", "EN", "input"), ("1", "PS/SYNC", "input"),
+              ("15", "VSEL", "input"), ("11", "L1", "passive"), ("9", "L2", "passive")],
+        right=[("7", "VOUT", "power_out"), ("8", "VOUT", "power_out"), ("5", "FB", "input"), ("6", "FB2", "passive"),
+               ("2", "PG", "open_collector"), ("3", "VAUX", "passive")],
+        bottom=[("4", "GND", "power_in"), ("10", "PGND", "power_in")],
+    ),
+    # TI TPS3840 SNVSB03E, Table 5-1: any PLxx option (push-pull, active-low RESET); the value field names the threshold
+    symbol(
+        "TPS3840PLxxDBV", "U", f"{LIBNAME}:TI_SOT-23-5_DBV0005A",
+        "https://www.ti.com/lit/ds/symlink/tps3840.pdf",
+        "Nano-power supervisor, push-pull active-low RESET, threshold per value (PL40 4.0 V, PL43 4.3 V), SOT-23-5",
+        "supervisor reset voltage monitor",
+        left=[("2", "VDD", "passive"), ("4", "~{MR}", "passive"), ("5", "CT", "passive")],
+        right=[("1", "~{RESET}", "passive")],
+        bottom=[("3", "GND", "power_in")],
+    ),
+    # 74x125 quad tri-state buffer as one unit (the stock 74xx symbols are derived and multi-unit). SOIC-14.
+    symbol(
+        "74x125_SO14", "U", "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm",
+        "https://www.ti.com/lit/ds/symlink/sn74lvc125a.pdf",
+        "Quad bus buffer, tri-state outputs, active-low output enables (74LVC125A at 3.3 V, 74AHCT125 at 5 V), SOIC-14",
+        "buffer tri-state level shifter 125",
+        left=[("1", "~{1OE}", "input"), ("2", "1A", "input"), ("4", "~{2OE}", "input"), ("5", "2A", "input"),
+              ("10", "~{3OE}", "input"), ("9", "3A", "input"), ("13", "~{4OE}", "input"), ("12", "4A", "input")],
+        right=[("3", "1Y", "tri_state"), ("6", "2Y", "tri_state"), ("8", "3Y", "tri_state"), ("11", "4Y", "tri_state")],
+        top=[("14", "VCC", "power_in")],
+        bottom=[("7", "GND", "power_in")],
+    ),
+    # Diodes DMN63D8LDW (SOT-363): 1 S1, 2 G1, 3 D2, 4 S2, 5 G2, 6 D1
+    symbol(
+        "DMN63D8LDW", "Q", "Package_TO_SOT_SMD:SOT-363_SC-70-6",
+        "https://www.diodes.com/assets/Datasheets/DMN63D8LDW.pdf",
+        "Dual N-channel MOSFET, 30 V, VGS +/-20 V, Vth 0.8-1.5 V, ESD-protected gates, SOT-363",
+        "dual N-MOSFET small signal",
+        left=[("2", "G1", "passive"), ("5", "G2", "passive")],
+        right=[("6", "D1", "passive"), ("1", "S1", "passive"), ("3", "D2", "passive"), ("4", "S2", "passive")],
+    ),
+    # TI CSD17313Q2 SLPS260 top view: D 1, 2, 5, 6; G 3; S 4. Footprint pad map (exposed pads) at M2.
+    symbol(
+        "CSD17313Q2", "Q", "",
+        "https://www.ti.com/lit/ds/symlink/csd17313q2.pdf",
+        "N-channel NexFET, 30 V, VGS +10/-8 V, 26 mOhm at 4.5 V, SON 2 x 2 mm",
+        "N-MOSFET NexFET",
+        left=[("3", "G", "passive")],
+        right=[("1", "D", "passive"), ("2", "D", "passive"), ("5", "D", "passive"), ("6", "D", "passive"), ("4", "S", "passive")],
+    ),
+    # TI CSD25483F4 SLPS449 (FemtoFET, 1.0 x 0.6 mm LGA): 1 G, 2 S, 3 D, to be confirmed in the M1 review
+    symbol(
+        "CSD25483F4", "Q", "",
+        "https://www.ti.com/lit/ds/symlink/csd25483f4.pdf",
+        "P-channel FemtoFET, -20 V, VGS -12 V, IDSS <= 100 nA, LGA 1.0 x 0.6 mm",
+        "P-MOSFET FemtoFET low leakage",
+        left=[("1", "G", "passive")],
+        right=[("2", "S", "passive"), ("3", "D", "passive")],
+    ),
+    # Raspberry Pi Pico 2 W header pin-out (40 pins). The stock MCU_Module symbol types GND and AGND as power
+    # outputs, which fails ERC as soon as both are grounded.
+    symbol(
+        "Pico2W", "A", "Module:RaspberryPi_Pico_Common_THT",
+        "https://datasheets.raspberrypi.com/picow/pico-2-w-datasheet.pdf",
+        "Raspberry Pi Pico 2 W (RP2350, CYW43439), 40-pin module on pin sockets",
+        "Pico 2 W RP2350 module",
+        left=[(str(pin), f"GP{g}", "bidirectional") for pin, g in
+              ((1, 0), (2, 1), (4, 2), (5, 3), (6, 4), (7, 5), (9, 6), (10, 7), (11, 8), (12, 9), (14, 10), (15, 11),
+               (16, 12), (17, 13), (19, 14), (20, 15))],
+        right=[("40", "VBUS", "passive"), ("39", "VSYS", "power_in"), ("37", "3V3_EN", "passive"), ("36", "3V3", "power_out"),
+               ("35", "ADC_VREF", "passive"), ("34", "GP28_ADC2", "bidirectional"), ("32", "GP27_ADC1", "bidirectional"),
+               ("31", "GP26_ADC0", "bidirectional"), ("30", "RUN", "passive"), ("29", "GP22", "bidirectional"),
+               ("27", "GP21", "bidirectional"), ("26", "GP20", "bidirectional"), ("25", "GP19", "bidirectional"),
+               ("24", "GP18", "bidirectional"), ("22", "GP17", "bidirectional"), ("21", "GP16", "bidirectional")],
+        bottom=[(str(n), "GND", "passive") for n in (3, 8, 13, 18, 23, 28, 38)] + [("33", "AGND", "passive")],
+        width=25.4,
     ),
 ]
 
