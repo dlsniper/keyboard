@@ -16,9 +16,16 @@ Then: tools/pcb_check.sh left   (DRC with schematic parity)
      the rows are joined by a 1 mm bus along the outer board edge;
    - GND: 100 n -> via -> LED; the ground itself is the pour on both sides.
    Stabilised keys: row trunk and return line dip south of the stabiliser's wire holes.
+   The rows always start at the west end (LED chain west to east), so the +5V bus runs along the west board edge
+   (outer edge on `left` and `numpad`, split edge on `right`) and the bottom row's riser along the east edge.
+   A tall key that sits half a pitch south of its row (numpad +): the four lines step south in the gap west of it
+   (STEP). Column links that the plain pattern cannot make (a long sideways run, a key of another column in
+   between) are searched on the front side against the real holes, windows, vias and tracks (col_options).
 2. `--strip`: the rear strip (expander, pull-ups, rail switch, headers) and its links to the field are left to
    Freerouting with the field locked (work files in build/route/<name>/).
-3. GND pours on both sides, refilled and saved through kicad-cli.
+3. GND pours on both sides, refilled and saved through kicad-cli; reference texts moved off pads and each
+   other (tools/silk_keys.py).
+The strip router's result differs from run to run: if tools/pcb_check.sh reports an open net, place and route again.
 """
 import math
 import os
@@ -30,6 +37,7 @@ from pathlib import Path
 import pcbnew
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import silk_keys  # noqa: E402
 from pcb_keys import PITCH, REAR, ROOT, frame, meet, rot  # noqa: E402
 
 JAR = Path.home() / "Documents/KiCad/10.0/3rdparty/plugins/app_freerouting_kicad-plugin/jar/freerouting-2.5.0.jar"
@@ -47,15 +55,23 @@ GND_VIA = (-4.7, 3.16)
 DIODE_CH, DIODE_5V = 3.7, 4.7        # the two lanes between the diode's pads
 CAP_CH = 4.2                         # the lane between the 100 n's pads
 BUS_X = 1.8                          # +5V bus: mm inside the outer board edge
-FEED_T = REAR - 2.5                  # +5V feed from the rail switch: along the rear edge of the strip
+FEED_T = REAR - 2.5                  # +5V feed from the rail switch: along the rear edge of the strip (`left`: switch mid-strip)
+FEED_NEAR = 16.9                     # ... or just behind the bulk capacitor where the switch is at the bus end (`right`, `numpad`)
+FEED_LANE = {"left": FEED_T}
+COL_LANES = (-9.1, -9.7, -10.3, -10.9, -11.5, -12.1, -8.5, -7.9, -7.3)   # long sideways column runs, y in the lower key's frame
+COL_MID = (-8.0, 8.0)                # column passing through a key of another column: x in that key's frame
+# A tall key half a pitch south of its west neighbour a: where each line turns (a's frame) and comes down (the tall key's frame)
+STEP = {"data": ((9.2, 7.9), (-8.0, 0.225)), "v5": ((8.3, 8.1), (-9.0, 0.325)), "row": (-10.05, 0.775),
+        "ret": (6.1, (-10.65, 1.675))}
 
 mm = pcbnew.FromMM
 F, B = pcbnew.F_Cu, pcbnew.B_Cu
 
 
 class Router:
-    def __init__(self, board, keys, inner_sign, origin, phi, lines):
+    def __init__(self, board, keys, inner_sign, origin, phi, lines, feed_t=FEED_T):
         self.b, self.inner, self.origin, self.phi, self.lines = board, inner_sign, origin, phi, lines
+        self.feed_t, self._obs, self._dip, self.why = feed_t, None, {}, None
         self.keys = [k for k in keys if k["kind"] == "switch"]
         self.fp = {}                                            # key id -> {"SW": fp, "D": fp, "LED": fp, "CL": fp}
         for fp in board.GetFootprints():
@@ -104,20 +120,40 @@ class Router:
     def stab(k):
         return k["stab"] and k["w"] >= k["h"]
 
+    def dipped(self, k):
+        """A stabilised key's lines dip south of its holes in one piece, unless the stabiliser holes of a key in
+        the next row are in the way there (`right`: Enter above Shift); then they come back up between its own
+        two holes and the middle of the cell is as on any key."""
+        if not self.stab(k):
+            return False
+        if k["id"] not in self._dip:
+            self._dip[k["id"]] = all(self.clear([self.P(k, -15.3, y), self.P(k, 15.3, y)], 0.4) for y in (ROW_DIP, RET_DIP))
+        return self._dip[k["id"]]
+
     def lane(self, k, y, dip, grow=0.0):
         """West-to-east line through a key's cell at y, dipping to `dip` under a stabiliser."""
         hw = k["w"] * PITCH / 2
         if self.stab(k):
-            a = 14.6 + grow
-            return [(-hw, y), (-a - 1.0, y), (-a, dip), (a, dip), (a + 1.0, y), (hw, y)]
+            a, m = 14.6 + grow, 9.0 - grow
+            mid = [(-a, dip), (a, dip)] if self.dipped(k) else [(-a, dip), (-m - 1.0, dip), (-m, y), (m, y), (m + 1.0, dip), (a, dip)]
+            return [(-hw, y), (-a - 1.0, y)] + mid + [(a + 1.0, y), (hw, y)]
         return [(-hw, y), (hw, y)]
+
+    @staticmethod
+    def join(pts, more):
+        """Append the next cell's points; where the two cells do not quite meet (0.45-1.5 mm), one shared point
+        instead of a kink, so that parallel lines stay parallel across the border."""
+        if pts and more and 0.45 < math.hypot(more[0][0] - pts[-1][0], more[0][1] - pts[-1][1]) < 1.5:
+            pts[-1] = ((pts[-1][0] + more[0][0]) / 2, (pts[-1][1] + more[0][1]) / 2)
+            more = more[1:]
+        pts += more
 
     def clear(self, pts, gap):
         """True if the polyline keeps `gap` from every stabiliser hole."""
         for k in self.keys:
             if not k["stab"]:
                 continue
-            turn = 90 if k["h"] > k["w"] else 0
+            turn = -90 if k["h"] > k["w"] else 0               # as placed: the large holes of a vertical one are east
             for hx, hy, hr in STAB_HOLES:
                 for sx in (-1, 1):
                     dx, dy = rot(sx * hx, hy, k["rot"] + turn)
@@ -127,6 +163,67 @@ class Router:
                         t = max(0.0, min(1.0, ((c[0] - p[0]) * vx + (c[1] - p[1]) * vy) / (vx * vx + vy * vy or 1)))
                         if math.hypot(p[0] + t * vx - c[0], p[1] + t * vy - c[1]) < hr + gap:
                             return False
+        return True
+
+    def step(self, a, b):
+        """True if b, a's east neighbour in the row, is a tall key half a pitch south of the row (STEP)."""
+        dx, dy = rot(b["x"] - a["x"], b["y"] - a["y"], -a["rot"])
+        if b["h"] <= 1 or abs(dy) < 3.0:
+            return False
+        if abs(dy - PITCH / 2) > 0.1 or abs(dx - PITCH) > 0.1 or a["rot"] != b["rot"]:
+            print(f"WARNING {a['id']} -> {b['id']}: the step pattern is drawn for a key one pitch east, half a pitch south")
+        return True
+
+    def front_ok(self, net, pts, width=W_SIG):
+        """True if a front-side polyline keeps the board rules from every hole, LED window, via, front track of
+        another net and the board edge (sampled every 0.15 mm, a little more than the rules ask)."""
+        if self._obs is None:
+            holes, wins = [], []
+            for fp in self.b.GetFootprints():
+                for pad in fp.Pads():
+                    d = pcbnew.ToMM(pad.GetDrillSize().x)
+                    if d > 0:
+                        q = pad.GetPosition()
+                        cu = pcbnew.ToMM(pad.GetBoundingBox().GetWidth()) if pad.GetNetCode() else 0
+                        holes.append((pcbnew.ToMM(q.x), pcbnew.ToMM(q.y), max(d, cu) / 2))
+                if fp.GetReference().startswith("LED"):
+                    q = fp.GetPosition()
+                    wins.append((pcbnew.ToMM(q.x), pcbnew.ToMM(q.y), fp.GetOrientationDegrees()))
+            self._obs = holes, wins
+        holes, wins = self._obs
+        name = net.GetNetname()
+        vias, segs = [], []
+        for t in self.b.GetTracks():
+            if t.GetNetname() == name:
+                continue
+            if t.Type() == pcbnew.PCB_VIA_T:
+                vias.append((pcbnew.ToMM(t.GetPosition().x), pcbnew.ToMM(t.GetPosition().y)))
+            elif t.GetLayer() == F:
+                segs.append((pcbnew.ToMM(t.GetStart().x), pcbnew.ToMM(t.GetStart().y), pcbnew.ToMM(t.GetEnd().x),
+                             pcbnew.ToMM(t.GetEnd().y), pcbnew.ToMM(t.GetWidth()) / 2))
+        h = width / 2
+        for p, q in zip(pts, pts[1:]):
+            ln = math.hypot(q[0] - p[0], q[1] - p[1])
+            for i in range(int(ln / 0.15) + 2):
+                f = min(1.0, i * 0.15 / ln) if ln else 0.0
+                x, y = p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f
+                self.why = f"({x:.1f}, {y:.1f})"
+                if any(n[0] * x + n[1] * y > d - 0.4 - h for n, d in self.lines.values()):
+                    return False
+                if any(math.hypot(x - hx, y - hy) < hr + 0.3 + h for hx, hy, hr in holes):
+                    return False
+                if any(math.hypot(x - vx, y - vy) < 0.3 + 0.22 + h for vx, vy in vias):
+                    return False
+                for wx, wy, wa in wins:
+                    if abs(x - wx) < 4 and abs(y - wy) < 4:
+                        lx, ly = rot(x - wx, y - wy, wa)
+                        if abs(lx) < 1.7 + 0.35 + h and abs(ly) < 1.5 + 0.35 + h:
+                            return False
+                for x1, y1, x2, y2, hw in segs:
+                    vx, vy = x2 - x1, y2 - y1
+                    t = max(0.0, min(1.0, ((x - x1) * vx + (y - y1) * vy) / (vx * vx + vy * vy or 1)))
+                    if math.hypot(x1 + t * vx - x, y1 + t * vy - y) < hw + h + 0.22:
+                        return False
         return True
 
     def rows(self, field):
@@ -142,7 +239,7 @@ class Router:
         (ax, ay), _ = self.pad(k, "D", "2")
         self.track(n_net, [P(ax, sy), P(ax, ay)], W_SIG)
         (cx, cy), row = self.pad(k, "D", "1")
-        self.track(row, [P(cx, cy), P(cx, ROW_DIP if self.stab(k) else ROW_Y)], W_SIG)
+        self.track(row, [P(cx, cy), P(cx, ROW_DIP if self.dipped(k) else ROW_Y)], W_SIG)
         (px, py), col = self.pad(k, "SW", "1")
         self.track(col, [P(px, py), P(*COL_VIA)], W_SIG)
         self.via(col, P(*COL_VIA))
@@ -161,30 +258,71 @@ class Router:
             pts, net = [], None
             for i, k in enumerate(ks):
                 (cx, _), net = self.pad(k, "D", "1")
-                yk = ROW_DIP if self.stab(k) else ROW_Y
+                yk = ROW_DIP if self.dipped(k) else ROW_Y
                 ln = self.lane(k, ROW_Y, ROW_DIP)
                 ln = [p for p in ln if p[0] < cx] + [(cx, yk)] + [p for p in ln if p[0] > cx]
                 if i == 0:
                     ln = [p for p in ln if p[0] >= cx]
-                if i == len(ks) - 1:
+                if i == len(ks) - 1 or self.step(k, ks[i + 1]):
                     ln = [p for p in ln if p[0] <= cx]
-                pts += [self.P(k, *p) for p in ln]
+                if i and self.step(ks[i - 1], k):
+                    ln = [STEP["row"], (STEP["row"][0], ROW_Y)] + ln[1:]
+                self.join(pts, [self.P(k, *p) for p in ln])
             self.track(net, pts, W_SIG)
 
+    def col_path(self, a, b, ya):
+        """Plain column link: down a's border to ya, straight across to b's border, down to b's via."""
+        mid = self.P(a, COL_VIA[0], ya)
+        ml = rot(mid[0] - b["x"], mid[1] - b["y"], -b["rot"])        # that point in the lower key's frame
+        return [self.P(a, *COL_VIA), mid, self.P(b, COL_VIA[0], ml[1]), self.P(b, *COL_VIA)]
+
+    def col_options(self, a, b):
+        """Shapes for a column link the plain pattern does not make, in the order they are tried. The lanes come
+        first and the columns are taken west to east, so that runs side by side nest without crossing."""
+        loc = lambda k, p: rot(p[0] - k["x"], p[1] - k["y"], -k["rot"])
+        for yb in COL_LANES:                                    # a's border extended to a lane along b's rear cell edge
+            y0, y1 = loc(b, self.P(a, COL_VIA[0], 0.0))[1], loc(b, self.P(a, COL_VIA[0], 1.0))[1]
+            t = (yb - y0) / (y1 - y0)
+            if t > COL_VIA[1] + 1.0:
+                yield [self.P(a, *COL_VIA), self.P(a, COL_VIA[0], t), self.P(b, COL_VIA[0], yb), self.P(b, *COL_VIA)]
+        for ya in COL_YS:
+            yield self.col_path(a, b, ya)
+        between = [k for k in self.keys if a["prow"] < k["prow"] < b["prow"]]
+        if between:                                             # through the cell of a key in the row(s) between
+            c = ((a["x"] + b["x"]) / 2, (a["y"] + b["y"]) / 2)
+            m = min(between, key=lambda k: math.hypot(k["x"] - c[0], k["y"] - c[1]))
+            for xm in COL_MID:
+                for ya in COL_YS:
+                    for ym in COL_YS:
+                        p1 = self.P(a, COL_VIA[0], ya)
+                        p3 = self.P(m, xm, ym)
+                        yield [self.P(a, *COL_VIA), p1, self.P(m, xm, loc(m, p1)[1]), p3,
+                               self.P(b, COL_VIA[0], loc(b, p3)[1]), self.P(b, *COL_VIA)]
+
     def columns(self):
+        later = []
         for ks in self.rows("col").values():
             ks = sorted(ks, key=lambda k: k["row"])
             for a, b in zip(ks, ks[1:]):
                 _, net = self.pad(a, "SW", "1")
                 for ya in COL_YS:
-                    mid = self.P(a, COL_VIA[0], ya)
-                    ml = rot(mid[0] - b["x"], mid[1] - b["y"], -b["rot"])    # that point in the lower key's frame
-                    pts = [self.P(a, *COL_VIA), mid, self.P(b, COL_VIA[0], ml[1]), self.P(b, *COL_VIA)]
+                    pts = self.col_path(a, b, ya)
                     if self.clear(pts, 0.5):
                         break
-                else:
-                    print(f"WARNING column {net.GetNetname()} {a['id']} -> {b['id']}: no clear step, check DRC")
-                self.track(net, pts, W_SIG, F)
+                if math.hypot(pts[2][0] - pts[1][0], pts[2][1] - pts[1][1]) < 1.25 * PITCH and self.front_ok(net, pts):
+                    self.track(net, pts, W_SIG, F)
+                else:                                           # a long run sideways, or something in the way
+                    later.append((a, b, net))
+        for a, b, net in later:                                 # after the plain ones, so that these see them
+            stops = []
+            for n, pts in enumerate(self.col_options(a, b)):
+                if self.front_ok(net, pts):
+                    self.track(net, pts, W_SIG, F)
+                    print(f"column {net.GetNetname()} {a['id']} -> {b['id']}: option {n}")
+                    break
+                stops.append(self.why)
+            else:
+                print(f"WARNING column {net.GetNetname()} {a['id']} -> {b['id']}: no clear path, left open; blocked at {' '.join(stops)}")
 
     def leds(self):
         leds = sorted((k for k in self.keys if k.get("led") is not None), key=lambda k: k["led"])
@@ -194,17 +332,27 @@ class Router:
             (ix, iy), _ = self.pad(b, "LED", "2")
             out = [(ox, oy), (ox + 1.9, oy), (ox + 2.15, DIODE_CH)]
             into = [(-5.6, CAP_CH), (ix - 1.6, iy), (ix, iy)]
-            if a["prow"] == b["prow"]:
+            if a["prow"] == b["prow"] and self.step(a, b):
+                (ta, tb) = STEP["data"]
+                pts = [self.P(a, *p) for p in out + [(ta[0], DIODE_CH), ta]] + [self.P(b, *p) for p in [tb, (tb[0], CAP_CH)] + into]
+            elif a["prow"] == b["prow"]:
                 pts = [self.P(a, *p) for p in out + [(7.7, DIODE_CH)]] + [self.P(b, *p) for p in [(-8.0, CAP_CH)] + into]
             else:                                               # end of a row: back west along the return line
                 ks = prow[a["prow"]]
-                ya = RET_DIP if self.stab(a) else RET_Y
+                ya = RET_DIP if self.dipped(a) else RET_Y
                 pts = [self.P(a, *p) for p in out + [(8.3, DIODE_CH), (8.9, DIODE_CH + 0.6), (8.9, ya)]]
-                for k in reversed(ks):
-                    ln = self.lane(k, RET_Y, RET_DIP, 0.7)
-                    pts += [self.P(k, *p) for p in reversed(ln) if k is not a or p[0] < 8.9]
+                for j, k in reversed(list(enumerate(ks))):
+                    ln = [p for p in reversed(self.lane(k, RET_Y, RET_DIP, 0.7)) if k is not a or p[0] < 8.9]
+                    if j and self.step(ks[j - 1], k):           # north in the gap west of the tall key
+                        ln = ln[:-1] + [(STEP["ret"][1][0], RET_Y), STEP["ret"][1]]
+                    if j < len(ks) - 1 and self.step(k, ks[j + 1]):
+                        ln = [(STEP["ret"][0], RET_Y)] + [p for p in ln if p[0] < STEP["ret"][0]]
+                    self.join(pts, [self.P(k, *p) for p in ln])
                 pts.append(self.P(ks[0], -ks[0]["w"] * PITCH / 2 - 0.5, RET_Y))
                 xw = -b["w"] * PITCH / 2 - 0.5
+                sb = rot(pts[-1][0] - b["x"], pts[-1][1] - b["y"], -b["rot"])
+                if sb[0] > xw + 0.3:                            # the next row starts further west: along the row gap first,
+                    pts.append(self.P(b, xw, sb[1]))            # not across that key's corner
                 pts += [self.P(b, *p) for p in [(xw, CAP_CH - 1.4), (xw + 1.4, CAP_CH)] + into]
             self.track(net, pts, W_SIG)
         tp = next((f for f in self.b.GetFootprints() if f.GetReference().startswith("TP")
@@ -215,47 +363,67 @@ class Router:
             tx, ty = self.local(a, tp.Pads()[0])
             self.track(net, [self.P(a, *p) for p in [(ox, oy), (ox + 1.9, oy), (ox + 2.15, DIODE_CH), (8.3, DIODE_CH),
                                                      (tx, ty)]], W_SIG)
-        # +5V_LED: along each row, then the bus along the outer edge
+        # +5V_LED: along each row, then the bus along the west edge
         taps = []
         for ks in prow.values():
             ks = [k for k in ks if "LED" in self.fp[k["id"]]]
             for a, b in zip(ks, ks[1:]):
                 (ex, ey), net = self.pad(a, "LED", "3")
                 (vx, vy), _ = self.pad(b, "CL", "1")
-                self.track(net, [self.P(a, ex + 1.7, ey), self.P(a, ex + 2.45, DIODE_5V), self.P(a, 7.7, DIODE_5V),
-                                 self.P(b, vx - 1.5, vy), self.P(b, vx, vy)], W_5V)
+                if self.step(a, b):
+                    (ta, tb) = STEP["v5"]
+                    mid = [self.P(a, ta[0], DIODE_5V), self.P(a, *ta), self.P(b, *tb), self.P(b, tb[0], vy)]
+                else:
+                    mid = [self.P(a, 7.7, DIODE_5V), self.P(b, vx - 1.5, vy)]
+                self.track(net, [self.P(a, ex + 1.7, ey), self.P(a, ex + 2.45, DIODE_5V)] + mid + [self.P(b, vx, vy)], W_5V)
             (vx, vy), net = self.pad(ks[0], "CL", "1")
-            taps.append((self.P(ks[0], vx, vy), net))
-        box = self.b.GetBoardEdgesBoundingBox()
-        edge = pcbnew.ToMM(box.GetLeft() if self.inner > 0 else box.GetRight())
-        bus = edge + self.inner * BUS_X
-        for p, net in taps:
-            self.track(net, [p, (bus, p[1])], W_5V)
+            taps.append((self.P(ks[0], vx, vy), net, ks[0]))
+        wn, wd = self.lines["outer" if self.inner > 0 else "inner"]
+        straight = abs(wn[1]) < 1e-9
+        if straight:                                            # the drawn edge (with its line width), as `left` was routed
+            wd = -pcbnew.ToMM(self.b.GetBoardEdgesBoundingBox().GetLeft())
+        bus = (wn, wd - BUS_X)
+        ends = []
+        for p, net, k in taps:                                  # straight west; along the key's own row where the edge is slanted
+            if straight:
+                e = (-bus[1], p[1])
+            else:
+                u = rot(-1, 0, k["rot"])
+                lam = (bus[1] - wn[0] * p[0] - wn[1] * p[1]) / (wn[0] * u[0] + wn[1] * u[1])
+                e = (p[0] + u[0] * lam, p[1] + u[1] * lam)
+            ends.append(e)
+            self.track(net, [p, e], W_5V)
         net = taps[0][1]
-        # feed: rail switch output and bulk capacitor -> along the rear edge of the strip -> down the bus
-        at = lambda s, t: (self.origin[0] + rot(self.inner * s, -t, self.phi)[0], self.origin[1] + rot(self.inner * s, -t, self.phi)[1])
-        def st(pad):
-            p = pad.GetPosition()
-            v = rot(pcbnew.ToMM(p.x) - self.origin[0], pcbnew.ToMM(p.y) - self.origin[1], -self.phi)
-            return self.inner * v[0], -v[1]
-        x0, x1 = at(0, FEED_T)[0], at(1, FEED_T)[0]
-        top = at((bus - x0) / (x1 - x0), FEED_T)
-        self.track(net, [top, (bus, max(p[1] for p, _ in taps))], W_BUS)
+        # feed: rail switch output and bulk capacitor -> along the feed lane of the strip -> down the bus
+        at, st, ft = self.at, self.st, self.feed_t
+        sx = lambda q: self.inner * rot(pcbnew.ToMM(q.x) - self.origin[0], pcbnew.ToMM(q.y) - self.origin[1], -self.phi)[0]
+        sgn = lambda v: 1 if v >= 0 else -1
+        nr, dr = self.lines["rear"]
+        top = meet(bus, (nr, dr - REAR + ft))
+        self.track(net, [top, max(ends, key=lambda e: e[1])], W_BUS)
         sw = next(f for f in self.b.GetFootprints() if "TPS22918" in f.GetValue())
         outs = sorted((st(p) for p in sw.Pads() if p.GetNetname() == net.GetNetname()), key=lambda q: q[1])
         bulk = max((p for f in self.b.GetFootprints() if f.GetReference()[0] == "C" and not f.GetReference().startswith("CL")
                     for p in f.Pads() if p.GetNetname() == net.GetNetname()), key=lambda p: p.GetBoundingBox().GetHeight())
         sc, tc = st(bulk)
         s6, t6 = outs[0]
-        self.track(net, [top, at(sc, FEED_T), at(s6 + 2.4, FEED_T), at(s6 + 2.4, t6), at(s6, t6)], W_BUS)
-        self.track(net, [at(s6, t6), at(*outs[-1])], 0.5)
-        self.track(net, [at(sc, FEED_T), at(sc, tc)], W_BUS)
-        for f in self.b.GetFootprints():                        # the rail's small capacitor(s): up to the feed, 1.4 mm west of the pad column
+        sd = s6 + 2.4 * sgn(s6 - sx(sw.GetPosition()))          # the output pin's column, clear of the package
+        small = []                                              # the rail's small capacitor(s): up to the lane, 1.4 mm beside the pad column
+        for f in self.b.GetFootprints():
             for p in f.Pads():
                 if f.GetReference()[0] == "C" and not f.GetReference().startswith("CL") and p.GetNetname() == net.GetNetname() \
                         and p.GetPosition() != bulk.GetPosition():
                     s2, t2 = st(p)
-                    self.track(net, [at(s2, t2), at(s2 - 1.4, t2), at(s2 - 1.4, FEED_T)], 0.5)
+                    small.append((s2, t2, s2 + 1.4 * sgn(s2 - sx(f.GetPosition()))))
+        s0 = self.inner * rot(top[0] - self.origin[0], top[1] - self.origin[1], -self.phi)[0]
+        stops = {sc, sd}
+        stops |= {sr for _, _, sr in small if not min(stops | {s0}) <= sr <= max(stops | {s0})}
+        self.track(net, [top] + [at(v, ft) for v in sorted(stops, key=lambda v: abs(v - s0))], W_BUS)
+        self.track(net, [at(sd, ft), at(sd, t6), at(s6, t6)], W_BUS)
+        self.track(net, [at(s6, t6), at(*outs[-1])], 0.5)
+        self.track(net, [at(sc, ft), at(sc, tc)], W_BUS)
+        for s2, t2, sr in small:
+            self.track(net, [at(s2, t2), at(sr, t2), at(sr, ft)], 0.5)
 
     def at(self, s, t):
         """Strip frame (as tools/pcb_keys.py place_strip): s from the outer board edge, t rearwards from the cap line."""
@@ -272,16 +440,16 @@ class Router:
         the east end of its trunk to the inner edge, north along it, west between the F-row caps and the bay header,
         to a via in front of the expander pin. The other rows are near enough for the strip router; a scripted
         riser for each of them (tried: lanes behind the bay header) fences the expander in on the front side.
-        Written for `left` (inner edge east)."""
-        n, d = self.lines["inner"]
+        Along the east edge: the split edge on `left` and `numpad`, the outer edge on `right`."""
+        n, d = self.lines["inner" if self.inner > 0 else "outer"]
         nr, dr = self.lines["rear"]
         rows = self.rows("row")
         for i, r in enumerate(sorted(rows, reverse=True)[:1]):
             k = rows[r][-1]
             (cx, _), net = self.pad(k, "D", "1")
             off, lane = 0.7, 0.6
-            v0 = self.P(k, cx, ROW_DIP if self.stab(k) else ROW_Y)
-            lead = [v0] + ([self.P(k, 14.6, ROW_DIP), self.P(k, 15.6, ROW_Y)] if self.stab(k) else [])   # back up, clear of the front holes
+            v0 = self.P(k, cx, ROW_DIP if self.dipped(k) else ROW_Y)
+            lead = [v0] + ([self.P(k, 14.6, ROW_DIP), self.P(k, 15.6, ROW_Y)] if self.dipped(k) else [])   # back up, clear of the front holes
             u, q = rot(1, 0, k["rot"]), lead[-1]
             lam = (d - off - n[0] * q[0] - n[1] * q[1]) / (n[0] * u[0] + n[1] * u[1])
             p1 = (q[0] + u[0] * lam, q[1] + u[1] * lam)
@@ -290,10 +458,36 @@ class Router:
                        if p.GetNetname() == net.GetNetname())
             sp, tp = self.st(pad)
             p4 = self.at(sp, tp - 2.2)
+            if not self.front_ok(net, lead + [p1, p2, self.at(sp, lane), p4]):
+                print(f"WARNING riser {net.GetNetname()}: not clear on the front side, check DRC")
             self.track(net, lead + [p1, p2, self.at(sp, lane), p4], W_SIG, F)
             self.via(net, v0)
             self.via(net, p4)
             self.track(net, [p4, self.at(sp, tp)], W_SIG)
+
+    def pullups(self):
+        """Where the pull-ups have their +3V3 pads at the rear (`right`): the +3V3 link along the row, and a fan from
+        each signal pad to its pin in the expander's rear pin row. The strip router left these open, run after run."""
+        pins = {p.GetNetname(): p for f in self.b.GetFootprints() if "MCP23S17" in f.GetValue() for p in f.Pads()}
+        rail = []
+        for f in self.b.GetFootprints():
+            pads = {p.GetNetname(): p for p in f.Pads()}
+            if f.GetValue() != "10k" or "/+3V3" not in pads or len(pads) != 2:
+                continue
+            v, (name, sig) = pads.pop("/+3V3"), next(iter(pads.items()))
+            (s1, t1), (s2, t2) = self.st(v), self.st(sig)
+            if t1 < t2 + 0.5:
+                continue
+            rail.append((s1, t1, v.GetNet()))
+            pin = pins.get(name)
+            if pin is None:
+                continue
+            (sp, tp), (_, tc) = self.st(pin), self.st(pin.GetParentFootprint())
+            if tp > tc:
+                self.track(sig.GetNet(), [self.at(s2, t2), self.at(sp, tp + 1.5), self.at(sp, tp)], W_SIG)
+        rail.sort()
+        for (sa, ta, net), (sb, tb, _) in zip(rail, rail[1:]):
+            self.track(net, [self.at(sa, ta), self.at(sb, tb)], 0.3)
 
     def field(self):
         for k in self.keys:
@@ -302,6 +496,7 @@ class Router:
         self.columns()
         self.leds()
         self.row_risers()
+        self.pullups()
 
 
 def freeroute(b, name, passes):
@@ -443,7 +638,7 @@ def main():
     if len(b.GetTracks()):
         sys.exit(f"{pcb.name} already has tracks; re-run tools/pcb_keys.py {name} --force first")
     keys, inner_sign, (lines, _, origin, phi, _) = frame(name)
-    r = Router(b, keys, inner_sign, origin, phi, lines)
+    r = Router(b, keys, inner_sign, origin, phi, lines, FEED_LANE.get(name, FEED_NEAR))
     r.field()
     print(f"{name}: key field, {r.count} locked segments and vias")
     led_windows(b)
@@ -457,11 +652,15 @@ def main():
                 ends.setdefault((p.x, p.y), set()).add(t.GetLayer())
     grave = [t for t in b.GetTracks() if t.Type() == pcbnew.PCB_VIA_T and not t.IsLocked() and t.GetNetname() != "GND"
              and len(ends.get((t.GetPosition().x, t.GetPosition().y), ())) < 2]
+    # the switch-to-diode nets are complete from the field pattern: what the strip router adds there is a stub
+    grave += [t for t in b.GetTracks() if not t.IsLocked() and re.search(r"/N_R\d+C\d+$", t.GetNetname())]
     for t in grave:
         b.Remove(t)
     if "--no-pours" not in sys.argv:
         stitch(b)
         gnd_pours(b)
+    moved, stuck = silk_keys.tidy(b, lines)
+    print(f"{name}: silkscreen, {len(moved)} references moved" + (f"; NO ROOM for {' '.join(stuck)}" if stuck else ""))
     pcbnew.SaveBoard(str(pcb), b)
     print(f"{name}: {len(b.GetTracks())} segments and vias in all")
     sys.stdout.flush()

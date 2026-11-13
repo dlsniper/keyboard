@@ -365,8 +365,11 @@ def place_strip(bd, lines, origin, phi, inner_sign, keys):
     fp.Move(vec(want[0] - pcbnew.ToMM(c.x), want[1] - pcbnew.ToMM(c.y)))
     for a, t in BAY["screws"]:                                  # one port board for all modules: the bay itself is
         bd.mech(HOLE_FP, "H", *at(sb + inner_sign * a, t))      # never mirrored, only its place in the strip is
-    # expander(s), outwards of the bay, long axis along s
-    s = sb - 33.0
+    # expander(s), outwards of the bay, long axis along s. Where the rows start at the bay end (`right`: the LED supply
+    # enters the field at the split edge) the rail switch sits between the bay and the first chip, so +5V does not
+    # cross the strip and come back
+    at_bay = inner_sign < 0
+    s = sb - (46.0 if at_bay else 33.0)
     chips = sorted(r for r in bd.comps if r.startswith("U") and "MCP23S17" in bd.comps[r]["value"])
     first_chip = s
     for u in chips:
@@ -381,9 +384,12 @@ def place_strip(bd, lines, origin, phi, inner_sign, keys):
     pull = sorted((r for r, c in bd.comps.items() if r not in bd.placed and r.startswith("R") and c["value"] == "10k"
                    and "+3V3" in [n.lstrip("/") for n in c["nets"].values()]), key=lambda r: int(r[1:]))
     for i, r in enumerate(pull):
-        bd.place(r, *at(first_chip + 8.0 - i * 2.6, 19.5), A + 90, back=True)
-    # LED rail switch and its parts, outwards of the last chip
-    s = last_chip - 22.0
+        # `right` (13 in a row): signal pads towards the chip, +3V3 pads at the rear, so the +3V3 link along the row
+        # does not wall the signal pads in (the strip router left 7 of them open the other way round); the first eight
+        # centred on the chip's rear pin row they go to (tools/route_keys.py draws that fan and the +3V3 link)
+        bd.place(r, *at(first_chip + (5.3 if at_bay else 8.0) - i * 2.6, 19.5), A + (270 if at_bay else 90), back=True)
+    # LED rail switch and its parts: outwards of the last chip, or beside the bay (above)
+    s = sb - 26.0 if at_bay else last_chip - 22.0
     bd.place(next(r for r in bd.comps if "TPS22918" in bd.comps[r]["value"]), *at(s, 8.0), A, back=True)
     bd.place(bd.find("C", "+5V_LED", "GND")[-1] if len(bd.find("C", "+5V_LED", "GND")) > 1 else bd.find("C", "+5V_LED", "GND")[0],
              *at(s, 14.0), A, back=True)
@@ -392,10 +398,10 @@ def place_strip(bd, lines, origin, phi, inner_sign, keys):
     for i, r in enumerate(rest):
         bd.place(r, *at(s - 7.0, 5.0 + 3.0 * i), A, back=True)
     # spare-pin header on the front side, long axis along s: outwards of the rail switch, its near pin 14.92 mm
-    # from it; where the strip is too short for that (numpad), along the rear edge outwards of the pull-ups
+    # from it (outwards of the last chip where the switch is beside the bay); where the strip is too short for that (numpad), along the rear edge outwards of the pull-ups
     j2 = next(r for r, c in bd.comps.items() if r.startswith("J") and c["value"] == "SPARE")
     span = (len(bd.comps[j2]["nets"]) - 1) * 2.54
-    want, narrow = (s - 14.92 - span / 2, 10.0), False
+    want, narrow = ((last_chip - 2.6 if at_bay else s) - 14.92 - span / 2, 10.0), False
     if not inside(lines, at(want[0] - span / 2, want[1]), 3.0):
         want, narrow = (12.5 + span / 2, 21.5), True
     fp = bd.place(j2, *at(*want), A + 90)

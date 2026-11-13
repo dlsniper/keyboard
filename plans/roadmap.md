@@ -94,8 +94,9 @@ met 2026-11-13; signed off by the user 2026-11-13.
    `tools/pcb_keys.py`: `left` placed and DRC-checked 2026-11-13 (straight edges, rear strip, bay at the split,
    port board on top; user). `right` (split edge mirrors left's angle; user) and `numpad` placed 2026-11-13, DRC 0 errors.
    Then the hub boards (parts chosen with a hub CAD section).
-2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source. `tools/route_keys.py`: `left` routed
-   2026-11-13 (DRC 0 errors, 0 unconnected, parity 0); `right` and `numpad` next.
+2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source. `tools/route_keys.py`: `left`, `right` and
+   `numpad` routed 2026-11-13 (DRC 0 errors, 0 unconnected, parity 0 on each; `tools/route_board.sh` repeats the strip
+   autorouter until clean), silkscreen pass by `tools/silk_keys.py`. Hub boards and port board next.
 3. DRC with schematic parity; a second independent review, including every Pico pin
    against the RP2350 and Pico 2 W datasheets.
 4. Plates (1.5 mm FR4) from the same file.

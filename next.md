@@ -132,14 +132,31 @@ locked, GND limited to the strip's pads, rule areas over the LED windows), then 
 and the pours. **Freerouting 2.5.0 alone does not route these boards** (stalls at 35-45 open, later passes get worse, it reports
 "unrouted" and "violations" that KiCad's DRC does not confirm): trust only `pcb_check.sh`. The strip result differs from run to
 run (seen: 0, 1, 4 and 8 open); scripted risers for all six rows fenced the expander in and are not used.
-**Not carried over to `right` and `numpad` yet (route_keys.py is written and run for `left` only)**: on `right` the rows start at
-the inner (west) end, so the +5V bus, the return descents and the feed must go to that side and the row riser to the other, and
-the strip has two expanders (rows on U2) and the dial nets; `numpad`'s spare header sits on the rear-edge line the +5V feed uses,
-and it has vertical stabilisers (`+`, maybe Enter: `lane()` and `stab()` only handle horizontal ones); rows with gaps (`right`
-nav block) get straight links that may cross holes: read the DRC.
-**Next (M2 session 3)**: carry `route_keys.py` over to `right` and `numpad` (above list), DRC 0 on both; a look at `left` in KiCad by
-the user (strip routing is autorouted: tidy by hand only if wanted); then the hub session (FreeCAD section, parts, footprints,
-placement) and the port board layout.
+**M2 session 3 done (2026-11-13): all three key boards routed. `tools/pcb_check.sh left right numpad`: 0 errors, 0 parity,
+0 unconnected, no warnings on each.** One command per board: `[PASSES=20] tools/route_board.sh <name> [tries]` (new) runs
+`pcb_keys.py --force`, `route_keys.py --strip` and `pcb_check.sh` again and again until the check is clean, and keeps the failed
+tries in `build/route/<name>/`. `numpad` was clean on try 1 (10 passes), `right` on try 3 (20 passes, about 15 minutes a try).
+`left` was not routed again: its field is still what the script draws (checked track by track); only 75 redundant stubs the
+strip router had added on switch-to-diode nets were removed and 12 references moved.
+**`route_keys.py` is now general** (script header has the details): rows and the LED chain run west to east on every board, so
+the +5V_LED bus is on the west edge (`right`: the split edge) and the bottom row's riser on the east edge; the feed lane is at
+t = 16.9 on `right` and `numpad` (left keeps the rear-edge lane); columns try the plain border path first, then lanes inside the
+lower key's frame, then a path through a middle key (`right` COL5 and COL7 print the option they took); trunks dip twice where
+a stabilised key sits below (Enter over RShift); vertical stabilisers (`numpad` +, Enter) and tall keys are handled; every
+scripted front track is tested against holes, LED windows, vias and tracks (`front_ok`) and warns.
+**`right`'s strip needed three things the others do not** (`pcb_keys.py` `at_bay`, `route_keys.py` `pullups()`): the LED rail
+switch sits between the bay and U1, not mid-strip (the bus is at the split edge: about 200 mm less 5 V path, about 0.2 V at
+1.87 A); the 13 pull-ups are turned (+3V3 pads at the rear) and the first eight centred on U1's rear pin row; the script draws
+the +3V3 link along the pull-ups and the fan from R5-R12 to COL0-COL7. Without the last two the strip router left 11 to 31
+connections open in every one of five runs. "no room for a GND via" warnings in the strip are harmless (those pads reach GND by
+track; DRC shows 0 unconnected).
+**Silkscreen pass = `tools/silk_keys.py`** (new; `route_keys.py` runs it at its end, or alone on a routed board): references
+1.0 / 0.15 mm, every visible non-switch reference that touches a pad, a hole, other silk or another reference moves to the
+nearest free spot. No `silk_overlap` or `silk_over_copper` warning is left on any of the three boards.
+**Not looked at by eye**: none of the three boards has been opened in KiCad since routing. The strips are autorouted and look
+untidy (many vias on `right` between U1 and U2); they pass DRC, tidy by hand only if wanted.
+**Next (M2 session 4)**: the user looks at the three boards in KiCad; then the hub session (FreeCAD section, parts, footprints,
+placement) and the port board layout. Plates (roadmap M2 step 4) and the independent PCB review (step 3) come after the hub.
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet could not be
 downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
