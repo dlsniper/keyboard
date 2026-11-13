@@ -281,16 +281,16 @@ tables and the boards against each other).
   `EN_x` high powers port x (10 k pull-down: off at reset). `DET_x` low = a sink
   (Rd) is attached and VBUS is on. `PORT_FLT` low = a port is in current limit or
   too hot (wired-OR). `INT_x` is the module's open-drain interrupt (pull-up on the module; firmware
-  enables the Pico's pull-up on it only while `DET_x` is low). `USB_PRESENT` high = host VBUS above about 4.5 V. `CC1/CC2_SENSE` read the
+  enables the Pico's pull-up on it only while `DET_x` is low). `USB_PRESENT` high = host VBUS above about 3.8 V. `CC1/CC2_SENSE` read the
   host's Rp for the current cap (§3). `VBAT_SENSE` is 1/3 of the highest pack (less a Schottky drop) while
   `BAT_DIV_EN` is high; the divider hangs before the UVLO supervisor's 10 k so a
-  measurement cannot trip the UVLO. `USB_PRESENT` is a 10 k / 12 k divider (stiff
-  enough for RP2350-E9). **Exported for the firmware: `firmware/hub-pinmap.json`**,
+  measurement cannot trip the UVLO. `USB_PRESENT` is a 10 k / 15 k divider (stiff
+  enough for RP2350-E9; 2.3 V at the pin with VBUS at 3.8 V, 3.3 V at 5.5 V). **Exported for the firmware: `firmware/hub-pinmap.json`**,
   written and checked by `tools/sch_hub.py`.
 - **Module port (x3).** 24-pin receptacle wired per the hub column of §1.
   **TPS25810** (user, 2026-11-13, over the 1.5 A TPS25821): advertises 3 A, limit
   3.4 A; a strap changes it to 1.5 A / 1.7 A. Confirmed by the user after the M1
-  review; the 5 V rail is raised to match (§3b, M1 task 5). **One 74LVC125A per port** (user, 2026-11-13): SCK and MOSI reach the
+  review; the 5 V rail was raised to match (TPS552892, §3b). **One 74LVC125A per port** (user, 2026-11-13): SCK and MOSI reach the
   cable, and MISO comes back, only while that port's CS is low; the CS line itself
   is driven only while `DET_x` is low. So each cable is driven point to point, a
   dead module cannot hold MISO, and a phone or an unpowered module sees no SPI.
@@ -302,12 +302,53 @@ tables and the boards against each other).
   `PACK1`-`PACK4` from below on as `PACK2`-`PACK5`, so hub input n is the n-th
   module from the hub and input 5 is the lowest. Modules stay passive (holder, PTC).
 - **Power path** (rev 8.1 parts and values unless said): per pack input SMF4L9.0CA,
-  LM74610-Q1 + CSD17313Q2; the packs meet on `VBAT`; CSD25402Q3A battery switch to
+  LM74610-Q1 + **SQ4184EY** (SO-8, from the LM74610 datasheet's own FET list; M1 task 5);
+  the packs meet on `VBAT`; CSD25402Q3A battery switch to
   `SYS` (power switch AND TPS3840PL40 UVLO AND no USB); second CSD25402Q3A from
-  `VBUS_IN` with TPS3840PL43 detect and the 2.2 M / 22 n delay; 4 x 47 uF on `SYS`;
-  TPS630701 makes +5V for the ports and the Pico. Dropped against rev 8.1: the
+  `VBUS_IN` with a **TPS3840PL36** detect and the 2.2 M / 22 n delay, **1 k** on its gate;
+  4 x 47 uF ceramic + **220 uF polymer** on `SYS`; a **TPS552892** makes +5V for the ports
+  and the Pico. Dropped against rev 8.1: the
   TPS70933 (the Pico has its own regulator; `SYS` reaches 6.4 V, above the Pico's
   5.5 V VSYS limit, which is why the Pico runs from +5V).
+- **5 V converter, TPS552892 (M1 task 5, 2026-11-13)**, 21-pin VQFN 3 x 5 mm, no I2C,
+  circuit from its datasheet: 400 kHz (FSW 49.9 k), 4.7 uH (XAL7070-472 class: Isat
+  15 A against the 13 A peak limit; the loop needs more than 3 uH at 400 kHz), FB
+  100 k / 31.6 k = 5.00 V, MODE low = PFM at light load, DITH/SYNC to GND, EXTVCC and
+  CDC open (internal VCC regulator, no cable compensation), ISP = ISN = VOUT (no
+  output current limit; each port has its own), PG and CC unused, boot capacitors
+  2 x 100 n, VCC 22 uF, COMP 12 k + 15 n with 470 p in parallel (crossover about
+  4 kHz with the 300 uF on +5V; right-half-plane zero 20-25 kHz at 3.6 V in), output
+  3 x 22 uF + 100 n + **220 uF polymer** (the TPS25810 asks for 120 uF or more; the
+  converter allows 10-1000 uF). **EN/UVLO 100 k / 54.9 k**: on above about 3.5 V, off
+  below about 2.95 V, so a sagging pack switches the converter off cleanly instead of
+  running it under its 3.0 V minimum. Start-up: VCC comes from VIN, then from the 5 V
+  output while VIN is below it. Layout notes for M2 are on the sheet (AGND and PGND
+  join at the VCC capacitor).
+- **USB / battery switchover, simulated** (`python3 tools/sim_switchover.py`, new at
+  M1 task 5; the rev 8.1 values did not survive the higher load):
+  - *Both switches were on together for about 20 us at every unplug* (10 k gate
+    resistor); with a full alkaline pack that lifted `VBUS_IN`, the detector saw
+    "USB" again and the two switches chattered. Fix: **1 k** on the USB switch gate
+    (5 mA, on USB only): no overlap in any case.
+  - *A 4.3 V detect threshold reads a loaded host as absent.* USB allows 4.0 V at the
+    connector at 3 A; with a pack fitted the hub then flipped between the sources at
+    several hundred Hz. Fix: **TPS3840PL36** (falls at 3.6 V, rises at 3.8 V). The
+    price: after an unplug `SYS` sags to 3.6 V before the pack takes over, which the
+    converter does not notice (lowest `SYS` 3.3-3.6 V up to 10 W with the extra
+    **220 uF on `SYS`**).
+  - Unplug with the pack's ideal diode asleep (after a time on USB the LM74610 has
+    lost its charge, so the pack current runs through the FET's body diode, about
+    0.75 V, for the first 25-140 ms): fine at 6 W from a 5.2 V pack and at 10 W from a
+    6.3 V pack; **a nearly empty pack (4.4 V) cannot take over more than about 3 W and
+    the hub restarts**. Harmless while the host link is USB; to revisit with Bluetooth
+    (O12).
+  - Plug-in: the load runs through the USB switch's body diode for about 7 ms
+    (lowest `SYS` 3.9 V at 10 W), then the switch closes. With a pack above 5 V the
+    `SYS` capacitors push about 1 A back into the host for under 0.1 ms.
+  - A host and cable outside the USB limits (4.75 V behind 0.35 Ohm, 12 W): the
+    sources still flip, or the hub restarts without a pack. The firmware lowers the
+    LED cap when `USB_PRESENT` drops under load (§4). Not modelled: the KTS1693
+    limit (8 ms, then off for 200 ms), the converter's soft start.
 - **Pack priority: lowest module first** (user, 2026-11-13), in hardware, no
   firmware. Inputs 1-4 pass a second CSD25402Q3A after the ideal diode. It is on
   only while no healthy pack sits below; otherwise that pack waits behind the FET's
@@ -338,6 +379,9 @@ tables and the boards against each other).
     above share through the body diodes before the active pack reaches 4.3 V.
   - A 4.9 V pack put in below a running pack is not preferred (stays idle until the
     pack above falls under it); a 5.3 V pack takes over after about 0.25 s.
+  - With the M1 task 5 parts (8 mOhm ideal diode, 380 uF, loads to 18 W): same
+    results; at 15-18 W three packs share (about 2.0 / 1.7 / 0.4 A) with one clean
+    hand-over and no bouncing.
   Limits, accepted: alkaline packs recover to about 4.9-5.1 V at rest and can swap
   back in for a while after dropping out (gap-free, it just uses them up); a
   half-used pack put back in is not preferred; idle drain of the priority stages is
@@ -362,35 +406,48 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
 - **LED rail switch (key boards).** TPS22918: 2 A at 70 C, 59 mOhm max; firmware
   caps `right` at 1.8 A.
 - **Ports stay at 3 A and the hub rail is raised to 3 A or more (user, 2026-11-13).**
-  The drawn TPS630701 is a 2 A part (graph: 3.4 A at 5.0 V in and 25 C, 2.1 A at
-  125 C), so three 3.4 A ports could pull the rail down (the M1 review's one
-  must-fix finding). Decided: replace it with a **TPS552892** (no I2C needed; 7 A
-  minimum inductor limit, about 4.5 A at 5 V from 3.6 V in, calculated; quiescent
-  0.8 mA against 0.05 mA and about 77 % against about 90 % at 50 mA, graph, so idle
-  battery life drops by roughly 15 %, to measure at M4). **Not drawn yet: M1 task 5**
-  (roadmap), with what follows from it: inductor and capacitors, a larger
-  ideal-diode FET (CSD17313Q2 is package-limited to 5 A and loses 0.5 W at 4 A), the
-  host-port limit, the +5 V bulk capacitor the TPS25810 asks for (120 uF).
-  Limits no converter removes: on USB the host gives at most 3 A (about 2.7 A at the
-  rail for all ports together); on battery 3 A at 5 V takes about 3.8 A from one pack.
-- **Host port (`hardware/usb-port`, still as rev 8).** KTS1693 ISET 4.99 k trips at
-  1.82-2.18 A and latches off (OC_MODE low): too low for a 3 A host. To change in
-  task 5: about 2.86 k (3.19 / 3.50 / 3.82 A) and OC_MODE high (auto-restart). The
-  cable header carries VBUS and GND on three JST GH contacts each, 1 A per contact:
-  3 A is its limit.
+  The TPS630701 was a 2 A part, so three 3.4 A ports could pull the rail down (the M1
+  review's one must-fix finding). **Drawn at M1 task 5: TPS552892** (§3a): average
+  inductor current limit 7 / 8 / 9 A, so about 4.4 A at 5 V from 3.6 V in and about
+  6 A from 5 V in (calculated at 88 %, before heat: about 1.3 W in the chip at 3.5 A
+  from 3.6 V, 43 K/W); peak inductor current 5.8 A at 3.5 A out. Efficiency at 5 V
+  out and 5 V in (graph, PFM): about 80 % at 10 mA, 88 % at 50 mA, 91 % at 100 mA,
+  96 % at 1-3 A; quiescent 0.76 mA (0.86 max) against the TPS630701's 0.05 mA, so idle
+  battery life drops by roughly 15 % (accepted, to measure at M4).
+- **What the sources can give.** USB: at most 3 A from the host, about 2.7 A at the
+  rail for all ports together. **One AA pack: about 8-10 W, not 3 A at 5 V**: a pack
+  with its path is about 0.3-0.5 Ohm, so it cannot deliver more than V^2 / 4R (9.7 W
+  at 4.4 V and 0.5 Ohm, about 17 W at 5.2 V and 0.4 Ohm, and only with `SYS` near
+  2.6 V); the earlier "3.8 A from one pack" was wrong. Several packs share through
+  the priority FETs' body diodes once the active pack sags by 0.7 V (simulated to
+  18 W on three packs). So the battery LED cap is a firmware value that follows the
+  measured pack voltage: about 8 W of input per pack as the starting point (O3).
+- **Host port (`hardware/usb-port`, changed at M1 task 5).** KTS1693 **ISET 2.87 k**:
+  limit 3.17 / 3.48 / 3.80 A (10000 / R, +/-9 %, 0-70 C; was 4.99 k, 2 A); switch
+  13 mOhm max, 0.16 W at 3.5 A. **OC_MODE open** = high through the internal 5 M
+  pull-up = auto-restart (limits for 8 ms, off, retries after 200 ms; was latch-off).
+  **OVLO stays external, 100 k / 26.4 k 0.1 %**: trips at 5.56-5.93 V. The rev 8 value
+  (27.4 k, from 5.40 V) could cut off a legal 5.5 V host; the internal threshold
+  (5.77-6.13 V) is above the USBLC6-2's 6 V breakdown (from memory, check at the
+  parts list). The cable header carries VBUS and GND on three JST GH contacts each,
+  1 A per contact: 3 A is its limit. The board file still has rev 8's layout (M2).
 - **Battery path.** Pack fuse **MF-LSMF500/16X (user, 2026-11-13)**: holds 5.0 A at
   23 C, 4.2 A at 40 C, 3.3 A at 60 C, trips at 10 A, 25 mOhm max, 2920 size (was
   MF-MSMF125, 1.25 A, which capped the battery at about 0.8 A at 5 V). Note: it needs
   10 A to trip, which NiMH cells deliver into a short and alkalines may not. Chain
   seam: pack lines doubled, Mill-Max spring pins 4.8 A or more each (derated), 20 to
   40 mOhm; headers 4.6 A or more per pin. Battery switch CSD25402Q3A: 8.9 mOhm max at
-  -4.5 V, 15.9 at -2.5 V.
+  -4.5 V, 15.9 at -2.5 V; about 0.3 W at 4.5 A, package limit 35 A. Ideal-diode FET
+  SQ4184EY: 5.6 mOhm max at 4.5 V gate drive, VGS +/-20 V, threshold 2.5 V max against
+  the LM74610's 5.2-6.3 V drive; at 4.5 A about 0.15 W in the channel plus 0.1-0.3 W
+  for the 2-8 % of the time the LM74610 leaves it on the body diode (80 K/W).
 - **Core layer.** +5 V over two stack pins feeds only the Pico (MBR120: 0.28 V at
   0.1 A, VSYS about 4.7 V). The connector layer takes a few mA from the Pico's 3V3
   (limit 300 mA).
 - **Firmware budget (O3), until measured:** LED current is capped from what the
   source offers: host 0.5 / 1.5 / 3 A (CC) less the Pico and conversion loss; on
-  battery the cap is a setting (pack current 4.2 A is the hardware ceiling).
+  battery the cap follows the pack voltage (about 8 W in per pack; the fuse's 4.2 A
+  is the hardware ceiling).
 
 ## 4. Firmware
 
@@ -405,6 +462,9 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
   before enabling interrupts (INTA is push-pull at power-on and the two are tied);
   never assert two CS lines at once (the port buffers share MISO); disable the
   digital input on the three ADC pins; pin data in `firmware/hub-pinmap.json`.
+  Power (M1 task 5): when `USB_PRESENT` falls, cut the LEDs to the battery cap at
+  once (interrupt); if it falls while the host is still there (sagging host, or the
+  port's 3.5 A limit cycling every 200 ms), lower the USB cap before trying again.
 - Bluetooth (M6): `tinygo.org/x/bluetooth` pairs only on Nordic chips today; we add
   what the Pico 2 W needs and contribute it.
 
@@ -436,7 +496,11 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
 - **O2** SPI at 4 MHz over a 1 m full-featured USB-C cable: prove on the bench at M4
   before PCBs are ordered, or order after M4.
 - **O3** LED current caps per source: sized at M1 (§3b), measured at M4.
-- **O11** 5 V rail at 3 A or more: TPS552892 rework of the power path (M1 task 5, §3b).
+- O11 closed 2026-11-13: 5 V rail on a TPS552892, drawn and reviewed (§3a, §3b).
+- **O12** USB unplug onto a weak pack restarts the hub above about 3 W (the pack's
+  ideal diode needs 25-140 ms to wake, §3a). Measure at M4; matters from M6
+  (Bluetooth keeps the link after an unplug). Ways out then: firmware keeps the
+  LEDs low while a pack is weak, or an always-on ideal-diode controller.
 - **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
 - O7 closed 2026-11-13: SK6812MINI-E chain (D10, §2). Open under it: a European source for the LED.
 - O8 closed 2026-11-13: 2x8 chain, five pack inputs, lowest-first priority (§3a). Priority hand-over simulated and the re-arm level tuned at the M1 review (§3a).

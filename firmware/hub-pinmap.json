@@ -198,7 +198,7 @@
       "net": "USB_PRESENT",
       "kind": "in",
       "active": "high",
-      "note": "host VBUS present; 10k / 12k divider, no pull needed"
+      "note": "host VBUS present (above about 3.8 V); 10k / 15k divider, no pull needed"
     },
     "GP22": {
       "gpio": 22,

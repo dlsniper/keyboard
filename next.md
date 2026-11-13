@@ -60,20 +60,32 @@ by +3V3** (the simulation found that an empty slot floats up through the LM74610
 Schottky clamps for a reversed pack; LED_CT 1 n confirmed.
 **User decisions 2026-11-13**: ports stay at 3 A and the **5 V rail goes to 3 A or more with a TPS552892**
 (accepted: about 15 % less idle battery life, to measure at M4); **pack fuse MF-LSMF500/16X** (drawn).
-**Next: M1 task 5** (roadmap; the M1 exit check waits for it): TPS552892 on hub-conn in place of the TPS630701
-(datasheet `build/ds/conv3a/`; MODE low = PFM, EXTVCC floating, ISP/ISN to VOUT, FB divider, COMP, two BOOT
-capacitors, RFSW, 4.7 uH class inductor with Isat above the 9 A limit; new symbol in `gen_kicad.py`); ideal-diode
-FET larger than CSD17313Q2 (5 A package limit, 0.5 W at 4 A); 150-220 uF bulk on +5V for the TPS25810 (inside the
-converter's output-capacitance range); `usb-port`: ISET 4.99 k -> about 2.86 k (3.5 A), OC_MODE (B4) high, OVLO
-may go back to the internal threshold, stale rev 8 notes (MDBT50Q, LM66200); then a focused Opus review of the
-changed power path and the USB/battery switchover. Reviewer's note: XFL4020-152 would have been marginal anyway.
+**M1 task 5 done (2026-11-13): 5 V rail at 3.5 A.** `hub-conn`: **TPS552892** in place of the TPS630701 (datasheet
+circuit, 400 kHz, 4.7 uH XAL7070 class, PFM, EN/UVLO 100 k / 54.9 k, values in spec §3a; symbol `TPS552892RYQ`),
+ideal-diode FET **SQ4184EY** (SO-8, from the LM74610 datasheet's list; symbol `SQ4184EY`; the `TPS630701RNM` and
+`CSD17313Q2` symbols are gone), 220 uF polymer on `+5V` and on `SYS`. `usb-port`: ISET 2.87 k (3.5 A), OC_MODE open
+(auto-restart), OVLO divider 100 k / 26.4 k (5.56-5.93 V), rev 8 notes rewritten. **Switchover re-checked with a new
+simulation, `python3 tools/sim_switchover.py`** (results in spec §3a); it found and fixed: both switches on together
+at unplug (USB switch gate 10 k -> 1 k), detect threshold too high for a loaded host (TPS3840PL43 -> PL36,
+`USB_PRESENT` divider 10 k / 15 k; pin-map note updated, `firmware/hub-pinmap.json` regenerated).
+`tools/sim_priority.py` re-run with the new parts: unchanged behaviour, three packs share cleanly to 18 W.
+Opus review of the changed path: 9 findings, all closed (EN/UVLO divider, VCC capacitor 22 uF, OVLO margin,
+`USB_PRESENT` level, comments; the rest are limits written into the spec). ERC 0 on all boards.
+**Limits found, in the spec, for the user to know**: one AA pack gives about 8-10 W, not 3 A at 5 V (§3b; the
+battery LED cap follows the pack voltage, firmware); pulling USB while a nearly empty pack is the only other source
+restarts the hub above about 3 W (the LM74610 needs 25-140 ms to wake; O12, to measure at M4, matters from M6).
+An LM74700-Q1 was looked at as the way out and not drawn: its minimum input is 4 V, the packs go to 4.0 V.
+**Next: the user's sign-off of the M1 exit check** (ERC 0, review closed, pin map exported: all met), then **M2**
+(PCBs; main session) and/or M3 and M4.
 **Carried to M2 (layout), from the review**: SK6812MINI-E footprint is right only on B.Cu (stock symbol numbers
 pins differently from the datasheet; pad geometry checked); **mirror one side of every mated header pair** (bay
 2x6, stack 2x25, battery chain 2x8: unmirrored, the chain shorts PACK1 to GND through the fuse; reversal-safe
-covers rotation only); port-board socket side so pin 1 mates pin 1; footprints missing: TPS552892, ideal-diode
-FET, CSD25483F4, inductor, BC4AAPC holder, pogo pins and chain parts, buttons, stabilisers; PEC11R lug span
+covers rotation only); port-board socket side so pin 1 mates pin 1; footprints missing: TPS552892 (VQFN-HR
+RYQ0021A, land pattern on datasheet p. 33), CSD25483F4, inductor (XAL7070), 220 uF polymer can (8 x 10 assumed), BC4AAPC holder, pogo pins and chain parts, buttons, stabilisers; PEC11R lug span
 13.2 mm in the footprint against 13.4 mm in the drawing; JAE DX07S024WJ1R350 drawing and SMF4L9.0CA datasheet
-could not be downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0).
+could not be downloaded (403), check them by hand; sheets were never opened in KiCad (hub-conn is A0 and full: new parts need
+smaller cells or a second sheet); `usb-port.kicad_pcb` is still rev 8's layout (OC_MODE ball B4 was on GND, now open;
+R502, R503 values); TPS552892: AGND and PGND join only at the VCC capacitor.
 **Carried to M4 (firmware)**: rules in spec §4 (HAEN first, ODR before interrupts, one CS at a time, ADC pins
 without digital input); RP2350-E9 only matters on A2 silicon; cable: passive full-featured only.
 `build/ds/samtec_{ssq,tsw,tlw}.pdf` are error pages, not PDFs. M3 may also start (D2 is done).

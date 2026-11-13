@@ -338,17 +338,19 @@ SYMBOLS = [
         right=[("8", "CATHODE", "passive"), ("7", "VCAPH", "passive"), ("6", "GATE", "passive"),
                ("2", "PULLDN", "passive"), ("5", "NC5", "passive")],
     ),
-    # TI TPS63070 SLVSC58B, Pin Functions (RNM, 15-pin VQFN 2.5 x 3 mm); TPS630701 = fixed 5.0 V. Footprint at M2.
+    # TI TPS552892 SLVSH28A, Table 5-1 (RYQ, 21-pin VQFN-HR 3 x 5 mm, no exposed pad pin). Footprint at M2.
     symbol(
-        "TPS630701RNM", "U", "",
-        "https://www.ti.com/lit/ds/symlink/tps63070.pdf",
-        "Buck-boost converter, 2-16 V in, fixed 5.0 V out, 2 A at 4 V in, power save mode, VQFN-15 (RNM)",
+        "TPS552892RYQ", "U", "",
+        "https://www.ti.com/lit/ds/symlink/tps552892.pdf",
+        "Buck-boost converter, 3-36 V in, 0.8-22 V out by FB divider, 8 A average inductor current limit, PFM, VQFN-HR-21 (RYQ)",
         "buck-boost converter TI",
-        left=[("12", "VIN", "power_in"), ("13", "VIN", "power_in"), ("14", "EN", "input"), ("1", "PS/SYNC", "input"),
-              ("15", "VSEL", "input"), ("11", "L1", "passive"), ("9", "L2", "passive")],
-        right=[("7", "VOUT", "power_out"), ("8", "VOUT", "power_out"), ("5", "FB", "input"), ("6", "FB2", "passive"),
-               ("2", "PG", "open_collector"), ("3", "VAUX", "passive")],
-        bottom=[("4", "GND", "power_in"), ("10", "PGND", "power_in")],
+        left=[("7", "VIN", "power_in"), ("1", "EN/UVLO", "input"), ("2", "MODE", "input"), ("5", "DITH/SYNC", "input"),
+              ("6", "FSW", "passive"), ("21", "EXTVCC", "input"), ("18", "VCC", "power_out"), ("20", "BOOT1", "passive"),
+              ("8", "SW1", "passive")],
+        right=[("11", "VOUT", "power_out"), ("12", "ISP", "input"), ("13", "ISN", "input"), ("14", "FB", "input"),
+               ("15", "COMP", "passive"), ("16", "CDC", "passive"), ("3", "PG", "open_collector"),
+               ("4", "CC", "open_collector"), ("19", "BOOT2", "passive"), ("10", "SW2", "passive")],
+        bottom=[("17", "AGND", "power_in"), ("9", "PGND", "power_in")],
     ),
     # TI TPS3840 SNVSB03E, Table 5-1: any PLxx option (push-pull, active-low RESET); the value field names the threshold
     symbol(
@@ -381,14 +383,15 @@ SYMBOLS = [
         left=[("2", "G1", "passive"), ("5", "G2", "passive")],
         right=[("6", "D1", "passive"), ("1", "S1", "passive"), ("3", "D2", "passive"), ("4", "S2", "passive")],
     ),
-    # TI CSD17313Q2 SLPS260 top view: D 1, 2, 5, 6; G 3; S 4. Footprint pad map (exposed pads) at M2.
+    # Vishay SQ4184EY (SO-8, datasheet drawing): S 1-3, G 4, D 5-8. In the LM74610-Q1 datasheet's FET table.
     symbol(
-        "CSD17313Q2", "Q", "",
-        "https://www.ti.com/lit/ds/symlink/csd17313q2.pdf",
-        "N-channel NexFET, 30 V, VGS +10/-8 V, 26 mOhm at 4.5 V, SON 2 x 2 mm",
-        "N-MOSFET NexFET",
-        left=[("3", "G", "passive")],
-        right=[("1", "D", "passive"), ("2", "D", "passive"), ("5", "D", "passive"), ("6", "D", "passive"), ("4", "S", "passive")],
+        "SQ4184EY", "Q", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm",
+        "https://www.vishay.com/docs/65946/sq4184ey.pdf",
+        "N-channel MOSFET, 40 V, VGS +/-20 V, 5.6 mOhm max at 4.5 V, SO-8",
+        "N-MOSFET SO-8 ideal diode",
+        left=[("4", "G", "passive")],
+        right=[("5", "D", "passive"), ("6", "D", "passive"), ("7", "D", "passive"), ("8", "D", "passive"),
+               ("1", "S", "passive"), ("2", "S", "passive"), ("3", "S", "passive")],
     ),
     # TI CSD25483F4 SLPS449 (FemtoFET, 1.0 x 0.6 mm LGA): 1 G, 2 S, 3 D, to be confirmed in the M1 review
     symbol(

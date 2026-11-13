@@ -10,7 +10,8 @@ hub-core: Pico 2 W on pin sockets, three pogo pins to its underside pads (TP2 US
 hub-conn: three module ports (24-pin USB-C receptacle, TPS25810 Type-C source switch, 74LVC125 SPI
           buffer gated by the port's CS, ESD arrays), one 74AHCT125 for LED data, the host-port cable
           header (hardware/usb-port J502), and the power path: five pack inputs (TVS, LM74610-Q1 ideal
-          diode, priority P-FET), pack-priority supervisors, UVLO, battery and USB switches, 5 V buck-boost.
+          diode, priority P-FET), pack-priority supervisors, UVLO, battery and USB switches, 5 V buck-boost
+          (TPS552892, 3.5 A).
 battery:  passive 4xAA module: holder, PTC, chain in / chain out with the one-line shift.
 
 Run:   .venv/bin/python tools/sch_hub.py            (generate + verify)
@@ -120,6 +121,10 @@ class Board:
     def c(self, value, n1, n2="GND", fp=FP_C, v="16V"):
         return self.part("C", "Device:C", value, fp, (8, 18), {1: n1, 2: n2}, {"Voltage": v, "Dielectric": "X7R"})
 
+    def bulk(self, net):
+        return self.part("C", "Device:C_Polarized", "220u", "Capacitor_SMD:CP_Elec_8x10", (10, 18), {1: net, 2: "GND"},
+                         {"Voltage": "16V", "MPN": "220 uF 16 V aluminium polymer, ESR 30 mOhm or less, 8 mm can"})
+
     def schottky(self, anode, cathode):
         return self.part("D", "Diode:BAT54W", "BAT54", FP_SOT23, (26, 10), {1: anode, 2: None, 3: cathode},
                          {"MPN": "Diodes BAT54-7-F"})
@@ -135,7 +140,7 @@ class Board:
     def pfet(self, g, s, d):
         # stock symbol: 1-3 D, 4 G, 5 S (CSD25402Q3A top view: D 1-3, G 4, S 5-8)
         return self.part("Q", "Transistor_FET:CSD25402Q3A", "CSD25402Q3A", "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET",
-                         (26, 20), {1: d, 2: d, 3: d, 4: g, 5: s}, {"MPN": "TI CSD25402Q3A"})
+                         (26, 18), {1: d, 2: d, 3: d, 4: g, 5: s}, {"MPN": "TI CSD25402Q3A"})
 
     def supervisor(self, value, vdd, out):
         return self.part("U", "keyboard:TPS3840PLxxDBV", value, "keyboard:TI_SOT-23-5_DBV0005A", (30, 16),
@@ -257,8 +262,11 @@ def build_pack_input(b, i):
     b.part("U", "keyboard:LM74610QDGK", "LM74610-Q1", "Package_SO:VSSOP-8_3x3mm_P0.65mm", (34, 16),
            {4: pk, 8: vm, 6: f"IDG{i}", 2: f"IDG{i}", 1: f"CPL{i}", 7: f"CPH{i}", 3: None, 5: None},
            {"MPN": "TI LM74610QDGKRQ1"})
-    b.part("Q", "keyboard:CSD17313Q2", "CSD17313Q2", "", (26, 14), {3: f"IDG{i}", 4: pk, 1: vm, 2: vm, 5: vm, 6: vm},
-           {"MPN": "TI CSD17313Q2"})
+    # SO-8 from the LM74610 datasheet's FET table: 5.6 mOhm max at 4.5 V; at 4.5 A about 0.15 W in the channel plus
+    # 0.1-0.3 W for the 2-8 % of the time the LM74610 leaves it on the body diode (the 2 x 2 mm CSD17313Q2 was
+    # package-limited to 5 A)
+    b.part("Q", "keyboard:SQ4184EY", "SQ4184EY", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", (26, 18),
+           {4: f"IDG{i}", 1: pk, 2: pk, 3: pk, 5: vm, 6: vm, 7: vm, 8: vm}, {"MPN": "Vishay SQ4184EY-T1_GE3"})
     b.c("1u", f"CPH{i}", f"CPL{i}")
     if i < 5:
         # on only while no healthy pack sits below: BLK high -> EN low -> gate at VBAT (off, body diode path)
@@ -337,30 +345,48 @@ def build_conn():
     b.r("1M", "VBAT", "NVBUS")
     # USB into SYS, with priority: detect, delayed turn-on
     b.pfet("QU_G", "SYS", "VBUS_IN")
-    b.r("10k", "SYS", "QU_G")
+    b.r("1k", "SYS", "QU_G")  # off within microseconds, before the battery switch closes (tools/sim_switchover.py)
     b.dual_nfet("USB_OK", "NVBUS", "GND", "USB_DLY", "QU_G", "GND")
-    b.supervisor("TPS3840PL43", "VBUS_IN", "USB_OK")
+    # 3.6 V: a host inside the USB limits (4.0 V at the connector at 3 A) never reads as absent
+    b.supervisor("TPS3840PL36", "VBUS_IN", "USB_OK")
     b.r("2.2M", "USB_OK", "USB_DLY")
     b.c("22n", "USB_DLY")
     b.schottky("USB_DLY", "USB_OK")
     b.r("100k", "VBUS_IN", "GND")
     b.c("100n", "VBUS_IN")
     b.r("10k", "USB_OK", "USB_PRESENT")  # 5.5k source: pulls an RP2350-E9 pad low
-    b.r("12k", "USB_PRESENT", "GND")
+    b.r("15k", "USB_PRESENT", "GND")  # 2.3 V at the Pico with VBUS at 3.8 V, 3.3 V at 5.5 V
     b.r("0R", "AUX_5V", "VBUS_IN", dnp=True)
     b.row(2)
-    # SYS bulk and the 5 V buck-boost
+    # SYS bulk and the 5 V buck-boost (TPS552892, datasheet section 8.2: 400 kHz, 4.7 uH, PFM at light load)
     for _ in range(4):
         b.c("47u", "SYS", fp=FP_C1210)
     b.c("10u", "SYS")
-    b.part("U", "keyboard:TPS630701RNM", "TPS630701", "", (36, 24),
-           {12: "SYS", 13: "SYS", 14: "CONV_EN", 1: "CONV_EN", 15: "GND", 11: "L1", 9: "L2", 7: "+5V", 8: "+5V", 5: "+5V",
-            6: None, 2: None, 3: "VAUX", 4: "GND", 10: "GND"}, {"MPN": "TI TPS630701RNMR"})
-    b.part("L", "Device:L", "1.5u", "", (10, 22), {1: "L1", 2: "L2"}, {"MPN": "Coilcraft XFL4020-152ME"})
+    b.c("100n", "SYS")
+    b.bulk("SYS")  # carries the hub over the USB-to-battery hand-over
+    b.part("U", "keyboard:TPS552892RYQ", "TPS552892", "", (40, 24),
+           {7: "SYS", 1: "CONV_EN", 2: "GND", 5: "GND", 6: "FSW", 21: None, 18: "VCC5", 20: "BOOT1", 8: "L1",
+            11: "+5V", 12: "+5V", 13: "+5V", 14: "FB", 15: "COMP", 16: None, 3: None, 4: None, 19: "BOOT2", 10: "L2",
+            17: "GND", 9: "GND"}, {"MPN": "TI TPS552892RYQR"})
+    b.part("L", "Device:L", "4.7u", "", (10, 22), {1: "L1", 2: "L2"},
+           {"MPN": "Coilcraft XAL7070-472ME (Isat 15 A, 14.3 mOhm)"})
+    # EN/UVLO: on above about 3.5 V, off below about 2.95 V (5 uA hysteresis current in the 100k), so the converter
+    # never runs under its 3.0 V minimum when a pack sags
     b.r("100k", "SYS", "CONV_EN")
-    b.c("100n", "VAUX")
+    b.r("54.9k", "CONV_EN", "GND")
+    b.r("49.9k", "FSW", "GND")  # 400 kHz
+    b.c("100n", "BOOT1", "L1")
+    b.c("100n", "BOOT2", "L2")
+    b.c("22u", "VCC5", fp=FP_C1210)  # more than 4.7 uF asked for, after DC bias
+    b.r("100k", "+5V", "FB")  # 1.2 V x (1 + 100k / 31.6k) = 5.00 V
+    b.r("31.6k", "FB", "GND")
+    b.r("12k", "COMP", "COMP_C")  # crossover about 4 kHz with 300 uF on +5V (worst case 3.6 V in, 3.5 A)
+    b.c("15n", "COMP_C")
+    b.c("470p", "COMP")
     for _ in range(3):
         b.c("22u", "+5V", fp=FP_C1210)
+    b.c("100n", "+5V")
+    b.bulk("+5V")  # the TPS25810 asks for 120 uF or more on its input
     for net in ("GND", "SYS", "+3V3", "VBAT"):
         b.flag(net)
     w, h = b.finish(
@@ -369,13 +395,17 @@ def build_conn():
         "TPS25810 per port: CHG high, CHG_HI 100k to +5V = 3 A advertised, 3.4 A limit (fit the DNP 0R to GND for 1.5 A / 1.7 A); UFP low = sink attached (DET).\n"
         "74LVC125A per port: SCK, MOSI and the MISO return are enabled only while that port's CS is low; the CS output only while DET is low,\n"
         "so an empty or unpowered port, or a phone that never answers, sees no SPI. CS idles high through 10k. One 74AHCT125 shifts LED data to 5 V.\n"
-        "Pack inputs 1 (next to the hub) to 5 (lowest module): SMF4L9.0CA, LM74610-Q1 + CSD17313Q2 ideal diode; inputs 1-4 then pass a CSD25402Q3A\n"
+        "Pack inputs 1 (next to the hub) to 5 (lowest module): SMF4L9.0CA, LM74610-Q1 + SQ4184EY ideal diode; inputs 1-4 then pass a CSD25402Q3A\n"
         "that is on only while no healthy pack sits below (BLKn low); otherwise the pack waits behind the FET's body diode and takes over without a gap.\n"
         "Healthy = TPS3840PL43 on the pack through 100k / 1u, 910k from VDD to its output: falls at about 4.3 V, re-arms above about 5.0 V (a swapped-in charged pack).\n"
         "22k bleeder per pack input 2-5, switched by +3V3: an empty slot floats up through the ideal diode's leakage and must not read as healthy (tools/sim_priority.py).\n"
-        "UVLO, battery switch, USB switch, detect and delay, pack divider: rev 8.1 values (TPS3840PL40, 10k / 1u, 1M, 4.7M, 2.2M / 22n, 200k / 100k).\n"
-        "TPS630701 makes +5V from SYS on USB and on battery (PS/SYNC high = power save); +5V feeds the ports and the Pico's VSYS.\n"
-        "DNP 0R from AUX_5V to VBUS_IN: reserved for a later Qi module. Footprints still open (M2): TPS630701, CSD17313Q2, CSD25483F4, inductor.")
+        "UVLO, battery switch, USB switch, delay, pack divider: rev 8.1 values (TPS3840PL40, 10k / 1u, 1M, 4.7M, 2.2M / 22n, 200k / 100k), except:\n"
+        "USB detect TPS3840PL36 (a host sagging to 4.0 V at 3 A stays 'present'), 1k on the USB switch gate (break before make), 220u on SYS (tools/sim_switchover.py).\n"
+        "TPS552892 makes +5V from SYS on USB and on battery (3.5 A on USB or several packs; one pack gives about 8-10 W): MODE low = PFM at light load,\n"
+        "400 kHz (49.9k), FB 100k / 31.6k, EN/UVLO 100k / 54.9k (on above 3.5 V, off below 2.95 V),\n"
+        "ISP = ISN = VOUT (no output current limit; the ports have their own), EXTVCC and CDC open (internal VCC, no cable compensation), DITH/SYNC to GND.\n"
+        "Layout (M2): AGND (pin 17) and PGND (pin 9) join only at the VCC capacitor; boot capacitors at the pins; FB and COMP away from L1 / L2.\n"
+        "DNP 0R from AUX_5V to VBUS_IN: reserved for a later Qi module. Footprints still open (M2): TPS552892, CSD25483F4, inductor.")
     return b, w, h
 
 
@@ -480,7 +510,7 @@ SIGNALS = {
     "MISO": ("in", "spi0", "SPI0 RX; 100k pull-up"), "SCK": ("out", "spi0", "SPI0 SCK"),
     "MOSI": ("out", "spi0", "SPI0 TX"),
     "PORT_FLT": ("in", "low", "a port is in current limit or too hot (wired-OR); 10k pull-up"),
-    "USB_PRESENT": ("in", "high", "host VBUS present; 10k / 12k divider, no pull needed"),
+    "USB_PRESENT": ("in", "high", "host VBUS present (above about 3.8 V); 10k / 15k divider, no pull needed"),
     "BAT_DIV_EN": ("out", "high", "switches the pack divider on; 100k pull-down"),
     "CC1_SENSE": ("adc", "analog", "host CC1 through 100k / 10n; Rp level gives the current cap"),
     "CC2_SENSE": ("adc", "analog", "host CC2 through 100k / 10n"),

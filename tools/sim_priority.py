@@ -9,10 +9,10 @@ module (no priority FET, like hub input 5). Netlist mirrors tools/sch_hub.py bui
   BLKi = OK(i+1) or BLK(i+1) through BAT54C, 4.7M to GND; BLKi high -> PENi low -> gate at VBAT (FET off)
   supervisor i: 100k from the pack to VDD, 1u, RFB from VDD to the push-pull output.
 Models from datasheet numbers: TPS3840PL43 VIT- 4.3 V, VHYS 200 mV, IDD 300 nA; CSD25402Q3A as a
-12 mOhm channel with Vth 0.9 V, 2 nF gate, body diode about 0.65 V at 1 A; LM74610 + CSD17313Q2 as a
-16 mV / 30 mOhm diode with 100k reverse leakage (its periodic body-diode refresh is not modelled); BAT54 about 0.2 V at 1 uA.
+12 mOhm channel with Vth 0.9 V, 2 nF gate, body diode about 0.65 V at 1 A; LM74610 + SQ4184EY as a
+16 mV / 8 mOhm diode with 100k reverse leakage (its periodic body-diode refresh is not modelled); BAT54 about 0.2 V at 1 uA.
 Pack: voltage source + 0.45 Ohm (4 cells, PTC, two pogo seams). Load: constant power on VBAT (the
-buck-boost), 200 uF bulk.
+TPS552892 buck-boost, up to 4.5 A in), 380 uF bulk (SYS: 4 x 47 uF ceramic derated + 220 uF polymer).
 """
 import os
 import subprocess
@@ -28,17 +28,17 @@ def deck(rfb, ocv, present, power, tend, name):
     """ocv[i], present[i]: PWL point lists [(t, v), ...] per pack (present: 1 = in the stack); power: PWL in W."""
     pwl = lambda pts: " ".join(f"{t} {v}" for t, v in pts)
     L = [f"* {name} rfb={rfb}", ".options reltol=1e-4 abstol=1e-11 vntol=1e-6 method=gear",
-         ".model DID D(Is=1e-9 N=0.03 Rs=0.03)", ".model DBODY D(Is=1e-11 N=1 Rs=0.02)",
+         ".model DID D(Is=1e-9 N=0.03 Rs=0.008)", ".model DBODY D(Is=1e-11 N=1 Rs=0.02)",
          ".model DSCH D(Is=2e-7 N=1.05 Rs=5)", ".model PRES SW(vt=0.5 vh=0.1 ron=0.001 roff=1e9)",
          ".model SUP SW(vt=4.4 vh=0.1 ron=1 roff=1e9)", "VONE one 0 1",
-         "CSYS vbat 0 200u", "RLEAK vbat 0 10Meg", f"VPW pw 0 PWL({pwl(power)})",
-         "BLOAD vbat 0 I = V(vbat) > 2 ? min(V(pw)/V(vbat), 3) : V(vbat)*V(pw)/4"]
+         "CSYS vbat 0 380u", "RLEAK vbat 0 10Meg", f"VPW pw 0 PWL({pwl(power)})",
+         "BLOAD vbat 0 I = V(vbat) > 2 ? min(V(pw)/V(vbat), 4.5) : V(vbat)*V(pw)/4"]
     for i in range(1, N + 1):
         vm = f"vm{i}" if i < N else "vbat"
         L += [f"VOCV{i} ocv{i} 0 PWL({pwl(ocv[i])})", f"VPR{i} pr{i} 0 PWL({pwl(present[i])})",
               f"RP{i} ocv{i} cell{i} {RPACK}", f"SP{i} cell{i} pack{i} pr{i} 0 PRES",
               f"RBLEED{i} pack{i} 0 {RBLEED}", f"CIN{i} pack{i} 0 10n",
-              # ideal diode: 16 mV + 30 mOhm forward; reverse: the LM74610 leakage (60 uA typ at 13.5 V) as 100k
+              # ideal diode: 16 mV + 8 mOhm forward; reverse: the LM74610 leakage (60 uA typ at 13.5 V) as 100k
               f"DID{i} pack{i} {vm} DID", f"RLK{i} pack{i} {vm} 100k"]
         if i < N:
             L += [f"DB{i} vm{i} vbat DBODY", f"CVM{i} vm{i} 0 10n",

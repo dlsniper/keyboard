@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Capture the USB port board schematic (hardware/usb-port/usb-port.kicad_sch).
 
-Local USB-C port, one per module (spec §8 "Local USB-C", §5 "USB input OVP",
-parts shortlist "USB input and VSYS"): GCT USB4085 receptacle -> KTS1693 OVP
-switch with an external OVLO divider and ISET -> SMF6.0A and USBLC6-2SC6 on the
-protected side -> J_USB to the core. CC1/CC2 carry 5.1 k Rd and a TVS2200 each.
+The hub's host port (plans/keyboard.md sections 3a, 3b; board carried over from rev 8):
+GCT USB4085 receptacle -> KTS1693 OVP switch with an external OVLO divider and
+ISET (3.5 A, auto-restart) -> SMF6.0A and USBLC6-2SC6 on the protected side ->
+J_USB cable header to hub-conn. CC1/CC2 carry 5.1 k Rd and a TVS2200 each.
 
 Placement, stubs, labels and the netlist check live in tools/schlib.py.
 
@@ -39,17 +39,17 @@ PARTS = [
      {"MPN": "TI TVS2200DRVR", "DNP_reason": "fit only if ESD/surge tests need it"}),
     ("C501", "Device:C", "100n", FP_C, (36, 16),
      {"1": "VBUS_CONN", "2": "GND"}, {"Voltage": "50V", "Dielectric": "X7R"}),
-    # OVP switch: EN tied on, OC_MODE low (an over-current latches off), CDET unused
+    # OVP switch: EN tied on, OC_MODE open = high through the internal 5 M pull-up (auto-restart), CDET unused
     ("U501", "keyboard:KTS1693EVB", "KTS1693EVB", "keyboard:Kinetic_WLCSP-20_1.935x2.16mm_Layout4x5_P0.4mm", (62, 34),
      {**{b: "VBUS_CONN" for b in IN_BALLS}, **{b: "VBUS_LOCAL" for b in OUT_BALLS},
-      "D1": "OVLO", "E1": "ISET", "B1": "GND", "B4": "GND", "C4": "GND", "D4": "GND",
+      "D1": "OVLO", "E1": "ISET", "B1": "GND", "B4": None, "C4": "GND", "D4": "GND",
       "C1": "ACOK", "A1": None},
      {"MPN": "Kinetic KTS1693EVB-TR"}),
     ("R501", "Device:R", "100k", FP_R, (46, 48),
      {"1": "VBUS_CONN", "2": "OVLO"}, {"Tolerance": "0.1%"}),
-    ("R502", "Device:R", "27.4k", FP_R, (46, 58),
+    ("R502", "Device:R", "26.4k", FP_R, (46, 58),
      {"1": "OVLO", "2": "GND"}, {"Tolerance": "0.1%"}),
-    ("R503", "Device:R", "4.99k", FP_R, (56, 56),
+    ("R503", "Device:R", "2.87k", FP_R, (56, 56),
      {"1": "ISET", "2": "GND"}, {"Tolerance": "1%"}),
     # protected side
     ("C502", "Device:C", "1u", FP_C, (80, 16),
@@ -84,7 +84,7 @@ NETS = {
     "VBUS_CONN": ["J501.A4", "J501.A9", "J501.B4", "J501.B9", *(f"U501.{b}" for b in IN_BALLS),
                   "C501.1", "D504.4", "D504.5", "D504.6", "R501.1"],
     "VBUS_LOCAL": [*(f"U501.{b}" for b in OUT_BALLS), "C502.1", "D501.1", "U502.5", "J502.1", "J502.6", "J502.11"],
-    "GND": ["J501.A1", "J501.A12", "J501.B1", "J501.B12", "J501.SH", "U501.B1", "U501.B4", "U501.C4", "U501.D4",
+    "GND": ["J501.A1", "J501.A12", "J501.B1", "J501.B12", "J501.SH", "U501.B1", "U501.C4", "U501.D4",
             "C501.2", "C502.2", "D501.2", "U502.2", "R502.2", "R503.2", "R504.2", "R505.2",
             *(f"{d}.{p}" for d in ("D502", "D503", "D504") for p in ("1", "2", "3", "7")),
             "J502.2", "J502.4", "J502.10"],
@@ -98,11 +98,13 @@ NETS = {
 }
 
 NOTES = [
-    ((4, 70), "Local USB-C port per spec §8. KTS1693: external OVLO 100k / 27.4k 0.1 % trips 5.38-5.78 V, under the MDBT50Q VBUS pad 5.8 V abs-max (E22; internal 5.77-6.13 V);\n"
-              "ISET 4.99k -> OCP 1.82-2.18 A (datasheet Table 1 at 5.00k, 0-70 C), under the LM66200's 2.5 A; EN tied low, OC_MODE low = latch off;\n"
-              "ACOK is open-drain, pulled up on the core. CDET unused. D504 (TVS2200 on connector VBUS) is a DNP footprint.\n"
-              "USBLC6-2SC6 VBUS (pin 5) is on VBUS_LOCAL, never on connector VBUS (5.5 V abs-max).\n"
-              "CC1/CC2: 5.1k Rd (0805 for a 20 V CC short) and TVS2200 (22 V VRWM); the core adds 100k in series before AINx.\n"
+    ((4, 70), "Host USB-C port of the hub (spec sections 3a, 3b). KTS1693: external OVLO 100k / 26.4k 0.1 % (E192) trips at 5.56-5.93 V: above a legal 5.5 V VBUS,\n"
+              "below the USBLC6's 6 V breakdown (the internal threshold, 5.77-6.13 V, is not).\n"
+              "ISET 2.87k -> limit 3.17 / 3.48 / 3.80 A (10000 / R, +/-9 %, 0-70 C): a 3 A host is not cut off; the cable header's 3 x 1 A contacts are the 3 A limit.\n"
+              "EN tied low. OC_MODE open: the internal 5 M pull-up makes it high = auto-restart (limits for 8 ms, off, retries after 200 ms).\n"
+              "ACOK is open-drain and not used by the hub (J_USB pin 8 is open there). CDET unused. D504 (TVS2200 on connector VBUS) is a DNP footprint.\n"
+              "USBLC6-2SC6 VBUS (pin 5) is on VBUS_LOCAL, never on connector VBUS.\n"
+              "CC1/CC2: 5.1k Rd (0805 for a 20 V CC short) and TVS2200 (22 V VRWM); hub-conn adds 100k in series before the Pico's ADC pins.\n"
               "J_USB is reversal-safe: an end-reversed cable keeps VBUS on VBUS and GND on GND; D+/D- swap and USB does not enumerate."),
 ]
 

@@ -77,12 +77,14 @@ matrix sizes in the spec are final.
    TPS630701 on `hub-conn` (application circuit from its datasheet, light-load mode),
    larger ideal-diode FET, +5 V bulk capacitor, host-port limit and auto-restart on
    `usb-port`, stale notes on `usb-port`; then a focused review of the changed power
-   path (Opus) and the switchover re-checked.
+   path (Opus) and the switchover re-checked. Done 2026-11-13 (spec §3a, §3b; new
+   `tools/sim_switchover.py`); review findings closed.
 
 **Decisions:** D10 key LED type is decided (SK6812MINI-E chain). D3 is decided
 (full-featured USB-C cable, port board in a pod bay; spec §1).
 
-**Exit check:** ERC 0, the review's findings closed (open: task 5), pin map exported (done).
+**Exit check:** ERC 0, the review's findings closed, pin map exported. All three
+met 2026-11-13; waiting for the user's sign-off.
 
 ## M2, PCBs
 
