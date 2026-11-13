@@ -72,7 +72,7 @@ matrix sizes in the spec are final.
    scanning. Rails, cable and fuses sized from datasheets.
 4. ERC clean; an independent review of the schematics against the datasheets.
 
-**Decisions:** **D10** key LED type (pros and cons first). **D3** module cable and
+**Decisions:** D10 key LED type is decided (SK6812MINI-E chain). **D3** module cable and
 connector (about 8 wires, pod-capable).
 
 **Exit check:** ERC 0, the review's findings closed, pin map exported.
@@ -177,4 +177,4 @@ whoever delegates verifies what comes back.
 | D7 | Place the order | M2 end |
 | D8 | Tenting, tilt, palm rest | M3 |
 | D9 | Keymap and layers | M5 |
-| D10 | Key LED type (SK6812MINI-E chain or IS31FL3733 matrix) | before M1 |
+| D10 | Key LED type: decided 2026-11-13, SK6812MINI-E chain | done |

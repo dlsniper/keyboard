@@ -58,7 +58,7 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 | Keys (D1, 2026-11-13; final at D2) | 36 | 52 + dial push | 22 |
 | Matrix (rows x cols), by physical position | 6 x 7 | 6 x 11 | 6 x 4 |
 | Reader | 1 x SPI expander (13 pins used) | 2 x SPI expander (17 matrix + 2 dial) | 1 x SPI expander (10 pins) |
-| LEDs (type open, O7) | 36 | 52 (none under the dial) | 22 |
+| LEDs (SK6812MINI-E, D10) | 36 | 52 (none under the dial) | 22 |
 | Dial | none | PEC11R, 24 detents, push switch in the matrix, on the separate dial board | none |
 
 - Switches: MX, Kailh hotswap sockets (CPG151101S11). One `1N4148W` per key, so
@@ -86,9 +86,17 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   where the controller sits.
 - Stabilisers: Cherry MX plate/PCB 2U footprint from the vendored kiswitch subset.
 - Plate: 1.5 mm FR4, no copper (as rev 8).
-- **Key LEDs: open (O7).** Candidates: SK6812MINI-E chain (one data wire, rail
-  switched at the hub) or rev 8's IS31FL3733 matrix driver. The user chooses after a
-  pros and cons review, before M1 draws them.
+- **Key LEDs: SK6812MINI-E chain (D10, user, 2026-11-13)**, one per key, reverse
+  mount through a 3.4 x 3.0 mm board window south of the switch, one data wire per
+  module. Chosen over rev 8's IS31FL3733 matrix (I2C would add 2-3 cable wires, no
+  TinyGo driver, 28 matrix nets per module, chip must not be power-gated). Costs
+  accepted: about 1 mA per LED with the rail on and the LEDs dark (datasheet typ,
+  about 110 mA for 110 LEDs), so **the hub switches the LED rail off whenever the
+  LEDs are off**; a dead LED cuts the chain behind it; the 3.3 V data line needs a
+  5 V level shifter at the hub (74AHCT125 class; VIH is 0.7 x VDD). Driver:
+  `tinygo.org/x/drivers/ws2812` (PIO on RP2350). Source: not found at Mouser so far
+  (Adafruit 4960 packs, or OPSCO parts from another distributor); to settle in the
+  M1 parts list.
 
 ## 3. Power
 
@@ -143,7 +151,7 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
   ordered, or order after M4.
 - **O3** LED current caps per source: sized at M1, measured at M4.
 - **O6** Bluetooth on the Pico 2 W (roadmap M6); idle current on batteries to measure.
-- **O7** key LED type (D10): pros and cons to the user before M1.
+- O7 closed 2026-11-13: SK6812MINI-E chain (D10, §2). Open under it: a European source for the LED.
 - **O8** five battery modules: chain connector and power path rework from rev 8.1's three.
 - **O9** n-key USB report in TinyGo (M4).
 - **O10** cable-free pods: mechanical mount and power pins on the module connector
