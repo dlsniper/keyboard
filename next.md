@@ -314,8 +314,51 @@ schematics and the usb-port board were upgraded; ERC, netlist checks and parity 
 **MCPs (user asked why they were not used)**: scripts stay the source of every board and of the section; **the FreeCAD MCP
 is used to show the user the model before a mechanical decision** (done for the tower: preview document "hub", objects
 `NEW_*`) and the KiCad MCPs for views and checks. Say so at once when a bridge does not answer (it was down at the start).
-**Next (M2 session 8)**: plates (roadmap M2 step 4); the independent PCB review (step 3, Opus, given the files); then fab
-outputs (step 5). Before M3: decide whether hub-core and battery boards grow with the tower.
+**M2 session 8 done (2026-11-14): plates made, independent PCB review done, its copper findings fixed; its placement
+findings are open.** `tools/pcb_check.sh` on all nine boards: 0 errors, 0 parity, 0 unconnected (warnings as before; hub-conn's
+`via_dangling` is gone); `tools/kicad-check.sh` exit 0; plates DRC 0 errors, 0 warnings.
+**User decisions (options UI, 2026-11-14)**: plates keep the **key board's outline with the bay cut away** (not key field
+only); **plate FR4 1.6 mm** (spec said 1.5); **usb-port inner copper 1 oz**; **hub-core and battery stay 94 mm**: the user
+first chose "grow to 108 now", saw it in FreeCAD (outline only, no part moved) and answered "Back to 94 mm": decide at M3.
+**Plates = `tools/pcb_plate.py [left right numpad]`** (KiCad's Python; `--check`, `--dump` for a FreeCAD preview, `--field-only`
+for the rejected variant) writes `hardware/plate-<name>/`. From `layout/keys.json` and `pcb_keys.py` `frame` /
+`strip_frame` (new: the strip frame and bay centre, factored out of `place_strip`); holes, the spare header and the
+checks are read from the routed key board, so **re-run it after a key board is placed again**. 14.0 mm cut-outs, 0.5 mm
+corners (my choice: Cherry's figure for a machined plate; the M0 test cell's 14.1 mm was FDM), Cherry stabiliser cut-outs
+(7 x 12.7 mm with a 3.5 x 1.2 mm wire notch, from memory of the Cherry drawing: **check one stabiliser on the first plate**),
+17 mm dial opening (provisional). Plates have no schematic: `kicad-check.sh` skips ERC for them, `pcb_check.sh` (parity)
+is not for them; the script runs its own DRC.
+**PCB review (Opus, read-only, files only; 14 findings).** Found correct: all 40 Pico pins against the Pico 2 W pinout,
+the RP2350 functions and `hub-pinmap.json`; stack, bay, chain and cable-header mating pin for pin from pad coordinates;
+the USB-C wire plan in both plug orientations; hand-drawn footprints against their datasheets (TPS552892, CSD25483F4,
+CSD25402Q3A, SQ4184EY, LM74610, TPS3840, TPS22918, TPS25810, KTS1693, USB4085, SK6812MINI-E reverse mount); matrix,
+diodes and LED chain against `keys.json`; LED bus drop 0.10 V on `right`.
+**Fixed (`route_hub.py` `power_areas` / `add_areas`; on a routed board `route_hub.py <board> --power-areas`; also part of
+every new routing)**: (1, must-fix) TPS552892 power pins left through 0.25-0.4 mm necks: copper areas for SYS, +5V, SW1,
+SW2 and two PGND vias; (2) port VBUS areas on top and inner 2 on hub-conn, +5V area on inner 2 on port-module; (3)
+TPS25810 exposed-pad vias where there was room (three each from the next routing: `rail_5v`); (7) battery pack-line vias
+1.5 / 0.9 mm. Zones made with `pcbnew.ZONE` on a loaded, routed board worked here (session 7's failure was with remaking
+existing zones). Copies of the boards before the change: `build/route/`.
+**Open from the review, next session (parts move, boards are routed again)**: (4) decoupling: hub-conn U1 74AHCT125
+45 mm from C1, U3 / U7 / U11 74LVC125A 27 mm, usb-port KTS1693 IN 14 mm from C501, MCP23S17 12.6-14.4 mm on the key boards
+(`pcb_keys.py` `place_strip`: the 100 n sits at s - 13.5); the SK6812's 100 n at 9.5 mm is the cell pattern and stays
+unless the user wants it changed; (5) TVS0500 D1 / D2 / D3 13-23 mm from J4 / J5 / J6, D2 on a 29 mm 0.4 mm track; (6)
+TPS552892 VCC capacitor C38 3 mm from pin 18 with its GND end on the far side, COMP parts R89 / C39 / C40 15 mm away,
+AGND not separate. Then `pcb_plate.py` again and all checks. **(8) copper weights and plate thickness are in no board
+file: write them into the fab data at step 5.**
+**To check on real parts or drawings (review 9-14)**: Amphenol 12401548E4-2A: drawing now in
+`build/ds/amphenol_12401548e4-2a.pdf` (pin order A1..A12 with B12..B1 on the same ends, as the footprint; it does not
+mark the mouth side or the tail length, so **handedness and the 2.0 mm between the battery holder and hub-conn's
+underside under ports A and B are still to check on a part**); Pico 2 W: datasheet names TP2 = USB DM, TP3 = USB DP, TP6 =
+BOOTSEL, the positions match its figure, which pad is which comes from KiCad's footprint: buzz TP2 / TP3 against the
+micro-USB shell pins before first power; BC4AAPC polarity (as before); TVS2200 pinout confirmed (`build/ds/tvs2200.pdf`:
+1-3 GND, 4-6 IN, as drawn); **USBLC6-2 datasheet could not be downloaded** (st.com errors): put it at
+`build/ds/usblc6-2.pdf` from https://www.st.com/resource/en/datasheet/usblc6-2.pdf and check pins 1 / 6 = I/O1, 3 / 4 =
+I/O2, 2 = GND, 5 = VBUS; fab questions: KTS1693 0.22 mm lands, CSD25483F4 0.15 mm lands, 0.49 mm via pairs, target discs
+on the underside (two-sided assembly). Firmware notes from the review: Pico VBUS pin is not wired (do not gate USB on
+its VBUS sense); never plug the Pico's own micro-USB while the hub's host port is in use; JST GH cable wired 1:1.
+**Next (M2 session 9)**: the review's placement findings (above), boards routed again, plates re-run; then fab outputs
+(step 5, with the copper weights and plate thickness in the fab notes; no sourcing lookups).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

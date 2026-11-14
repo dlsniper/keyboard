@@ -326,6 +326,8 @@ def rail_5v(c):
         gx, gy = c.pad(u, "12")
         c.track("GND", [(gx, gy), (gx + 0.85, gy)], 0.2)
         c.via("GND", *c.pad(u, "21"), 0.6, 0.3)                  # the GND pin between CC1 and CC2: to the exposed pad
+        for d in (-0.85, 0.85):                                  # PCB review: more than one via under the exposed pad
+            c.via("GND", c.pad(u, "21")[0], c.pad(u, "21")[1] + d, 0.6, 0.3)
         c.via(vb, px + 6.6, 134.6); c.via(vb, px + 6.6, 135.8)
         # In2 bar close in front of the A row (just clear of the locating peg), not further north: the band it covers
         # takes no via, and the A row's signals need theirs between the row and the ESD arrays
@@ -785,6 +787,98 @@ def gnd_pours(b, layers, solid=()):
         b.Add(z)
 
 
+# ---- power areas (PCB review, 2026-11-14) -------------------------------------------------------------------------
+def power_areas(c, name):
+    """Copper areas where a scripted track cannot be wide enough, and the vias that go with them. Returns
+    ([(net, zone name, layer, points)], [(net, x, y)] vias of 0.6 / 0.3).
+    hub-conn converter: the TPS552892's VIN, VOUT and switch strips are 0.25 mm wide at 0.5 mm pitch, so each leaves
+    through a neck no longer than the 0.25 mm it takes to clear the small pins beside it and then opens into an area
+    (VIN: the SYS bar of the input capacitors; VOUT: the output capacitor bar and its three vias; SW1 / SW2: down to
+    the inductor's pads); a PGND via right at each end of the PGND strip. Ports: the VBUS path as an area on top
+    (switch to the vias) and on inner 2 (vias to the receptacle's through-pins), and more vias under each source
+    switch's exposed pad. port-module: +5V on inner 2 round the receptacle's through-pins."""
+    areas, vias = [], []
+    if name == "hub-conn":
+        ix, iy = ph.CONV
+        u = c.find("U", "FSW")
+        x7, x8, x10, x11, x13 = (c.pad(u, n)[0] for n in ("7", "8", "10", "11", "13"))
+        yn, ys = iy - 1.7, iy + 1.7                                 # the strips' ends
+        ind = c.find("L", "L1")
+        (l1x, l1y), (l2x, _) = c.pad(ind, "1"), c.pad(ind, "2")
+        areas.append(("SYS", "SYS_conv", F, [(x7 - 0.125, yn + 0.2), (x7 - 0.125, yn - 0.25), (x7 - 0.44, yn - 0.5), (x7 - 0.44, yn - 2.4),
+                                             (x7 + 12.56, yn - 2.4), (x7 + 12.56, yn - 0.25), (x7 + 0.125, yn - 0.25), (x7 + 0.125, yn + 0.2)]))
+        areas.append(("+5V", "5V_conv", F, [(x13 - 0.125, yn + 0.62), (x13 - 0.125, yn - 0.25), (57.5, yn - 0.25), (57.5, yn + 0.6),
+                                            (53.9, yn + 0.6), (53.9, yn - 2.4), (x11 + 0.34, yn - 2.4), (x11 + 0.34, yn - 0.25),
+                                            (x11 + 0.125, yn - 0.25), (x11 + 0.125, yn + 0.62)]))
+        areas.append(("L1", "SW1_conv", F, [(x8 - 0.125, ys - 0.2), (x8 + 0.125, ys - 0.2), (x8 + 0.125, ys + 0.25), (l1x + 1.0, ys + 0.25),
+                                            (l1x + 1.0, l1y + 3.3), (x8 - 0.125, l1y + 3.3)]))
+        areas.append(("L2", "SW2_conv", F, [(x10 + 0.125, ys - 0.2), (x10 - 0.125, ys - 0.2), (x10 - 0.125, ys + 0.25), (l2x - 1.0, ys + 0.25),
+                                            (l2x - 1.0, l1y + 3.3), (x10 + 0.125, l1y + 3.3)]))
+        vias += [("GND", ix - 0.1, yn - 1.1), ("GND", ix, ys + 2.9)]
+        for f in c.fps.values():
+            if "MODULE PORT" not in f.GetValue():
+                continue
+            p, px = f.GetValue()[-1], MM(f.GetPosition().x)
+            sw, j = c.find("U", f"REF_{p}"), c.find("J", f"SCK_{p}")
+            ox, oy = c.mean(sw, "14", "15")
+            by = c.pad(j, "A1")[1] + 5.02 - 5.6
+            areas.append((f"VBUS_{p}", f"VBUS_{p}_top", F, [(px + 5.9, oy - 0.4), (ox + 0.3, oy - 0.4), (ox + 0.3, oy + 0.4), (px + 7.9, oy + 0.4),
+                                                           (px + 7.3, 136.4), (px + 5.9, 136.4)]))
+            areas.append((f"VBUS_{p}", f"VBUS_{p}_in2", I2, [(px - 3.2, by - 2.8), (px + 7.4, by - 2.8), (px + 7.4, by + 3.1), (px - 3.2, by + 3.1)]))
+            tx, ty = c.pad(sw, "21")
+            box = c.fps[sw].FindPadByNumber("21").GetBoundingBox()
+            w, h = MM(box.GetWidth()), MM(box.GetHeight())
+            d = 0.85
+            vias += [("GND", tx + (sx * d if w > h else 0), ty + (0 if w > h else sx * d), True) for sx in (-1, 1) if max(w, h) >= 2 * d + 0.6]   # inside the pad
+    if name == "port-module":
+        j = c.find("J", "MISO_CONN")
+        ox, oy = c.pad(j, "A1")[0] - 2.75, c.pad(j, "A1")[1] - 5.02
+        areas.append(("+5V", "5V_in2", I2, [(ox - 3.3, oy + 2.5), (ox + 3.3, oy + 2.5), (ox + 3.3, oy + 6.3), (ox - 3.3, oy + 6.3)]))
+    return areas, vias
+
+
+def add_areas(c, name):
+    if name == "battery":       # PCB review: a pack line changes layer through one via; make it as good as the 1.5 mm track
+        n = 0                   # (0.9 mm drill: barrel cross-section about that of 1.5 mm of 1 oz copper)
+        for v in c.b.GetTracks():
+            if v.Type() == pcbnew.PCB_VIA_T and v.GetNetname() != "GND" and v.GetDrill() < mm(0.9):
+                v.SetWidth(F, mm(1.5)); v.SetDrill(mm(0.9))
+                n += 1
+        return n
+    areas, vias = power_areas(c, name)
+    have = {z.GetZoneName() for z in c.b.Zones()}
+    n = 0
+    for net, zname, layer, pts in areas:
+        if zname in have:
+            continue
+        z = pcbnew.ZONE(c.b)
+        z.SetLayer(layer); z.SetNet(c.net(net)); z.SetZoneName(zname); z.SetAssignedPriority(2)
+        o = z.Outline()
+        o.NewOutline()
+        for x, y in pts:
+            o.Append(mm(x), mm(y))
+        z.SetLocalClearance(mm(0.2)); z.SetMinThickness(mm(0.2))
+        z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+        z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
+        c.b.Add(z)
+        n += 1
+    for net, x, y, *in_pad in vias:
+        q = pcbnew.VECTOR2I(mm(x), mm(y))
+        if any(t.Type() == pcbnew.PCB_VIA_T and (t.GetPosition() - q).EuclideanNorm() < mm(0.3) for t in c.b.GetTracks()):
+            continue
+        v = pcbnew.PCB_VIA(c.b)
+        v.SetPosition(q); v.SetWidth(F, mm(0.6)); v.SetDrill(mm(0.3)); v.SetNet(c.net(net)); v.SetLocked(True)
+        tracks_ok = all(t.GetNetname() == v.GetNetname() or (
+            math.hypot(t.GetPosition().x - q.x, t.GetPosition().y - q.y) >= mm(0.3 + 0.16) + t.GetWidth(F) / 2 if t.Type() == pcbnew.PCB_VIA_T
+            else _seg_dist(q, t.GetStart(), t.GetEnd()) >= mm(0.3 + 0.21) + t.GetWidth() / 2) for t in c.b.GetTracks())
+        if not (tracks_ok if in_pad else _via_clear(c.b, v, q)):
+            print(f"no room for the {net} via at {x:.2f}, {y:.2f}")
+            continue
+        c.b.Add(v)
+        n += 1
+    return n
+
+
 # ---- finishing: a small maze router for what the autorouter leaves open ------------------------------------------
 CELL = 0.1                       # grid, mm
 T_W, T_CLR = 0.2, 0.15           # track it draws, clearance it keeps (plus 0.4 of a cell for the grid's own error)
@@ -1210,6 +1304,14 @@ def main():
         subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
         sys.stdout.flush()
         os._exit(0)
+    if "--power-areas" in sys.argv:                 # on a routed board: only the power areas and their vias
+        pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
+        b = pcbnew.LoadBoard(str(pcb))
+        print(f"{name}: {add_areas(Cu(b), name)} power areas and vias added")
+        pcbnew.SaveBoard(str(pcb), b)
+        subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
+        sys.stdout.flush()
+        os._exit(0)
     if "--reoutline" in sys.argv:                   # routed hub-conn: the outline and holes of hub_geom.py, copper untouched
         import pcb_keys as pk
         import pcb_hub as ph
@@ -1306,8 +1408,10 @@ def main():
     if four:
         missed = gnd_vias(b)                        # pads that had no room before
         gnd_pours(b, (F, I1, I2, B))
+        add_areas(Cu(b), name)
     else:
         gnd_pours(b, (F, B))
+        add_areas(Cu(b), name)
     fill = [CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)]
     pcbnew.SaveBoard(str(pcb), b)
     subprocess.run(fill, capture_output=True)

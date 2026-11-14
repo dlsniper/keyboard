@@ -343,19 +343,27 @@ def place_keys(bd, keys):
     return errors
 
 
-def place_strip(bd, lines, origin, phi, inner_sign, keys):
-    """Rear strip. Local frame: s along the rear edge from the outer board edge towards the split, t rearwards."""
+def strip_frame(lines, origin, phi, inner_sign):
+    """The rear strip's frame and the bay centre (also used by tools/pcb_plate.py): at(s, t) with s along the rear
+    edge from the outer board edge towards the split and t rearwards from the F-row cap line; the bay sits as far
+    towards the split as the 30 mm wide port board fits."""
     def at(s, t):
         dx, dy = rot(inner_sign * s, -t, phi)
         return origin[0] + dx, origin[1] + dy
-    A = -phi                                                    # KiCad angle of the strip's s axis
-    # bay: as far towards the split as the 30 mm wide port board fits
     half = BAY["width"] / 2
     sb = 400.0
     while not all(inside(lines, at(sb + e * half, t), 1.5) for e in (-1, 1) for t in (1.0, REAR - 2.0)):
         sb -= 0.5
         if sb < half:
             sys.exit("the port bay does not fit in the rear strip")
+    return at, sb
+
+
+def place_strip(bd, lines, origin, phi, inner_sign, keys):
+    """Rear strip. Local frame: s along the rear edge from the outer board edge towards the split, t rearwards."""
+    at, sb = strip_frame(lines, origin, phi, inner_sign)
+    A = -phi                                                    # KiCad angle of the strip's s axis
+    half = BAY["width"] / 2
     hx, ht = BAY["header"]
     j1 = bd.find("J", *(["+5V", "+5V", "GND", "GND", "LED_DIN", "+3V3", "SPARE", "INT", "CS", "MISO", "MOSI", "SCK"]))[0]
     # 2x6 header, long axis along s, on the FRONT side (pins up); centred on the bay centre line

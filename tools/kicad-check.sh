@@ -19,7 +19,9 @@ while IFS= read -r pro; do
   dir="$(dirname "$pro")"
   name="$(basename "$pro" .kicad_pro)"
   echo "== $name"
-  "$KICAD_CLI" sch erc --exit-code-violations --output "$OUT/$name-erc.rpt" "$dir/$name.kicad_sch" || status=1
+  if [ -f "$dir/$name.kicad_sch" ]; then   # plates have no schematic
+    "$KICAD_CLI" sch erc --exit-code-violations --output "$OUT/$name-erc.rpt" "$dir/$name.kicad_sch" || status=1
+  fi
   "$KICAD_CLI" pcb drc --exit-code-violations --output "$OUT/$name-drc.rpt" "$dir/$name.kicad_pcb" || status=1
 done < <(find "$ROOT/hardware" -name '*.kicad_pro' -not -path '*/lib/*' | sort)
 

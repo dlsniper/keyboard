@@ -109,8 +109,12 @@ met 2026-11-13; signed off by the user 2026-11-13.
    2026-11-14 (KTS1693 ball field and both VBUS paths scripted; DRC 0 errors, 0 unconnected, parity 0); `hub-core` routed
    again for its moved screws. All nine boards clean. KiCad file formats: `tools/kicad_format.sh`, checked by `kicad-check.sh`.
 3. DRC with schematic parity; a second independent review, including every Pico pin
-   against the RP2350 and Pico 2 W datasheets.
-4. Plates (1.5 mm FR4) from the same file.
+   against the RP2350 and Pico 2 W datasheets. Review done 2026-11-14 (Opus, 14 findings; all 40 Pico pins, board-to-board
+   mating and the cable wire plan found correct). Closed: converter and port power copper, pack vias (spec §3a).
+   **Open: the placement findings** (decoupling, port TVS, converter small-signal parts: hub-conn, usb-port and the three
+   key boards placed and routed again), copper weights into the fab data (step 5), checks on real parts (next.md).
+4. Plates (1.6 mm FR4; user, 2026-11-14) from the same file. Done 2026-11-14: `tools/pcb_plate.py`,
+   `hardware/plate-{left,right,numpad}`, DRC 0, checked against the three key boards.
 5. Fab outputs, BOM with European sources, a costed quote.
 
 **Decisions:** **D6** board house and who assembles. **D7** the order itself, placed
@@ -200,7 +204,7 @@ whoever delegates verifies what comes back.
 | D4 | Host USB port: decided, USB-C port board on `right` | done |
 | D5 | Retired rev 8 folders: decided, moved to `archive/rev8/` | done |
 | D6 | Board house and assembly: decided 2026-11-13, JLCPCB makes and assembles | done |
-| D7 | Place the order (already settled for it: inner copper 1 oz on `hub-conn` and `port-module`, user, 2026-11-14; `usb-port` taken as the same; to ask JLCPCB: KTS1693 lands, receptacle hole rules) | M2 end |
+| D7 | Place the order (already settled for it: inner copper 1 oz on `hub-conn` and `port-module` and `usb-port`, user, 2026-11-14; plates 1.6 mm; to ask JLCPCB: KTS1693 lands, receptacle hole rules) | M2 end |
 | D8 | Tenting, tilt, palm rest | M3 |
 | D9 | Keymap and layers | M5 |
 | D10 | Key LED type: decided 2026-11-13, SK6812MINI-E chain | done |
