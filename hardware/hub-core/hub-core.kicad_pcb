@@ -1610,8 +1610,8 @@
 			(uuid "f5234ae8-9233-4536-a3e8-7ea4b2f201f4")
 			(effects
 				(font
-					(size 0.8 0.8)
-					(thickness 0.12)
+					(size 1 1)
+					(thickness 0.15)
 				)
 			)
 		)
@@ -1715,7 +1715,7 @@
 		(descr "Raspberry Pi Pico common (Pico & Pico W) through-hole footprint, supports Raspberry Pi Pico 2, default socketed model has height of 8.51mm, https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf")
 		(tags "module usb pcb antenna")
 		(property "Reference" "A1"
-			(at 20.6375 48.895 270)
+			(at -4.004762 13.8175 270)
 			(unlocked yes)
 			(layer "F.SilkS")
 			(uuid "0621f036-bc76-4f69-943d-146d5846e345")
@@ -4893,13 +4893,13 @@
 		(descr "Mill-Max 0929-x-15-20-7x-14-11-0 spring pin, through-hole, 0.8 mm hole")
 		(tags "pogo spring pin Mill-Max 0929")
 		(property "Reference" "TP1"
-			(at 0 -1.8 0)
+			(at -2.12325 0 90)
 			(layer "F.SilkS")
 			(uuid "10c5ae75-051d-46e2-b4b6-c8df06b2e07c")
 			(effects
 				(font
-					(size 0.8 0.8)
-					(thickness 0.12)
+					(size 1 1)
+					(thickness 0.15)
 				)
 			)
 		)
@@ -5003,13 +5003,13 @@
 		(descr "Mill-Max 0929-x-15-20-7x-14-11-0 spring pin, through-hole, 0.8 mm hole")
 		(tags "pogo spring pin Mill-Max 0929")
 		(property "Reference" "TP2"
-			(at 0 -1.8 0)
+			(at 4.857143 0 0)
 			(layer "F.SilkS")
 			(uuid "b6c750b5-202e-44d4-b3a0-57184a885e8a")
 			(effects
 				(font
-					(size 0.8 0.8)
-					(thickness 0.12)
+					(size 1 1)
+					(thickness 0.15)
 				)
 			)
 		)

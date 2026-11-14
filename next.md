@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14, branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14 (after M2 session 6), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -233,14 +233,45 @@ opened in KiCad**, only two rendered images were looked at; the autorouted parts
 **Cap board = `hardware/chain-cap`** (new project; `.venv/bin/python tools/sch_hub.py --only chain-cap` writes one schematic and
 verifies the rest; nets `LINE1`-`LINE16`; `pcb_hub.py` checks its holes against the battery board's riser pins and its spring
 pins against the target pads). Still to confirm: the Mill-Max 827 strip's drawing (the footprint is a plain 2x8 header pattern).
-**Not done**: the port board layouts (`port-module` with the Amphenol receptacle, bay numbers from `pcb_keys.py` `BAY`, and its
-receptacle needs the same escape as `route_hub.py` `receptacle()` with the module-side nets; `usb-port` still rev 8's layout).
-**Next (M2 session 6)**: the user's remarks on the key boards and on the hub boards; port boards; silkscreen pass on the hub
-boards; then plates (roadmap M2 step 4) and the independent PCB review (step 3).
+**M2 session 6 done (2026-11-14): `port-module` placed and routed, hub boards tidied and given their silkscreen pass.**
+**`tools/pcb_check.sh left right numpad hub-core hub-conn battery chain-cap port-module`: 0 errors, 0 parity, 0 unconnected on
+all eight.** Warnings left: hub-conn 1 `via_dangling` + 2 `hole_to_hole`, port-module 1 `hole_to_hole` (below); no silkscreen warning anywhere.
+**User decisions (options UI, 2026-11-14)**: **hub-conn inner copper 1 oz** (order option, goes into D7); **`port-module` has 4
+copper layers** (as hub-conn: every signal sits twice on the receptacle, on opposite sides, and must be joined across it; on 2
+layers the joins do not fit in the 5.5 mm between receptacle and bay header). **The user has still not looked at the key
+boards or the hub boards in KiCad** ("not looked at yet"); remarks stay owed.
+**`port-module` = `tools/pcb_port.py`** (placement; KiCad's Python, header has the command) **+ `tools/route_hub.sh port-module`**
+(place, route, tidy, silkscreen, check; clean on the first try, about a minute). Board 30 x 23.5 mm in the bay frame of
+`pcb_keys.py` `BAY` (a -15..15, t 1.5..25, 1 mm fillets), M2 holes at the bay screws, 2x6 socket J2 on the UNDERSIDE (flipped,
+270 degrees: pin n over header pin n), receptacle mouth to the rear, origin `RECEPTACLE_EDGE` (4.7 mm, still a guess) inside the rear
+edge, midway between the screws; ESD arrays left and right of it, regulator and TVS at the header's +5V end, pull-ups and
+the CS capacitor in the strip in front of the header; all SMD on top. **The script checks the socket pins and holes against
+the bay header and bay screws of the three routed key boards** (worst offset 0.005 mm, not mirrored). Copper
+(`route_hub.py` `port_module_copper`): the hub's receptacle escape turned by 180 degrees with the module's nets; differences:
+MISO and MOSI leave side by side on the bottom at 0.15 mm (inner 2 carries the +5V bar on that side), +5V from the two VBUS
+through-pins on an inner-2 bar (1 mm for 2 mm, then 2.2 mm) and a 2 mm trunk to header pins 2 and 1. Inner copper there is
+0.5 oz unless the order says otherwise (not asked; `right` draws up to 1.87 A).
+**Tidy pass = `route_hub.py <board> --tidy`** (new; also runs at the end of every 4-layer routing): removes signal stubs and
+unlocked vias that end in nothing (escape stubs the autorouter did not use), pushes apart via pairs with holes under 0.5 mm
+where the push stays clear of other copper. hub-conn: 19 stubs and vias removed, 9 pairs pushed, the port VBUS vias now both
+join the inner-2 bar (ports A and C; **at port B a DET_B track is in the way on the routed board, so one of its two VBUS vias
+still carries nothing**: the `via_dangling` warning; `rail_5v` is fixed for the next routing). The remaining `hole_to_hole`
+pairs (0.49 mm against our own 0.5 mm margin, a locked GND via each) have no room to move: check against JLCPCB's real limit
+at the order.
+**Silkscreen pass on hub and port boards = `tools/silk_keys.py <board>`** (generalised; `route_hub.sh` runs it): references
+moved to the nearest free spot (hub-conn 128, up to 4.6 mm from the part), **hidden where there is none** (hub-conn: Q21 R4 R6
+R64 R75 R79 R81 R82 U15 U19; port-module: R3; the fab layer and the assembly files still name them).
+**`usb-port` is NOT done, and its board file is empty** (no outline, no footprints: not "rev 8's layout" as written before).
+It cannot be laid out yet: **the host port board has no place in `mech/hub/hub_geom.py`** (only its cable header on hub-conn,
+`JUSB_XY`); where it sits in the tower, its size and screws are a user decision to bring through the options UI, with a
+look at the FreeCAD section. Its hard part is the KTS1693 (WLCSP-20, 0.4 mm pitch, 3.5 A through six balls each way: scripted
+copper, and to check against JLCPCB's limits).
+**Next (M2 session 7)**: the user's remarks on the boards; `usb-port` (place in the tower first, then layout); plates (roadmap
+M2 step 4); then the independent PCB review (step 3) and fab outputs (step 5).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
-is still rev 8's layout (OC_MODE ball B4 was on GND, now open; R502, R503 values); TPS552892: AGND and PGND join
+is empty (see above); TPS552892: AGND and PGND join
 only at the VCC capacitor, no thermal pad (heat leaves through the strips); stack 2x25 and chain 2x8 pairs follow
 the mirror rule above (unmirrored, the chain shorts PACK1 to GND through the fuse).
 **Carried to M4 (firmware)**: rules in spec §4 (HAEN first, ODR before interrupts, one CS at a time, ADC pins

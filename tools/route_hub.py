@@ -4,6 +4,8 @@
 Run with KiCad's Python (KiCad closed), on a board fresh from tools/pcb_hub.py --force:
     /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3 tools/route_hub.py <board> [--passes 30]
 One command that repeats until the check is clean: tools/route_hub.sh <board> [tries].
+On a routed board, without routing again: `--finish` (close what is open), `--tidy` (loose stubs, close via pairs).
+port-module (tools/pcb_port.py, 4 layers) is routed here too, the same way as hub-conn (port_module_copper).
 
 hub-core and battery (2 layers): everything by Freerouting, then GND pours on both sides.
 chain-cap (2 layers): sixteen scripted lines, no autorouter (cap_copper).
@@ -328,7 +330,7 @@ def rail_5v(c):
         # In2 bar close in front of the A row (just clear of the locating peg), not further north: the band it covers
         # takes no via, and the A row's signals need theirs between the row and the ESD arrays
         by = c.pad(j, "A1")[1] + 5.02 - 5.6
-        c.track(vb, [(px + 6.6, 135.8), (px + 6.6, by), (px + 1.2, by)], 1.0, I2)
+        c.track(vb, [(px + 6.6, 134.6), (px + 6.6, by), (px + 1.2, by)], 1.0, I2)    # from the first via: both carry
         c.track(vb, [(px + 1.2, by), (px - 1.2, by)], 0.5, I2)
         for a, bb in (("A9", "B4"), ("A4", "B9")):
             tx, ty2 = c.pad(j, bb)
@@ -401,6 +403,54 @@ def hub_conn_copper(b):
     return c.count                                # fanout(c) was tried here: Freerouting then leaves about 30 connections open
 
 
+# ---- port-module: receptacle escape and +5V -------------------------------------------------------------------
+def port_module_copper(b):
+    """Module-side port board (tools/pcb_port.py; 4 layers as hub-conn). The receptacle is turned by 180 degrees (mouth
+    to the rear), so a point x, y of receptacle() lies at origin - (x, y). Same escape as on the hub with the module's
+    nets: A row stubs on top, its GND pads to the GND through-pins; SCK (B11) out through the west gap of the front row
+    on the bottom, MISO and MOSI (B3, B2) side by side through the east gap, both on the bottom at 0.15 mm (the hub has
+    one of the pair on inner 2: here inner 2 carries the +5V bar on that side); CS, INT straight out; LED data and CC2
+    round the shell pins. +5V: top links A4-B9 and A9-B4, the two through-pins down to a bar on inner 2 close in
+    front of the A row, widened once it is clear of the A row's via field, then a 2 mm trunk to header pins 2 and 1.
+    Inner copper is 0.5 oz unless ordered otherwise: the 1 mm stretch of the bar is 2 mm long."""
+    c = Cu(b)
+    j, h = c.find("J", "MISO_CONN"), c.find("J", "MISO")
+    ox, oy = c.pad(j, "A1")[0] - 2.75, c.pad(j, "A1")[1] - 5.02
+
+    def at(x, y):
+        return ox - x, oy - y
+    for pad, x, y in (("B12", -2.8, -3.71), ("B1", 2.8, -3.71), ("B11", -2.4, -3.01), ("B8", -0.8, -3.01), ("A11", 2.25, -5.02)):
+        got = c.pad(j, pad)
+        if abs(got[0] - at(x, y)[0]) > 0.01 or abs(got[1] - at(x, y)[1]) > 0.01:
+            sys.exit(f"receptacle {j}: pin {pad} is not where the escape pattern expects it")
+    c.track("GND", [c.pad(j, "A1"), c.pad(j, "B12")], 0.2)
+    c.track("GND", [c.pad(j, "A12"), at(2.68, -4.5), at(2.68, -3.9)], 0.2)
+    c.track("GND", [at(1.75, -5.02), at(1.75, -4.47), c.pad(j, "B1")], 0.2)           # A10
+    for pad in ("A2", "A3", "A5", "A6", "A7", "A8", "A11"):
+        x, y = c.pad(j, pad)
+        c.track(c.fps[j].FindPadByNumber(pad).GetNetname(), [(x, y), (x, y + 1.3)], 0.2)
+    c.track("SCK", [at(-2.4, -3.01), at(-2.1, -3.35), at(-2.1, -4.6)], 0.2, B)
+    c.track("MISO_CONN", [at(1.6, -3.01), at(1.84, -3.35), at(1.84, -4.6)], 0.15, B)
+    c.track("MOSI", [at(2.4, -3.01), at(2.16, -3.35), at(2.16, -4.6)], 0.15, B)
+    c.track("CS_CONN", [at(0.4, -3.71), at(0.4, -4.6)], 0.2, B)
+    c.track("INT", [at(-0.4, -3.71), at(-0.4, -4.6)], 0.2, B)
+    c.track("LED_DIN", [at(-0.8, -3.01), at(-0.8, -2.1), at(-4.85, -2.1), at(-4.85, -5.6)], 0.2, B)
+    c.track("CC2", [at(0.8, -3.01), at(0.8, -2.1), at(4.85, -2.1), at(4.85, -5.6)], 0.2, B)
+    by = -5.6
+    c.track("+5V", [at(-1.2, by), at(1.2, by)], 0.5, I2)
+    for a, bb in (("A9", "B4"), ("A4", "B9")):
+        tx = c.pad(j, bb)[0]
+        c.track("+5V", [(tx, at(0, by)[1]), c.pad(j, bb)], 0.5, I2)
+        c.track("+5V", [c.pad(j, a), c.pad(j, bb)], 0.3)
+    (p2x, p2y), (p1x, p1y) = c.pad(h, "2"), c.pad(h, "1")
+    if abs(p2x - p1x) > 0.01 or p2x > at(2.9, 0)[0]:
+        sys.exit("port-module: header pins 1 and 2 are not where the +5V trunk expects them")
+    c.track("+5V", [at(1.2, by), (p2x, at(0, by)[1])], 1.0, I2)
+    c.track("+5V", [at(2.3, by), at(2.9, by - 0.6), (p2x - 0.4, at(0, by - 0.6)[1]), (p2x, at(0, by - 0.3)[1])], 1.2, I2)
+    c.track("+5V", [(p2x, at(0, by - 0.25)[1]), (p2x, p2y), (p1x, p1y)], 2.0, I2)
+    return c.count
+
+
 # ---- chain-cap: sixteen straight lines ---------------------------------------------------------------------------
 def cap_copper(b):
     """Riser pin n to spring pin n, 9 mm apart. Every line has to pass one row of foreign pins: the riser's far row
@@ -447,7 +497,7 @@ def keep_out(b, x0, y0, x1, y1, name):
 def router_fences(b):
     """What the router does not know: KiCad's clearance to the receptacles' locating pegs and to the board edge."""
     for f in b.GetFootprints():
-        if "MODULE PORT" in f.GetValue():
+        if "12401548" in str(f.GetFPID().GetLibItemName()):
             for p in f.Pads():
                 if p.GetAttribute() == pcbnew.PAD_ATTRIB_NPTH:
                     c, r = p.GetPosition(), max(p.GetSize().x, p.GetSize().y) // 2 + mm(0.2)
@@ -934,9 +984,128 @@ def drop_violators(b, pcb, name):
     return len(seen)
 
 
+def _seg_dist(q, a, e):
+    vx, vy = e.x - a.x, e.y - a.y
+    k = max(0.0, min(1.0, ((q.x - a.x) * vx + (q.y - a.y) * vy) / (vx * vx + vy * vy or 1)))
+    return math.hypot(a.x + k * vx - q.x, a.y + k * vy - q.y)
+
+
+def _via_clear(b, via, q, r=None):
+    """Would `via` (or a round piece of copper of radius r on In2), put at q, keep 0.16 mm from other nets' copper?"""
+    rr = r or via.GetWidth(F) / 2
+    net = via.GetNetname() if r is None else via
+    for t in b.GetTracks():
+        if t.GetNetname() == net:
+            continue
+        if t.Type() == pcbnew.PCB_VIA_T:
+            if math.hypot(t.GetPosition().x - q.x, t.GetPosition().y - q.y) < rr + t.GetWidth(F) / 2 + mm(0.16):
+                return False
+        elif (r is None or t.GetLayer() == I2) and _seg_dist(q, t.GetStart(), t.GetEnd()) < rr + t.GetWidth() / 2 + mm(0.16):
+            return False
+    for f in b.GetFootprints():
+        for p in f.Pads():
+            if p.GetNetname() != net and (r is None or p.IsOnLayer(I2)):
+                bb = p.GetBoundingBox()
+                if math.hypot(max(bb.GetLeft() - q.x, 0, q.x - bb.GetRight()), max(bb.GetTop() - q.y, 0, q.y - bb.GetBottom())) < rr + mm(0.26):
+                    return False
+    return True
+
+
+def tidy(b):
+    """After routing: (1) take out thin signal stubs that end in nothing (escape stubs the autorouter did not pick up,
+    its own leftovers) and unlocked vias that join nothing, again and again until none is left; GND and wide copper
+    are never touched. An end counts as held, as KiCad sees it, when it lies in a pad, a via or the copper of another
+    track of its net. (2) Via pairs whose holes are closer than the board's 0.5 mm: the unlocked one is pushed away
+    by the missing few hundredths, its track ends with it. Returns (removed, pushed)."""
+    removed = pushed = 0
+    pads = [(p.GetBoundingBox(), p.GetNetname(), p) for f in b.GetFootprints() for p in f.Pads() if p.GetNetname()]
+    while True:
+        tr = [t for t in b.GetTracks() if t.GetNetname() != "GND"]
+        segs = [t for t in tr if t.Type() != pcbnew.PCB_VIA_T]
+        vias = [t for t in tr if t.Type() == pcbnew.PCB_VIA_T]
+
+        def held(t, q):
+            for bb, net, p in pads:
+                if net == t.GetNetname() and p.IsOnLayer(t.GetLayer()) and bb.Contains(q):
+                    return True
+            for v in vias:
+                if v.GetNetname() == t.GetNetname() and math.hypot(v.GetPosition().x - q.x, v.GetPosition().y - q.y) <= v.GetWidth(F) / 2:
+                    return True
+            for o in segs:
+                if o is t or o.GetLayer() != t.GetLayer() or o.GetNetname() != t.GetNetname():
+                    continue
+                a, e = o.GetStart(), o.GetEnd()
+                vx, vy = e.x - a.x, e.y - a.y
+                k = max(0.0, min(1.0, ((q.x - a.x) * vx + (q.y - a.y) * vy) / (vx * vx + vy * vy or 1)))
+                if math.hypot(a.x + k * vx - q.x, a.y + k * vy - q.y) <= o.GetWidth() / 2:
+                    return True
+            return False
+        grave = [t for t in segs if (t.GetWidth() <= mm(0.25) or not t.IsLocked()) and not (held(t, t.GetStart()) and held(t, t.GetEnd()))]
+        for v in vias:
+            if v.IsLocked():
+                continue
+            c = v.GetPosition()
+            on = {t.GetLayer() for t in segs if t.GetNetname() == v.GetNetname() and t not in grave
+                  and min(math.hypot(q.x - c.x, q.y - c.y) for q in (t.GetStart(), t.GetEnd())) <= v.GetWidth(F) / 2}
+            if len(on) < 2 and not any(net == v.GetNetname() and bb.Contains(c) for bb, net, p in pads):
+                grave.append(v)
+        if not grave:
+            break
+        for t in grave:
+            b.Remove(t)
+        removed += len(grave)
+    vias = [t for t in b.GetTracks() if t.Type() == pcbnew.PCB_VIA_T]
+    for i, v in enumerate(vias):
+        for w in vias[:i]:
+            a, c = w.GetPosition(), v.GetPosition()
+            d = math.hypot(c.x - a.x, c.y - a.y)
+            lack = mm(0.5) + (v.GetDrill() + w.GetDrill()) / 2 - d
+            if lack <= 0 or d == 0 or lack > mm(0.2):
+                continue
+            for mv, st in ((v, w), (w, v)):                 # the first of the two that is free to move and stays clear
+                if mv.IsLocked():
+                    continue
+                o, f = mv.GetPosition(), st.GetPosition()
+                k = (lack + mm(0.02)) / d
+                n = pcbnew.VECTOR2I(int(o.x + (o.x - f.x) * k), int(o.y + (o.y - f.y) * k))
+                if _via_clear(b, mv, n):
+                    break
+            else:
+                print(f"  tidy: via pair at {MM(a.x):.2f}, {MM(a.y):.2f} left as it is (no room to push)")
+                continue
+            for t in b.GetTracks():
+                if t.Type() != pcbnew.PCB_VIA_T and t.GetNetname() == mv.GetNetname():
+                    if t.GetStart() == o:
+                        t.SetStart(n)
+                    if t.GetEnd() == o:
+                        t.SetEnd(n)
+            mv.SetPosition(n)
+            pushed += 1
+    print(f"  tidy: {removed} loose stubs and vias removed, {pushed} vias pushed apart")
+    return removed, pushed
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     name = args[0]
+    if "--tidy" in sys.argv:                        # on a routed board: only the tidy pass
+        pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
+        b = pcbnew.LoadBoard(str(pcb))
+        if name == "hub-conn":                      # boards routed before the port VBUS bar started at its first via
+            c = Cu(b)
+            for f in list(c.fps.values()):
+                if "MODULE PORT" in f.GetValue():
+                    px = MM(f.GetPosition().x)
+                    have = any(t.GetLayer() == I2 and t.GetNetname().endswith(f"VBUS_{f.GetValue()[-1]}") and abs(MM(t.GetStart().y) - 134.6) < 0.01
+                               for t in b.GetTracks() if t.Type() != pcbnew.PCB_VIA_T)
+                    spots = [pcbnew.VECTOR2I(mm(px + 6.6), mm(134.6 + i * 0.1)) for i in range(13)]
+                    if not have and all(_via_clear(b, "/" + f"VBUS_{f.GetValue()[-1]}", q, mm(0.5)) for q in spots):
+                        c.track(f"VBUS_{f.GetValue()[-1]}", [(px + 6.6, 134.6), (px + 6.6, 135.8)], 1.0, I2)
+        tidy(b)
+        pcbnew.SaveBoard(str(pcb), b)
+        subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
+        sys.stdout.flush()
+        os._exit(0)
     if "--finish" in sys.argv:                      # on a routed board: only the finishing pass
         pcb = Path(os.environ.get("HUB_PCB", ROOT / "hardware" / name / f"{name}.kicad_pcb"))
         b = pcbnew.LoadBoard(str(pcb))
@@ -953,15 +1122,15 @@ def main():
     pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
     b = pcbnew.LoadBoard(str(pcb))
     if len(b.GetTracks()):
-        sys.exit(f"{pcb.name} already has tracks; re-run tools/pcb_hub.py --force {name} first")
-    four = name == "hub-conn"
+        sys.exit(f"{pcb.name} already has tracks; re-run tools/pcb_hub.py (port boards: pcb_port.py) --force {name} first")
+    four = name in ("hub-conn", "port-module")
     if name == "chain-cap":
         print(f"{name}: {cap_copper(b)} scripted segments")
         pcbnew.SaveBoard(str(pcb), b)
         sys.stdout.flush()
         os._exit(0)
     if four:
-        print(f"{name}: {hub_conn_copper(b)} scripted segments and vias")
+        print(f"{name}: {hub_conn_copper(b) if name == 'hub-conn' else port_module_copper(b)} scripted segments and vias")
         gnd_vias(b)                                 # before the router, so that it leaves them their room
         router_fences(b)
     if "--no-route" not in sys.argv:
@@ -997,6 +1166,10 @@ def main():
             subprocess.run(fill, capture_output=True)
         if not dropped and not closed:
             break
+    if four and "--no-route" not in sys.argv:
+        tidy(b)
+        pcbnew.SaveBoard(str(pcb), b)
+        subprocess.run(fill, capture_output=True)
     print(f"{name}: {len(b.GetTracks())} segments and vias in all")
     sys.stdout.flush()
     os._exit(0)

@@ -49,6 +49,7 @@ CLASSES = {
     "battery": [pk.DEFAULT_CLASS, dict(pk.POWER_CLASS, track_width=1.5, via_diameter=1.0, via_drill=0.5), pk.GND_CLASS],
     "chain-cap": [pk.DEFAULT_CLASS, dict(pk.POWER_CLASS, track_width=1.2), pk.GND_CLASS],
 }
+CLASSES["port-module"] = CLASSES["hub-conn"]        # 4 layers too (tools/pcb_port.py)
 CLASS_OF["/+3V3"] = "Power"
 CLASS_OF["/AUX_5V"] = "Power"
 CLASS_OF["/LINE*"] = "Power"
@@ -235,7 +236,7 @@ class Hub(pk.Board):
             self.errors.append(f"not placed: {missing}")
         pcbnew.SaveBoard(str(self.path), self.b)
         d = pk.HW / self.name
-        ports = " || ".join(f"A.memberOfFootprint('{r}')" for r, c in self.comps.items() if "MODULE PORT" in c["value"])
+        ports = " || ".join(f"A.memberOfFootprint('{r}')" for r, c in self.comps.items() if "12401548" in c["fp"])
         (d / f"{self.name}.kicad_dru").write_text(DRU + (DRU_PORTS.format(ports=ports) if ports else ""))
         p = d / f"{self.name}.kicad_pro"
         pro = json.loads(p.read_text())

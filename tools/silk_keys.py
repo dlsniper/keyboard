@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Silkscreen pass for a key board: every visible reference that sits on a pad, a hole, another part's silk or
+"""Silkscreen pass for a key board (and, with the outline taken as its box, for the hub and port boards; there a
+reference that finds no free spot is hidden): every visible reference that sits on a pad, a hole, another part's silk or
 another reference is moved to the nearest free spot beside its part. Copper is not touched.
 
 tools/route_keys.py runs this at its end. For a board that is already routed (KiCad closed):
@@ -113,10 +114,20 @@ def main():
     name = sys.argv[1]
     pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
     b = pcbnew.LoadBoard(str(pcb))
-    _, _, (lines, _, _, _, _) = frame(name)
+    keys = name in ("left", "right", "numpad")
+    if keys:
+        _, _, (lines, _, _, _, _) = frame(name)
+    else:                                                # hub and port boards: rectangles, the outline's box will do
+        e = b.GetBoardEdgesBoundingBox()
+        lines = {"w": ((-1, 0), -T(e.GetLeft())), "e": ((1, 0), T(e.GetRight())), "n": ((0, -1), -T(e.GetTop())), "s": ((0, 1), T(e.GetBottom()))}
     moved, stuck = tidy(b, lines)
+    if not keys:                                         # dense boards: a reference with no free spot is hidden (the fab
+        for fp in b.GetFootprints():                     # layer and the assembly files still name the part)
+            if fp.GetReference() in stuck:
+                fp.Reference().SetVisible(False)
     pcbnew.SaveBoard(str(pcb), b)
-    print(f"{name}: {len(moved)} references moved ({' '.join(moved)})" + (f"; NO ROOM for {' '.join(stuck)}" if stuck else ""))
+    print(f"{name}: {len(moved)} references moved" + (f" ({' '.join(moved)})" if keys else "")
+          + (f"; no room for {len(stuck)}, {'hidden' if not keys else 'LEFT IN PLACE'}: {' '.join(stuck)}" if stuck else ""))
     sys.stdout.flush()
     os._exit(0)
 

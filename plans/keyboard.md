@@ -101,6 +101,13 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   **M2 (user, 2026-11-13):** the bay is at the inner (split) end of a full-width rear strip, 25 mm deep behind the
   F-row caps; the port board plugs on the **top side** of the key board (header pins up, socket on the underside
   of the port board), under a small top cover. Bay geometry: `tools/pcb_keys.py` `BAY`.
+  **Port board layout (M2 session 6, 2026-11-14):** `hardware/port-module`, 30 x 23.5 mm, **4 copper layers (user,
+  2026-11-14)** like `hub-conn` (top parts and signals, inner 1 GND plane, inner 2 +5V and signals, bottom signals):
+  the receptacle carries every signal twice, on opposite sides, and each pair is joined across it. Receptacle at the
+  rear edge midway between the two screws, socket underneath, all SMD parts on top. Placed by `tools/pcb_port.py`
+  (which checks its socket pins and holes against the bays of the three routed key boards), routed by
+  `tools/route_hub.sh port-module`; DRC 0 errors, 0 unconnected, parity 0. +5V runs on inner 2 (0.5 oz unless
+  ordered otherwise): a 1 mm bar for 2 mm at the receptacle, then 2 mm and wider to the header.
 - **Cable-free modules are a wanted upgrade (user, 2026-11-13), not rev 9's first
   build.** The module's cable connector doubles as a **pod socket**: a later pod
   (its own controller with radio, its own AA pack and converter) plugs in where the
@@ -253,9 +260,12 @@ tables and the boards against each other).
     capacitors along the front to the three ports (3 mm branch and three vias at each TPS25810) and the 220 uF; port
     VBUS through two vias and an inner-2 bar to the receptacle's two VBUS through-pins. All four hub boards: DRC
     0 errors, 0 unconnected, parity 0 (2026-11-14).
-  - **Limit to know: the inner layers are 0.5 oz at JLCPCB by default.** A 1.2 mm pack trunk then warms by roughly
-    20 K at 2.2 A (one pack at its 8-10 W) and more at the fuse's 5 A; the 3 mm trunks are fine at 3.5 A. 1 oz inner
-    copper is an order option and is the better choice (to settle at D7).
+  - **Inner copper of `hub-conn`: 1 oz (user, 2026-11-14)**, an order option at JLCPCB (default 0.5 oz; goes into
+    D7). On 0.5 oz a 1.2 mm pack trunk would warm by roughly 20 K at 2.2 A (one pack at its 8-10 W) and more at the
+    fuse's 5 A; the 3 mm trunks are fine either way.
+  - After routing a tidy pass (`route_hub.py --tidy`) removes unused stubs and pushes close via pairs apart, and
+    `tools/silk_keys.py` places the references (hidden where a dense spot leaves no room). Left on `hub-conn`: two
+    via pairs with holes 0.49 mm apart (our margin is 0.5 mm) and one of port B's two VBUS vias that joins nothing.
   - `hub-core` and `battery` are plain 2-layer boards, routed by the autorouter (battery pack lines 1.5 mm).
   - **Cap board `hardware/chain-cap`** (26 x 18 mm, 2 layers, no parts but the riser's upper end and the spring-pin
     strip): riser pin n to spring pin n, nets `LINE1`-`LINE16`. Every line passes one row of foreign pins through the
@@ -471,7 +481,7 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
   the priority FETs' body diodes once the active pack sags by 0.7 V (simulated to
   18 W on three packs). So the battery LED cap is a firmware value that follows the
   measured pack voltage: about 8 W of input per pack as the starting point (O3).
-- **Host port (`hardware/usb-port`, changed at M1 task 5).** KTS1693 **ISET 2.87 k**:
+- **Host port (`hardware/usb-port`, changed at M1 task 5; board not laid out yet, its place in the tower is open).** KTS1693 **ISET 2.87 k**:
   limit 3.17 / 3.48 / 3.80 A (10000 / R, +/-9 %, 0-70 C; was 4.99 k, 2 A); switch
   13 mOhm max, 0.16 W at 3.5 A. **OC_MODE open** = high through the internal 5 M
   pull-up = auto-restart (limits for 8 ms, off, retries after 200 ms; was latch-off).
@@ -479,7 +489,7 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
   (27.4 k, from 5.40 V) could cut off a legal 5.5 V host; the internal threshold
   (5.77-6.13 V) is above the USBLC6-2's 6 V breakdown (from memory, check at the
   parts list). The cable header carries VBUS and GND on three JST GH contacts each,
-  1 A per contact: 3 A is its limit. The board file still has rev 8's layout (M2).
+  1 A per contact: 3 A is its limit. The board file is empty (M2: layout after its place in the tower is decided).
 - **Battery path.** Pack fuse **MF-LSMF500/16X (user, 2026-11-13)**: holds 5.0 A at
   23 C, 4.2 A at 40 C, 3.3 A at 60 C, trips at 10 A, 25 mOhm max, 2920 size (was
   MF-MSMF125, 1.25 A, which capped the battery at about 0.8 A at 5 V). Note: it needs
