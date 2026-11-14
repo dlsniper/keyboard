@@ -383,6 +383,10 @@
       {
         "netclass": "Power",
         "pattern": "/AUX_5V"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/LINE*"
       }
     ]
   },

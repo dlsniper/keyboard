@@ -26,6 +26,17 @@ from pathlib import Path
 
 import kicad_sch_api as ksa
 
+KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
+
+
+def to_current_format(path):
+    """Re-save a generated schematic in the installed KiCad's file format. kicad_sch_api stamps an older format, and
+    KiCad then reports on opening that the file comes from an older version (user, 2026-11-14). Every generator calls
+    this after writing; tools/kicad_format.sh --check (run by tools/kicad-check.sh) fails on any old-format file."""
+    r = subprocess.run([KICAD_CLI, "sch", "upgrade", str(path)], capture_output=True, text=True)
+    if r.returncode:
+        sys.exit(f"{path}: kicad-cli sch upgrade failed: {r.stderr[-300:]}")
+
 ROOT = Path(__file__).resolve().parent.parent
 G = 2.54
 HIDDEN_PROPS = ("MPN", "Tolerance", "Voltage", "Dielectric", "Power", "DNP_reason", "Shaft")

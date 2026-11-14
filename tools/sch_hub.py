@@ -488,6 +488,7 @@ def generate(name, title, b, w, h):
     schlib.build(name, title, 0, b.parts, b.flags, b.notes, paper=paper_for(w, h)).save(str(path))
     schlib.post_process(path, b.dnp, {}, {})
     normalise_uuids(path, {str(uuid.uuid5(uuid.NAMESPACE_URL, f"keyboard/{name}/{p[0]}")) for p in b.parts})
+    schlib.to_current_format(path)
     print("wrote", path)
 
 

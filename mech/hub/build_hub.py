@@ -48,8 +48,8 @@ def add(name, shape, col, transparency=0):
     return shape
 
 
-def board(name, z, holes, y0=-g.BOARD / 2):
-    s = box(-g.BOARD / 2, g.BOARD / 2, y0, g.BOARD / 2, z, z + g.T_PCB)
+def board(name, z, holes, y0=-g.BOARD / 2, x1=g.BOARD / 2, y1=g.BOARD / 2):
+    s = box(-x1, x1, y0, y1, z, z + g.T_PCB)
     for x, y in holes:
         s = s.cut(cyl(2.2, x, y, z - 1, z + g.T_PCB + 1))
         add(f"{name}_standoff_{int(x)}_{int(y)}", cyl(5.0, x, y, z - 6.0, z), "boss")   # insert boss under the board (M3 shapes it)
@@ -88,8 +88,27 @@ for i in range(1, N_BATT + 1):
 
 # ---- connector layer ------------------------------------------------------------------------------------------------
 z = lv["conn"]
-board("conn", z, g.MOUNT_XY)
+board("conn", z, g.MOUNT_XY, y0=g.CONN_FRONT, x1=g.CONN_X, y1=g.CONN_REAR)
 esq("conn", z)
+# host port board in the rear strip, on two standoffs; cable header at its front edge, hub-conn's header at JUSB_XY
+zu = z + top + g.UP_STANDOFF
+add("usbport_board", box(g.UP_X[0], g.UP_X[1], g.UP_Y[0], g.UP_Y[1], zu, zu + top), "board")
+rx, (rw, rd, rh) = g.UP_REC_X, g.USB4085
+add("usbport_receptacle", box(rx - rw / 2, rx + rw / 2, g.REAR_Y - rd, g.REAR_Y, zu + top, zu + top + rh), "part")
+for i, (x, y) in enumerate(g.UP_MOUNT_XY):
+    add(f"usbport_standoff_{i}", cyl(4.0, x, y, z + top, zu), "boss")
+gx, gy = g.UP_GH_XY
+add("usbport_header", cbox(gx, gy - 0.4, 17.0, 4.05, zu + top, zu + top + 4.05), "conn")
+add("usbport_plug", box(gx - 7.5, gx + 7.5, gy - 9.5, gy - 2.45, zu + top + 0.3, zu + top + 3.8), "conn", 40)
+jx, jy = g.JUSB_XY
+add("conn_usb_header", cbox(jx, jy, 6.4, 18.2, z + top, z + top + 4.05), "conn")
+add("conn_usb_plug", box(jx + 3.2, jx + 10.5, jy - 7.5, jy + 7.5, z + top + 0.3, z + top + 3.8), "conn", 40)
+checks.append(("usb-port: board front edge to the stack socket (y)", g.UP_Y[0] - (g.STACK_XY[1] + g.ESQ_W / 2), None))
+checks.append(("usb-port: board rear edge to the rear wall", (g.REAR_Y - g.WALL) - g.UP_Y[1], None))
+checks.append(("usb-port: board rear edge to the receptacle mouth flush with the wall's outer face: left of the 0.05 mm allowed",
+               0.05 - abs(g.REAR_Y - g.UP_Y[1] - g.USB4085_OVER), None))
+checks.append(("usb-port: plug top to the core board's expansion header pins (z, 3 mm pins)", (g.GAP - 3.0) - (g.UP_STANDOFF + top + 3.8), None))
+checks.append(("usb-port: standoff to the receptacle's shell lug (x)", 8.0 - 2.31 - (4.325 + 0.45), None))
 add("conn_targets", cbox(*g.CHAIN_PADS_XY, 20.32, 5.08, z - g.TARGET_H, z), "pin")
 for p, x in zip("ABC", g.PORT_X):
     add(f"conn_port_{p}", box(x - g.USBC[0] / 2, x + g.USBC[0] / 2, -g.BOARD / 2 - g.USBC_NOSE, -g.BOARD / 2 - g.USBC_NOSE + g.USBC[1],
@@ -118,7 +137,7 @@ add("core_expansion", cbox(ex, ey, 12.7, 5.08, zc + top, zc + top + 8.5), "conn"
 checks.append(("core: expansion header to the stack socket (x)", (g.STACK_XY[0] - (2.54 * 25 + 0.51) / 2) - (ex + 6.35), None))
 checks.append(("core: Pico rear edge to the stack socket (y)", (g.STACK_XY[1] - g.ESQ_W / 2) - (py + g.PICO[1] / 2), None))
 zb = zc + g.PITCH - 0.65 - g.UB_BODY[2] / 2 - 1.0            # [rev8] buttons at the top of the core wall
-front = -g.OUTSIDE / 2
+front = g.FRONT_Y
 for name, x in g.BUTTONS:
     add(f"button_{name}", box(x - g.UB_BODY[0] / 2, x + g.UB_BODY[0] / 2, front, front + g.UB_BODY[1], zb - g.UB_BODY[2] / 2, zb + g.UB_BODY[2] / 2), "part")
     add(f"plug_{name}", cbox(x, g.BUTTON_PLUG_Y, 9.9 if name == "power" else 7.4, 5.75, zc + top, zc + top + 7.0), "conn")
@@ -129,7 +148,7 @@ checks.append(("core: gap between the reset and boot buttons (x)", g.BUTTONS[2][
 
 # ---- shell, as a plain tube for scale -------------------------------------------------------------------------------
 h = zc + g.PITCH + 2.0
-tube = cbox(0, 0, g.OUTSIDE, g.OUTSIDE, 0, h).cut(cbox(0, 0, g.OUTSIDE - 2 * g.WALL, g.OUTSIDE - 2 * g.WALL, 2.0, h + 1))
+tube = cbox(0, g.AXIS_Y, g.OUTSIDE, g.OUTSIDE, 0, h).cut(cbox(0, g.AXIS_Y, g.OUTSIDE - 2 * g.WALL, g.OUTSIDE - 2 * g.WALL, 2.0, h + 1))
 add("shell_outline", tube, "shell", 85)
 
 # ---- interference: every pair of solids except those that are meant to touch -----------------------------------------
@@ -144,7 +163,8 @@ for i, a in enumerate(names):
         if v > 0.5:
             allowed = ("esq" in a and "esq" in b) or ("esq_tails" in a + b and a.split("_")[0] == b.split("_")[0]) \
                 or ("spring" in a + b and ("targets" in a + b or "pico" in a + b)) \
-                or ("spring" in a + b and min(len(a), len(b)) <= 8)      # pins drawn at free length reach into the board they press on
+                or ("spring" in a + b and min(len(a), len(b)) <= 8) \
+                or ("plug" in a + b and "header" in a + b) or ("usbport" in a and "usbport" in b)      # pins drawn at free length reach into the board they press on
             if not allowed:
                 bad.append((a, b, round(v, 1)))
 

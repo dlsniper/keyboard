@@ -50,6 +50,7 @@ CLASSES = {
     "chain-cap": [pk.DEFAULT_CLASS, dict(pk.POWER_CLASS, track_width=1.2), pk.GND_CLASS],
 }
 CLASSES["port-module"] = CLASSES["hub-conn"]        # 4 layers too (tools/pcb_port.py)
+CLASSES["usb-port"] = CLASSES["hub-conn"]
 CLASS_OF["/+3V3"] = "Power"
 CLASS_OF["/AUX_5V"] = "Power"
 CLASS_OF["/LINE*"] = "Power"
@@ -65,6 +66,7 @@ DRU = """(version 1)
   (constraint courtyard_clearance (min -100mm)))
 """
 # Amphenol 12401548E4-2A: 0.4 mm holes in 0.65 mm pads on a staggered 0.8 mm grid, as its drawing asks (to clear with JLCPCB at the order)
+# GCT USB4085 (usb-port): 0.4 mm holes on a 0.85 mm pitch, 0.45 mm hole to hole: the same exception
 DRU_PORTS = """(rule "module port receptacle pins"
   (condition "{ports}")
   (constraint annular_width (min 0.1mm))
@@ -136,8 +138,8 @@ class Hub(pk.Board):
         self.mech(pk.HOLE_FP, "H", x, y)
         self.taken.append((x - 3.0, y - 3.0, x + 3.0, y + 3.0))       # screw head and boss
 
-    def outline(self, y_front):
-        c = [K(-g.BOARD / 2, y_front), K(g.BOARD / 2, y_front), K(g.BOARD / 2, g.BOARD / 2), K(-g.BOARD / 2, g.BOARD / 2)]
+    def outline(self, y_front, x1=g.BOARD / 2, y_rear=g.BOARD / 2):
+        c = [K(-x1, y_front), K(x1, y_front), K(x1, y_rear), K(-x1, y_rear)]
         for a, b in zip(c, c[1:] + c[:1]):
             self.line(a, b)
 
@@ -236,7 +238,7 @@ class Hub(pk.Board):
             self.errors.append(f"not placed: {missing}")
         pcbnew.SaveBoard(str(self.path), self.b)
         d = pk.HW / self.name
-        ports = " || ".join(f"A.memberOfFootprint('{r}')" for r, c in self.comps.items() if "12401548" in c["fp"])
+        ports = " || ".join(f"A.memberOfFootprint('{r}')" for r, c in self.comps.items() if "12401548" in c["fp"] or "USB4085" in c["fp"])
         (d / f"{self.name}.kicad_dru").write_text(DRU + (DRU_PORTS.format(ports=ports) if ports else ""))
         p = d / f"{self.name}.kicad_pro"
         pro = json.loads(p.read_text())
@@ -363,8 +365,8 @@ def port(bd, p, px):
 def hub_conn(force):
     bd = Hub("hub-conn", force)
     bd.b.SetCopperLayerCount(4)
-    bd.outline(-g.BOARD / 2)
-    for x, y in g.MOUNT_XY:
+    bd.outline(g.CONN_FRONT, g.CONN_X, g.CONN_REAR)       # 108 x 108 since the tower grew (user, 2026-11-14); parts stay where they were
+    for x, y in g.MOUNT_XY + g.UP_MOUNT_XY:               # the last two carry the host port board's standoffs
         bd.hole(x, y)
     bd.fix(bd.by_value("STACK"), *g.STACK_XY, angle=90)
     bd.fix(bd.by_value("J_USB"), *g.JUSB_XY, angle=90, by="box")

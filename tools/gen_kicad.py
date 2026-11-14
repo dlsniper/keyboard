@@ -1104,4 +1104,6 @@ if __name__ == "__main__":
     write_symbols()
     write_footprints()
     write_projects()
+    import subprocess
+    subprocess.run([str(ROOT / "tools" / "kicad_format.sh")], check=False)      # new project stubs: installed KiCad's file format
     print("generated", HW)

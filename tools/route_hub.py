@@ -451,6 +451,110 @@ def port_module_copper(b):
     return c.count
 
 
+# ---- usb-port: KTS1693 ball field, both VBUS paths, receptacle pairs ---------------------------------------------
+def usb_port_copper(b):
+    """Host port board (tools/pcb_port.py usb_port; 4 layers: F parts and signals, In1 GND plane, In2 the two VBUS
+    paths, B signals). Hub coordinates as in mech/hub/hub_geom.py; H() turns them into KiCad's.
+
+    KTS1693 (WLCSP-20, 4 x 5 balls at 0.4 mm, 0.22 mm lands, 0.18 mm between lands), turned 180 degrees. Its six OUT
+    balls (A2 A3 A4 B2 B3 C2) and six IN balls (C3 D2 D3 E2 E3 E4) each form one connected patch, so each is a mesh
+    of 0.22 mm tracks from land to land that leaves the field on its own side: OUT to the front into a bar with four
+    0.8 mm vias, IN to the rear into a 2 mm patch with six 0.6 mm vias. No via under the chip. The other balls sit
+    on the two outer columns: GND B1 east, C4 + D4 west, each to its own via; ACOK, OVLO, ISET east as 0.2 mm stubs
+    at the 0.4 mm pitch; A1 (CDET) and B4 (OC_MODE) stay open.
+    VBUS_CONN, inner 2: 2 mm from the IN patch east, then on the diagonal past the standoff, then along the front of
+    the receptacle's pin rows, 0.5 mm up each VBUS pin pair (the pins' barrels join the layers).
+    VBUS_LOCAL, inner 2: a 1.2 mm bus behind the cable header's pad row, a 0.8 mm via and a 0.6 mm stub at each of
+    its three VBUS pins (1, 6, 11: 1 A per contact is the header's limit).
+    Receptacle: D+ (A6, B6) joined on top and D- (A7, B7) on the bottom, crossing between the rows; CC2 (B5, rear
+    row) out on the bottom through the lane between the rows and past the GND pins. Inner copper: 1 oz assumed."""
+    c = Cu(b)
+
+    def H(x, y):
+        return 100.0 + x, 100.0 - y
+    u, j, hd = c.find("U", "ISET"), c.find("J", "CC1", "USB_DP", "VBUS_CONN"), c.find("J", "ACOK")
+    kx, ky = MM(c.fps[u].GetPosition().x), MM(c.fps[u].GetPosition().y)
+
+    def L(x, y):                                    # footprint-local ball coordinates (A1 at -0.6, -0.8) of the turned chip
+        return kx - x, ky - y
+    for ball, x, y in (("A1", -0.6, -0.8), ("E4", 0.6, 0.8), ("C2", -0.2, 0.0), ("D1", -0.6, 0.4)):
+        got = c.pad(u, ball)
+        if math.hypot(got[0] - L(x, y)[0], got[1] - L(x, y)[1]) > 0.005:
+            sys.exit(f"usb-port: KTS1693 ball {ball} is not where the copper expects it")
+    nets = {n: c.fps[u].FindPadByNumber(n).GetNetname().lstrip("/") for n in ("A2", "A3", "A4", "B2", "B3", "C2", "C3", "D2", "D3", "E2", "E3", "E4", "B1", "C4", "D4", "C1", "D1", "E1")}
+    if {nets[n] for n in ("A2", "A3", "A4", "B2", "B3", "C2")} != {"VBUS_LOCAL"} or {nets[n] for n in ("C3", "D2", "D3", "E2", "E3", "E4")} != {"VBUS_CONN"} \
+            or {nets[n] for n in ("B1", "C4", "D4")} != {"GND"} or (nets["C1"], nets["D1"], nets["E1"]) != ("ACOK", "OVLO", "ISET"):
+        sys.exit(f"usb-port: KTS1693 balls carry other nets than the copper is drawn for: {nets}")
+    w = 0.22
+    for a, e in (((-0.2, 0.0), (-0.2, -2.3)), ((0.2, -0.4), (0.2, -2.3)), ((0.6, -0.8), (0.6, -2.3)), ((-0.2, -0.8), (0.6, -0.8)), ((-0.2, -0.4), (0.2, -0.4))):
+        c.track("VBUS_LOCAL", [L(*a), L(*e)], w)
+    c.track("VBUS_LOCAL", [L(-0.2, -1.45), L(0.6, -1.45)], 0.5)
+    c.track("VBUS_LOCAL", [L(-1.5, -2.3), L(1.5, -2.3)], 0.7)
+    for x in (-1.5, -0.5, 0.5, 1.5):
+        c.via("VBUS_LOCAL", *L(x, -2.3))
+    for a, e in (((0.2, 0.0), (0.2, 2.0)), ((-0.2, 0.4), (-0.2, 2.0)), ((0.6, 0.8), (0.6, 2.0)), ((-0.2, 0.4), (0.2, 0.4)), ((-0.2, 0.8), (0.6, 0.8))):
+        c.track("VBUS_CONN", [L(*a), L(*e)], w)
+    c.track("VBUS_CONN", [L(-0.4, 2.8), L(0.4, 2.8)], 2.0)
+    for x in (-0.9, 0.0, 0.9):
+        for y in (2.5, 3.3):
+            c.via("VBUS_CONN", *L(x, y), d=0.6, drill=0.3)
+    c.track("GND", [L(-0.6, -0.4), L(-1.1, -0.4), L(-1.7, -1.0)], 0.2)
+    c.via("GND", *L(-1.7, -1.0), d=0.6, drill=0.3)
+    c.track("GND", [L(0.6, 0.0), L(0.6, 0.4)], w)
+    c.track("GND", [L(0.6, 0.2), L(1.45, 0.2)], 0.2)
+    c.via("GND", *L(1.45, 0.2), d=0.6, drill=0.3)
+    r_ov, r_div, r_is = c.find("R", "OVLO", "GND"), c.find("R", "VBUS_CONN", "OVLO"), c.find("R", "ISET", "GND")
+    c.track("ACOK", [L(-0.6, 0.0), L(-1.3, 0.0)], 0.2)
+    c.track("OVLO", [L(-0.6, 0.4), c.pad(r_ov, "1"), c.pad(r_div, "2")], 0.2)
+    if abs(c.pad(r_ov, "1")[1] - L(0, 0.4)[1]) > 0.01 or c.pad(r_div, "1")[1] > c.pad(r_div, "2")[1] or c.pad(r_is, "1")[1] < c.pad(r_is, "2")[1]:
+        sys.exit("usb-port: the OVLO / ISET resistors are not turned as the copper expects")
+    px, py = c.pad(r_is, "1")
+    c.track("ISET", [L(-0.6, 0.8), L(-1.85, 0.8), (px, L(0, 0.8)[1] - (px - L(-1.85, 0)[0])), (px, py)], 0.2)
+    # VBUS_CONN on inner 2
+    band_y = MM(c.fps[u].GetPosition().y) - 2.9                 # through the IN vias
+    front = c.pad(j, "A9")[1] + 2.19                            # along the front of the pin rows: 0.54 mm to their pads
+    turn_x = 67.0
+    c.track("VBUS_CONN", [(L(0.95, 0)[0], band_y), (turn_x, band_y), (turn_x + (front - band_y), front), (c.pad(j, "A4")[0], front)], 2.0, I2)
+    for a, bb in (("A9", "B4"), ("A4", "B9")):
+        if abs(c.pad(j, a)[0] - c.pad(j, bb)[0]) > 0.01 or c.fps[j].FindPadByNumber(a).GetNetname().lstrip("/") != "VBUS_CONN":
+            sys.exit("usb-port: receptacle VBUS pins are not in pairs")
+        c.track("VBUS_CONN", [(c.pad(j, a)[0], front), c.pad(j, bb)], 0.5, I2)
+        c.track("VBUS_CONN", [c.pad(j, a), c.pad(j, bb)], 0.3)
+    dx, dy = c.pad(r_div, "1")
+    c.track("VBUS_CONN", [(dx, dy), (dx + 1.1, dy)], 0.4)
+    c.via("VBUS_CONN", dx + 1.1, dy, d=0.6, drill=0.3)
+    # VBUS_LOCAL on inner 2: bus behind the header's pad row
+    bus_y = L(0, -2.3)[1]
+    pins = [c.pad(hd, n) for n in ("1", "6", "11")]
+    if any(c.fps[hd].FindPadByNumber(n).GetNetname().lstrip("/") != "VBUS_LOCAL" for n in ("1", "6", "11")) or bus_y > pins[0][1] - 1.4:
+        sys.exit("usb-port: cable header pins 1, 6, 11 are not VBUS_LOCAL in front of the bus")
+    c.track("VBUS_LOCAL", [(pins[0][0], bus_y), (pins[2][0], bus_y)], 1.2, I2)
+    for x, y in pins:
+        c.via("VBUS_LOCAL", x, bus_y)
+        c.track("VBUS_LOCAL", [(x, bus_y), (x, y)], 0.6)
+    # receptacle pairs
+    for a, bb, layer in (("A6", "B6", F), ("A7", "B7", B)):
+        c.track(c.fps[j].FindPadByNumber(a).GetNetname(), [c.pad(j, a), c.pad(j, bb)], 0.2, layer)
+    (bx, by), mid = c.pad(j, "B5"), (c.pad(j, "A5")[1] + c.pad(j, "B5")[1]) / 2
+    lane = (c.pad(j, "B1")[0] - 0.35 + min(p.GetPosition().x for p in c.fps[j].Pads() if p.GetNumber() == "SH") / 1e6 + 0.45) / 2   # between the GND pins and the shell lug
+    c.track("CC2", [(bx, by), (bx - 0.425, mid), (lane, mid), (lane, c.pad(j, "A5")[1] + 0.7)], 0.2, B)
+    for hx, hy in ph.g.UP_MOUNT_XY:                 # standoff below, screw head above: no tracks or vias on the outer layers
+        x, y = H(hx, hy)
+        z = pcbnew.ZONE(b)
+        z.SetIsRuleArea(True)
+        ls = pcbnew.LSET(); ls.AddLayer(F); ls.AddLayer(B)
+        z.SetLayerSet(ls)
+        z.SetZoneName("STANDOFF")
+        z.SetDoNotAllowTracks(True); z.SetDoNotAllowVias(True); z.SetDoNotAllowPads(False)
+        z.SetDoNotAllowZoneFills(False); z.SetDoNotAllowFootprints(False)
+        o = z.Outline()
+        o.NewOutline()
+        for sx, sy in ((-2.4, -2.4), (2.4, -2.4), (2.4, 2.4), (-2.4, 2.4)):
+            o.Append(mm(x + sx), mm(y + sy))
+        b.Add(z)
+    return c.count
+
+
 # ---- chain-cap: sixteen straight lines ---------------------------------------------------------------------------
 def cap_copper(b):
     """Riser pin n to spring pin n, 9 mm apart. Every line has to pass one row of foreign pins: the riser's far row
@@ -1106,6 +1210,57 @@ def main():
         subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
         sys.stdout.flush()
         os._exit(0)
+    if "--reoutline" in sys.argv:                   # routed hub-conn: the outline and holes of hub_geom.py, copper untouched
+        import pcb_keys as pk
+        import pcb_hub as ph
+        g = ph.g
+        pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
+        spare = [pk.load_fp(pk.HOLE_FP) for _ in g.UP_MOUNT_XY]      # before the board: removing items from a loaded board breaks FootprintLoad
+        b = pcbnew.LoadBoard(str(pcb))
+        holes = [f for f in b.GetFootprints() if "MountingHole" in str(f.GetFPID().GetLibItemName())]
+        x0, y0 = ph.K(-g.CONN_X, g.CONN_REAR)       # the four edge lines are moved in place (removing drawings from a
+        x1, y1 = ph.K(g.CONN_X, g.CONN_FRONT)       # loaded board made the next GetFootprints() crash)
+        box = b.GetBoardEdgesBoundingBox()
+        cx, cy = MM(box.GetCenter().x), MM(box.GetCenter().y)
+        for d in b.GetDrawings():
+            if d.GetLayer() == pcbnew.Edge_Cuts:
+                (sx, sy), (ex, ey) = ((MM(q.x), MM(q.y)) for q in (d.GetStart(), d.GetEnd()))
+                d.SetStart(pcbnew.VECTOR2I(mm(x0 if sx < cx else x1), mm(y0 if sy < cy else y1)))
+                d.SetEnd(pcbnew.VECTOR2I(mm(x0 if ex < cx else x1), mm(y0 if ey < cy else y1)))
+        for hx, hy in g.UP_MOUNT_XY:
+            x, y = ph.K(hx, hy)
+            if any(abs(MM(f.GetPosition().x) - x) < 0.01 and abs(MM(f.GetPosition().y) - y) < 0.01 for f in holes):
+                continue
+            fp = spare.pop()
+            fp.SetReference(f"H{len(holes) + 1}")
+            fp.Reference().SetVisible(False)
+            fp.SetAttributes(fp.GetAttributes() | pcbnew.FP_BOARD_ONLY | pcbnew.FP_EXCLUDE_FROM_BOM | pcbnew.FP_EXCLUDE_FROM_POS_FILES)
+            b.Add(fp)
+            fp.SetPosition(pcbnew.VECTOR2I(mm(x), mm(y)))
+            holes.append(fp)
+        old = (MM(box.GetLeft()), MM(box.GetTop()), MM(box.GetRight()), MM(box.GetBottom()))
+        pcbnew.SaveBoard(str(pcb), b)
+        # the four GND zones keep their settings; only their rectangles grow (remaking them with gnd_pours() on a
+        # loaded board failed in the Python bindings). Corner by corner, in the zone outlines only.
+        text = pcb.read_text()
+        new = (x0 - 0.05, y0 - 0.05, x1 + 0.05, y1 + 0.05)
+        num = lambda v: f"{v:.4f}".rstrip("0").rstrip(".")
+        def grow(m):
+            pts = re.findall(r"\(xy ([-\d.]+) ([-\d.]+)\)", m.group(0))
+            if len(pts) != 4 or any(min(abs(float(x) - old[0]), abs(float(x) - old[2])) > 0.01 or min(abs(float(y) - old[1]), abs(float(y) - old[3])) > 0.01 for x, y in pts):
+                return m.group(0)
+            out = m.group(0)
+            for x, y in pts:
+                nx = new[0] if abs(float(x) - old[0]) < 0.01 else new[2]
+                ny = new[1] if abs(float(y) - old[1]) < 0.01 else new[3]
+                out = out.replace(f"(xy {x} {y})", f"(xy {num(nx)} {num(ny)})", 1)
+            return out
+        text, n = re.subn(r"\(polygon\s*\(pts[^()]*(?:\(xy [-\d.]+ [-\d.]+\)\s*)+\)\s*\)", grow, text)
+        pcb.write_text(text)
+        subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
+        print(f"{name}: outline {2 * g.CONN_X:.0f} x {g.CONN_REAR - g.CONN_FRONT:.0f} mm, {len(holes)} holes, pours remade")
+        sys.stdout.flush()
+        os._exit(0)
     if "--finish" in sys.argv:                      # on a routed board: only the finishing pass
         pcb = Path(os.environ.get("HUB_PCB", ROOT / "hardware" / name / f"{name}.kicad_pcb"))
         b = pcbnew.LoadBoard(str(pcb))
@@ -1123,14 +1278,15 @@ def main():
     b = pcbnew.LoadBoard(str(pcb))
     if len(b.GetTracks()):
         sys.exit(f"{pcb.name} already has tracks; re-run tools/pcb_hub.py (port boards: pcb_port.py) --force {name} first")
-    four = name in ("hub-conn", "port-module")
+    four = name in ("hub-conn", "port-module", "usb-port")
     if name == "chain-cap":
         print(f"{name}: {cap_copper(b)} scripted segments")
         pcbnew.SaveBoard(str(pcb), b)
         sys.stdout.flush()
         os._exit(0)
     if four:
-        print(f"{name}: {hub_conn_copper(b) if name == 'hub-conn' else port_module_copper(b)} scripted segments and vias")
+        copper = {"hub-conn": hub_conn_copper, "port-module": port_module_copper, "usb-port": usb_port_copper}[name]
+        print(f"{name}: {copper(b)} scripted segments and vias")
         gnd_vias(b)                                 # before the router, so that it leaves them their room
         router_fences(b)
     if "--no-route" not in sys.argv:

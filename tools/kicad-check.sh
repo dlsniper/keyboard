@@ -13,6 +13,8 @@ mkdir -p "$OUT"
 "$KICAD_CLI" fp upgrade --force "$ROOT/hardware/lib/keyboard.pretty"
 
 status=0
+echo "== file formats"
+"$ROOT/tools/kicad_format.sh" --check || status=1
 while IFS= read -r pro; do
   dir="$(dirname "$pro")"
   name="$(basename "$pro" .kicad_pro)"

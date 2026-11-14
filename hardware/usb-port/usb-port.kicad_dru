@@ -1,0 +1,13 @@
+(version 1)
+# Written by tools/pcb_hub.py. Footprint-inherent exceptions to the board-wide rules.
+(rule "pads of one footprint follow its land pattern"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Parent == B.Parent")
+  (constraint clearance (min 0.13mm)))
+(rule "spring pins stand under the Pico"
+  (condition "A.Reference == 'TP*' || B.Reference == 'TP*'")
+  (constraint courtyard_clearance (min -100mm)))
+(rule "module port receptacle pins"
+  (condition "A.memberOfFootprint('J501')")
+  (constraint annular_width (min 0.1mm))
+  (constraint hole_to_hole (min 0.2mm))
+  (constraint edge_clearance (min 0.2mm)))

@@ -29,7 +29,7 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
                          +--------------------------+
 ```
 
-- **Hub tower** (about 100 x 100 mm ASA stack on the desk, rev 8 concept): top to
+- **Hub tower** (114 x 114 mm ASA stack on the desk since M2 session 7, user, 2026-11-14; rev 8 concept, was 100 x 100): top to
   bottom optional layers, core layer, connector layer, AA battery modules. It holds
   the only controller, the host USB-C port, the power path and the cells. Front
   buttons: power, reset, boot.
@@ -106,8 +106,7 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   the receptacle carries every signal twice, on opposite sides, and each pair is joined across it. Receptacle at the
   rear edge midway between the two screws, socket underneath, all SMD parts on top. Placed by `tools/pcb_port.py`
   (which checks its socket pins and holes against the bays of the three routed key boards), routed by
-  `tools/route_hub.sh port-module`; DRC 0 errors, 0 unconnected, parity 0. +5V runs on inner 2 (0.5 oz unless
-  ordered otherwise): a 1 mm bar for 2 mm at the receptacle, then 2 mm and wider to the header.
+  `tools/route_hub.sh port-module`; DRC 0 errors, 0 unconnected, parity 0. +5V runs on inner 2 (**1 oz, user, 2026-11-14**, as `hub-conn`): a 1 mm bar for 2 mm at the receptacle, then 2 mm and wider to the header.
 - **Cable-free modules are a wanted upgrade (user, 2026-11-13), not rev 9's first
   build.** The module's cable connector doubles as a **pod socket**: a later pod
   (its own controller with radio, its own AA pack and converter) plugs in where the
@@ -231,8 +230,10 @@ tables and the boards against each other).
   drawing. The Pico's VSYS is fed from +5V through a Schottky; its 3V3 output is the
   hub's logic rail.
 - **Hub mechanics (M2 session 4, user, 2026-11-13)**, numbers in `mech/hub/hub_geom.py`, section model
-  `mech/hub/build_hub.py`, placement `tools/pcb_hub.py`: tower 100 mm outside, boards 94 x 94 mm (core 94 x 77), 17.5 mm
-  between boards everywhere. Stack: Samtec ESQ-125 stack-through socket on both boards (both on top, the core's tails
+  `mech/hub/build_hub.py`, placement `tools/pcb_hub.py`: **tower 114 mm square outside (user, 2026-11-14; was 100)**, grown
+  to the rear and the sides so that the front wall and the module ports stay where they were; connector layer board
+  108 x 108 mm, core (94 x 77) and battery (94 x 94) boards unchanged for now and all on the same four screw places
+  (+-43.5 / +-20 mm), 17.5 mm between boards everywhere. Stack: Samtec ESQ-125 stack-through socket on both boards (both on top, the core's tails
   in the connector layer's socket). Pico on standard sockets; USB and BOOTSEL by three Mill-Max 0929-7 spring pins
   (1.15 mm of 1.40 mm stroke used: check on the real socket stack). Buttons: NKK UB16 (power, latching) and UB15 on
   leads to JST XH plugs on the core board. Module ports: Amphenol 12401548E4-2A on the connector layer's front edge.
@@ -260,6 +261,15 @@ tables and the boards against each other).
     capacitors along the front to the three ports (3 mm branch and three vias at each TPS25810) and the 220 uF; port
     VBUS through two vias and an inner-2 bar to the receptacle's two VBUS through-pins. All four hub boards: DRC
     0 errors, 0 unconnected, parity 0 (2026-11-14).
+  - **Host port board `hardware/usb-port` (M2 session 7, user, 2026-11-14)**: 38 x 15 mm, 4 copper layers, all parts on
+    top, in the rear strip of the connector layer behind the stack connector, on two M2 x 3 mm threaded standoffs that
+    stand on `hub-conn` (holes at x = -28 and -12, y = 57.5 in hub coordinates) left and right of the receptacle. The
+    USB4085's mouth is flush with the rear wall's outer face; the 11-pin cable header is at the board's front edge and
+    faces forward, so its plug and the plug on `hub-conn` are both in the open. Placement `tools/pcb_port.py`, copper
+    `tools/route_hub.py` `usb_port_copper`: the KTS1693's OUT and IN ball groups each leave the 0.4 mm field as a mesh
+    of 0.22 mm tracks on their own side (no via under the chip) into via fields; both VBUS paths run on inner 2
+    (2 mm from the receptacle to the switch, a 1.2 mm bus to the header's three VBUS pins); inner copper 1 oz assumed.
+    DRC 0 errors, 0 unconnected, parity 0. To clear with JLCPCB at the order: 0.22 mm lands with 0.18 mm gaps.
   - **Inner copper of `hub-conn`: 1 oz (user, 2026-11-14)**, an order option at JLCPCB (default 0.5 oz; goes into
     D7). On 0.5 oz a 1.2 mm pack trunk would warm by roughly 20 K at 2.2 A (one pack at its 8-10 W) and more at the
     fuse's 5 A; the 3 mm trunks are fine either way.
@@ -481,7 +491,7 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
   the priority FETs' body diodes once the active pack sags by 0.7 V (simulated to
   18 W on three packs). So the battery LED cap is a firmware value that follows the
   measured pack voltage: about 8 W of input per pack as the starting point (O3).
-- **Host port (`hardware/usb-port`, changed at M1 task 5; board not laid out yet, its place in the tower is open).** KTS1693 **ISET 2.87 k**:
+- **Host port (`hardware/usb-port`, changed at M1 task 5; laid out at M2 session 7, §3a).** KTS1693 **ISET 2.87 k**:
   limit 3.17 / 3.48 / 3.80 A (10000 / R, +/-9 %, 0-70 C; was 4.99 k, 2 A); switch
   13 mOhm max, 0.16 W at 3.5 A. **OC_MODE open** = high through the internal 5 M
   pull-up = auto-restart (limits for 8 ms, off, retries after 200 ms; was latch-off).
@@ -489,7 +499,7 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
   (27.4 k, from 5.40 V) could cut off a legal 5.5 V host; the internal threshold
   (5.77-6.13 V) is above the USBLC6-2's 6 V breakdown (from memory, check at the
   parts list). The cable header carries VBUS and GND on three JST GH contacts each,
-  1 A per contact: 3 A is its limit. The board file is empty (M2: layout after its place in the tower is decided).
+  1 A per contact: 3 A is its limit.
 - **Battery path.** Pack fuse **MF-LSMF500/16X (user, 2026-11-13)**: holds 5.0 A at
   23 C, 4.2 A at 40 C, 3.3 A at 60 C, trips at 10 A, 25 mOhm max, 2920 size (was
   MF-MSMF125, 1.25 A, which capped the battery at about 0.8 A at 5 V). Note: it needs

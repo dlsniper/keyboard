@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14 (after M2 session 6), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14 (after M2 session 7), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -261,17 +261,64 @@ at the order.
 **Silkscreen pass on hub and port boards = `tools/silk_keys.py <board>`** (generalised; `route_hub.sh` runs it): references
 moved to the nearest free spot (hub-conn 128, up to 4.6 mm from the part), **hidden where there is none** (hub-conn: Q21 R4 R6
 R64 R75 R79 R81 R82 U15 U19; port-module: R3; the fab layer and the assembly files still name them).
-**`usb-port` is NOT done, and its board file is empty** (no outline, no footprints: not "rev 8's layout" as written before).
-It cannot be laid out yet: **the host port board has no place in `mech/hub/hub_geom.py`** (only its cable header on hub-conn,
-`JUSB_XY`); where it sits in the tower, its size and screws are a user decision to bring through the options UI, with a
-look at the FreeCAD section. Its hard part is the KTS1693 (WLCSP-20, 0.4 mm pitch, 3.5 A through six balls each way: scripted
-copper, and to check against JLCPCB's limits).
-**Next (M2 session 7)**: the user's remarks on the boards; `usb-port` (place in the tower first, then layout); plates (roadmap
-M2 step 4); then the independent PCB review (step 3) and fab outputs (step 5).
+(After session 6 `usb-port` was still empty and had no place in the tower; done in session 7, below.)
+(Session 7 settled this: see the next block.)
+**M2 session 7 done (2026-11-14): tower grown to 114 mm, `usb-port` placed and routed, KiCad file formats fixed.**
+**`tools/pcb_check.sh left right numpad hub-core hub-conn battery chain-cap port-module usb-port`: 0 errors, 0 parity,
+0 unconnected on all nine.** Warnings: hub-conn and port-module as before; usb-port 2 `silk_edge_clearance` (the receptacle's
+own outline at the board edge).
+**User decisions (options UI and chat, 2026-11-14)**:
+- **Tower 114 x 114 mm outside** (was 100): the stack connector left no free rear wall for the host port. It grew to the
+  rear (14 mm) and the sides (7 mm each); **the front wall and the module ports did not move**, so the origin of
+  `hub_geom.py` stays on the axis of the 94 mm boards and the tower's own axis is at y = 7 (`AXIS_Y`).
+- **`hub-conn` is 108 x 108 mm** (outline only; no part and no track moved). **`hub-core`, `battery`, `chain-cap` keep
+  their 94 mm outlines** and sit forward in the shell with 15 mm of air behind them: my reading of "tower bigger", shown to
+  the user in FreeCAD and accepted with "all looks good"; whether they grow is open for M3.
+- **`usb-port`**: rear wall, in the new rear strip behind the stack connector, receptacle facing the rear, on **two M2 x 3 mm
+  threaded standoffs standing on hub-conn** (two new holes in hub-conn), board **38 x 15 mm, all parts on top, 4 copper
+  layers**; cable to hub-conn's header kept (both plugs in the open).
+- **Core board screws moved onto the screws of the boards below** (`CORE_XY = MOUNT_XY`, +-43.5 / +-20; were y -26.5 / 26):
+  hub-core placed and routed again (`tools/route_hub.sh hub-core`, clean on try 1).
+- **port-module inner copper 1 oz** (as hub-conn; D7). `usb-port` inner copper is taken as 1 oz too (**not asked**).
+- **KiCad files must be in the installed KiCad's format** (below).
+- **The user's look at the boards**: after first opening the rev 8 projects under `archive/rev8/hardware/` by mistake
+  (the "expansion" board with no outline is rev 8's), the user looked at the rev 9 renders and the FreeCAD section and said
+  "all looks good". The per-board list of what to look at was given in session 7's chat; no change was asked for except
+  the core screws. KiCad has rewritten five `archive/rev8/.../*.kicad_pro` files on opening them: left uncommitted, not ours.
+**Geometry**: `mech/hub/hub_geom.py` (`OUTSIDE`, `FRONT_Y`, `AXIS_Y`, `REAR_Y`, `CONN_*`, `UP_*`), section
+`mech/hub/build_hub.py` (exit 0; new checks: usb-port 3.0 mm behind the stack socket, 0.5 mm to the rear wall, mouth flush
+with the wall face, cable plug 6.1 mm under the expansion header's pins, standoff 0.9 mm from the receptacle's shell lug).
+**hub-conn's new outline without routing again = `route_hub.py hub-conn --reoutline`**: moves the four edge lines, adds the
+standoff holes, grows the four GND zone rectangles in the file text, refills. `pcb_hub.py` draws the same outline and holes on
+a fresh placement. **pcbnew notes**: removing drawings from a loaded board made the next `GetFootprints()` crash; remaking
+zones with `gnd_pours()` on a loaded board that already had zones failed (`Outline()` came back untyped): hence the in-place edits.
+**`usb-port` = `tools/pcb_port.py` `usb_port()` + `tools/route_hub.sh usb-port`** (place, route, tidy, silkscreen, check;
+clean on the first try, about a minute). In hub coordinates (KiCad x = 100 + x, y = 100 - y): outline x -47..-9, y 46.49..61.49;
+receptacle J501 (GCT USB4085, through-hole) on x = -20, mouth flush with the wall's outer face (2.51 mm beyond the board
+edge, from KiCad's footprint: **check on the GCT drawing**); standoff holes at x = -28 and -12, y = 57.5; cable header J502 at
+the front edge, mating face to the front; KTS1693 behind it; protection parts in a row in front of the receptacle.
+**Scripted copper (`route_hub.py` `usb_port_copper`, header explains it)**: the KTS1693's six OUT and six IN balls each form
+one connected patch, so each is a mesh of 0.22 mm tracks from land to land leaving on its own side (OUT to four 0.8 mm vias,
+IN to six 0.6 mm vias), no via under the chip; VBUS_CONN 2 mm on inner 2 from the receptacle's pin pairs to the IN patch;
+VBUS_LOCAL 1.2 mm on inner 2 behind the header's pads with a via and stub at pins 1, 6, 11; D+ / D- pairs crossed between
+the receptacle's rows (top / bottom); CC2 out through the lane between the rows; rule areas (top and bottom) under the
+standoffs. The rest is autorouted. **Open on usb-port**: the 0.22 mm lands and 0.18 mm gaps of the KTS1693 against JLCPCB's
+stated limits (not looked up: ask at the order or pick their finer process); references are far from their parts in places
+and three are hidden (D501 D503 U502); the USB4085's 0.45 mm hole-to-hole has a rule exception as the Amphenol part has.
+**KiCad file format (user, 2026-11-14: "make sure it doesn't happen again")**: the generated schematics carried a KiCad 9
+format stamp (written by `kicad_sch_api`), and KiCad 10 said so on opening. Now: `schlib.to_current_format()` re-saves every
+generated schematic with `kicad-cli sch upgrade` (called by `sch_keys.py` and `sch_hub.py`); `gen_kicad.py` runs
+**`tools/kicad_format.sh`** (upgrades everything under `hardware/` except the vendored kiswitch) after writing stubs;
+**`tools/kicad_format.sh --check` is the first step of `tools/kicad-check.sh`** and fails on any old-format file. All ten
+schematics and the usb-port board were upgraded; ERC, netlist checks and parity are unchanged (0 everywhere).
+**MCPs (user asked why they were not used)**: scripts stay the source of every board and of the section; **the FreeCAD MCP
+is used to show the user the model before a mechanical decision** (done for the tower: preview document "hub", objects
+`NEW_*`) and the KiCad MCPs for views and checks. Say so at once when a bridge does not answer (it was down at the start).
+**Next (M2 session 8)**: plates (roadmap M2 step 4); the independent PCB review (step 3, Opus, given the files); then fab
+outputs (step 5). Before M3: decide whether hub-core and battery boards grow with the tower.
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
-downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); `usb-port.kicad_pcb`
-is empty (see above); TPS552892: AGND and PGND join
+downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join
 only at the VCC capacitor, no thermal pad (heat leaves through the strips); stack 2x25 and chain 2x8 pairs follow
 the mirror rule above (unmirrored, the chain shorts PACK1 to GND through the fuse).
 **Carried to M4 (firmware)**: rules in spec §4 (HAEN first, ODR before interrupts, one CS at a time, ADC pins
@@ -283,8 +330,7 @@ Python 3.15 interpreter and matplotlib beside it and rewrote `pyvenv.cfg`; the 3
 packages (checked), tidy up only if the user asks.
 Decided 2026-11-13: Pico 2 W (in the hub), host USB-C port on the hub, ANSI. **`archive/rev8/` is the rev 8 design: not
 current, read it only for the hub/battery rework, and no tool touches it** (`gen_kicad.py`, `kicad-check.sh`, `check_interconnect.py` cover only
-`hardware/usb-port` and `hardware/dial`; check run 2026-11-13: ERC 0, interconnect 0 errors, one expected
-"no board outline" DRC item on usb-port, so the script exits 1). Open items in the spec §7.
+`hardware/usb-port` and `hardware/dial`; check run 2026-11-14: file formats current, ERC 0, interconnect 0 errors). Open items in the spec §7.
 Decisions go to the user as options with pros and cons.
 
 ## Working rules

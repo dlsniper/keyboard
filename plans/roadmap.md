@@ -96,14 +96,18 @@ met 2026-11-13; signed off by the user 2026-11-13.
    Hub boards: FreeCAD section (`mech/hub/`), parts chosen (user), `tools/pcb_hub.py` placed hub-core, hub-conn and battery
    2026-11-13; `hub-conn` arranged for routing 2026-11-14 (4 layers, user; converter per its datasheet layout, port
    clusters, pack columns); cap board `hardware/chain-cap` added. `port-module` placed 2026-11-14 (`tools/pcb_port.py`,
-   4 layers, user; bay checked against the three key boards). Open: `usb-port` (its place in the tower is not decided).
+   4 layers, user; bay checked against the three key boards). **Tower grown to 114 mm (user, 2026-11-14)**: `hub-conn`
+   108 x 108 mm (outline only), core screws aligned with the boards below (hub-core placed again); `usb-port` placed
+   2026-11-14 in the new rear strip on two standoffs (38 x 15 mm, 4 layers, user).
 2. Routing: matrix, LEDs with wide 5 V, SPI with series resistors at the source. `tools/route_keys.py`: `left`, `right` and
    `numpad` routed 2026-11-13 (DRC 0 errors, 0 unconnected, parity 0 on each; `tools/route_board.sh` repeats the strip
    autorouter until clean), silkscreen pass by `tools/silk_keys.py`. Hub boards: `tools/route_hub.py` (`tools/route_hub.sh`
    repeats until clean): `hub-core`, `battery` and `chain-cap` routed 2026-11-14 (DRC 0 errors, 0 unconnected, parity 0);
    `hub-conn` (4 layers: scripted power copper, autorouter for the thin nets, a finishing maze router) routed 2026-11-14 too,
    DRC 0 errors, 0 unconnected, parity 0. `port-module` routed the same way 2026-11-14 (DRC 0 errors, 0 unconnected,
-   parity 0); tidy pass (`route_hub.py --tidy`) and silkscreen pass on the hub and port boards. `usb-port` next.
+   parity 0); tidy pass (`route_hub.py --tidy`) and silkscreen pass on the hub and port boards. `usb-port` routed
+   2026-11-14 (KTS1693 ball field and both VBUS paths scripted; DRC 0 errors, 0 unconnected, parity 0); `hub-core` routed
+   again for its moved screws. All nine boards clean. KiCad file formats: `tools/kicad_format.sh`, checked by `kicad-check.sh`.
 3. DRC with schematic parity; a second independent review, including every Pico pin
    against the RP2350 and Pico 2 W datasheets.
 4. Plates (1.5 mm FR4) from the same file.
@@ -196,7 +200,7 @@ whoever delegates verifies what comes back.
 | D4 | Host USB port: decided, USB-C port board on `right` | done |
 | D5 | Retired rev 8 folders: decided, moved to `archive/rev8/` | done |
 | D6 | Board house and assembly: decided 2026-11-13, JLCPCB makes and assembles | done |
-| D7 | Place the order (already settled for it: `hub-conn` inner copper 1 oz, user, 2026-11-14) | M2 end |
+| D7 | Place the order (already settled for it: inner copper 1 oz on `hub-conn` and `port-module`, user, 2026-11-14; `usb-port` taken as the same; to ask JLCPCB: KTS1693 lands, receptacle hole rules) | M2 end |
 | D8 | Tenting, tilt, palm rest | M3 |
 | D9 | Keymap and layers | M5 |
 | D10 | Key LED type: decided 2026-11-13, SK6812MINI-E chain | done |

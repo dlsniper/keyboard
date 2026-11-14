@@ -2,20 +2,29 @@
 placement (tools/pcb_hub.py). Plain data, no FreeCAD or KiCad imports.
 
 Axes as rev 8: X to the right seen from the keyboard, Y towards the rear (front wall at -Y faces the keyboard),
-Z up, origin on the tower's axis. Units mm. [rev8] = carried over from archive/rev8/mech/hub/build_hub.py (decided
+Z up. Origin: on the axis of the 94 mm boards (hub-core, battery), which is where rev 8's 100 mm tower had its
+axis. Since M2 session 7 the tower is 114 mm square and has grown to the rear and the sides only (the front wall and
+the three module ports stay put), so the tower's own axis is at y = AXIS_Y. Units mm. [rev8] = carried over from archive/rev8/mech/hub/build_hub.py (decided
 there), [user] = decided 2026-11-13 at M2 session 4, [check] = to confirm on a drawing or a real part.
 """
 # --- tower ---------------------------------------------------------------------------------------------------------
-OUTSIDE = 100.0             # [rev8] outside footprint
+OUTSIDE = 114.0             # [user 2026-11-14] outside footprint, square (was 100: no free rear wall for the host port)
 WALL = 2.0                  # [rev8]
-BOARD = 94.0                # [rev8] board outline, square, centred
+FRONT_Y = -50.0             # outer face of the front wall: where rev 8 had it
+AXIS_Y = FRONT_Y + OUTSIDE / 2      # 7.0: the tower's axis; x is centred
+REAR_Y = FRONT_Y + OUTSIDE          # 64.0: outer face of the rear wall
+BOARD = 94.0                # [rev8] hub-core and battery board outline, square, centred on the origin
+# connector layer board: fills the tower (1 mm to the walls at the sides and the rear, 3 mm at the front as before)
+CONN_X = OUTSIDE / 2 - WALL - 1.0   # 54.0: half width
+CONN_FRONT = -BOARD / 2             # -47.0: unchanged, the module-port receptacles sit on this edge
+CONN_REAR = REAR_Y - WALL - 1.0     # 61.0
 T_PCB = 1.6
 GAP = 17.5                  # [user] board to board everywhere: ESQ stack (core/connector) and battery seams
 PITCH = GAP + T_PCB         # 19.1
 HOLE_X = 43.5               # [rev8] M2 holes 3.5 mm from the side edges
 MOUNT_XY = [(sx * HOLE_X, sy * 20.0) for sx in (-1, 1) for sy in (-1, 1)]      # [rev8] connector layer, battery
 CORE_FRONT_Y = -30.0        # [rev8][user] core board front edge: room for the NKK UB bodies (board 94 x 77)
-CORE_XY = [(sx * HOLE_X, y) for sx in (-1, 1) for y in (CORE_FRONT_Y + 3.5, 26.0)]   # [rev8] core screws
+CORE_XY = MOUNT_XY          # [user 2026-11-14] core screws above the screws of the boards below (were at y -26.5 / 26)
 
 # --- stack connector, core <-> connector layer (frozen 2x25) ---------------------------------------------------------
 # [user] Samtec ESQ-125 stack-through as rev 8: the same part on both boards, body on the TOP side, the core's tails
@@ -48,6 +57,19 @@ USBC = (8.94, 7.3, 3.2)         # receptacle shell w x depth x height [check] JA
 USBC_NOSE = 1.0                 # shell front beyond the board edge [check]
 CAN = (8.3, 10.2)               # 220 uF can: diameter, height (8 x 10 case)
 JUSB_XY = (-39.0, 31.0)         # host port cable header (JST GH 11), turned 90 deg, rear left
+
+# --- host port board (hardware/usb-port), M2 session 7 [user 2026-11-14] ---------------------------------------------
+# In the rear strip of the connector layer, behind the stack connector: lies flat on two M2 x 3 mm threaded standoffs
+# that stand on hub-conn, receptacle (GCT USB4085, horizontal, through-hole) through the rear wall, its 11-pin cable
+# header at the front edge facing forward. The cable goes to hub-conn's header at JUSB_XY; both plugs are in the open.
+UP_X = (-47.0, -9.0)            # board outline, x (38 mm)
+UP_Y = (46.49, 61.49)           # board outline, y (15 mm); rear edge 2.51 mm inside the wall face, 0.51 mm from the wall
+UP_STANDOFF = 3.0               # hub-conn top to the port board's underside (the receptacle's pin ends are below)
+UP_REC_X = -20.0                # receptacle centre line
+UP_MOUNT_XY = [(UP_REC_X - 8.0, 57.5), (UP_REC_X + 8.0, 57.5)]     # standoffs left and right of the receptacle
+UP_GH_XY = (-37.5, 49.6)        # cable header (JST GH 11) origin, mating face to the front
+USB4085 = (8.94, 9.17, 3.46)    # shell width, depth, height; pin A1 is 8.61 mm behind the mouth (KiCad footprint) [check] GCT drawing
+USB4085_OVER = 2.51             # shell beyond the board edge: the mouth is flush with the wall's outer face
 
 # --- core layer ------------------------------------------------------------------------------------------------------
 PICO_XY = (-10.0, 6.0)          # Pico 2 W centre, long axis along X, USB end towards +X (antenna end towards -X wall)

@@ -330,6 +330,7 @@ def generate(name, s, w, h, ref_base):
     schlib.post_process(sch_path, set(), {}, {})
     stable = {str(uuid.uuid5(uuid.NAMESPACE_URL, f"keyboard/{name}/{p[0]}")) for p in s.parts}
     normalise_uuids(sch_path, stable)
+    schlib.to_current_format(sch_path)
     print("wrote", sch_path)
     return sch_path
 
