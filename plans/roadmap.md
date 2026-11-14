@@ -145,8 +145,11 @@ spacers, sleeves, tilt bars, two fit-print pieces; the key boards' M2 holes are 
 (2026-11-14): the wireless numpad shell (see M3b session 4). Session 3 (2026-11-14): `left` and `right` shells in
 both variants (0 clashes); decided (options UI, FreeCAD): `left` 4 cells and not widened, dial board on the plate
 on two new holes in `plate-right`, tent base screwed with four M2 and repeating the tray's underside, palm rest on
-a screwed tongue with the pose parts under both, square split-side rail end. Still to do: tent base, palm rest and
-long tilt bars as parts, the hub tower (core section with the carrier first), the pod's rear support, fit prints.
+a screwed tongue with the pose parts under both, square split-side rail end. Session 4 (2026-11-14): pose parts of `left` / `right` in both variants
+(`mech/case/pose_case.py`, 0 clashes): tent bases 5 and 7 degrees (short and long, `left` lifted to level the split
+edges), palm rest 100 x 26 mm with a pillow top, tilt bars for under it; the tray's tilt bars got a second hole
+pair for the base (spec §2a). Still to do: fit prints, the hub tower (core section with the carrier first), the
+pod's rear support.
 
 **Exit check:** everything assembles with no rework; the user has typed on it for a day.
 

@@ -631,8 +631,35 @@ the dial board beside the hood's screw pillar (0.3 mm); M2 nuts in the frame's p
 cover every feature of `left` and `right` except the dial parts (`build/case/right/right-dial-hood.stl`,
 `right-dial-frame.stl`).
 **The user had KiCad open during the session**: reload `plate-right` there; do not save an old view over it.
-**Next**: fit prints (3D); tent base, palm rest, long tilt bars; the hub's core section with the carrier; the pod's
-rear support. The order (D7) still waits for M4 step 2 (SPI over the real cable).
+**M3 session 4 done (2026-11-14): pose parts of `left` and `right`, wired and wireless, 0 clashes. No board
+changed; nothing is placed or routed again. The numpad's parts are unchanged.** Details and numbers: spec §2a
+"Pose parts".
+**User decisions (options UI; FreeCAD document `pose_options` with groups `TENT_*`, `PALM_*`, made by
+`mech/case/pose_preview.py`)**: **tent 5 and 7 degrees, a base for each**; **`left`'s base lifted (8.0 / 11.3 mm) so
+both split edges are level**; **palm rest 100 mm deep, 26 mm high, pillow top** (I recommended 85 x 22; 26 mm is
+4.5 mm under the cap tops, to judge on the print). The K860 was not measured (how: phone level zeroed on the desk,
+laid along A-S-D-F-G; ruler from the space bar's front edge to the palm rest's front edge; desk to the palm rest's
+highest point and to the left Alt cap). **Fit prints: still none (asked again, "not printed yet").**
+**Script**: `mech/case/pose_case.py` (header explains the parts), called by `build_case.py` when the module is not
+the numpad; new outputs per shell folder: `palm`, `tiltp4`, `tiltp7`, `tent5`, `tent7`, `tent5-long`, `tent7-long`.
+`build_case.py`: `BAR_ALT` (second hole pair in `tilt4` / `tilt7` of `left` / `right`), `FLAT` (STL lies as it is
+printed: bases desk face down, palm rest on its outer end), `SHOWN` (the GUI shows `tent7-long` and hides the other
+bases and `tiltp*`). Run one shell per call (`CASE_MODULE=left CASE_VARIANT=pod freecadcmd ...`; freecadcmd exits 0
+even when the script raises: read `report.txt`'s time or grep the output for `Exception`).
+**Found**: the base cannot have inserts where the tray has them (its own screws' access bores come out there), so
+its inserts lie 20 mm inward and the tilt bars carry both hole pairs. Solid wedges were up to 1.7 litres: the bases
+are frames now (18 mm rim).
+**Limits**: long bases are 270 to 304 mm deep (H2S only); palm rest of `right` prints 246 / 265 mm tall; with the
+palm rest and no base or bar the tray's front stands 3 mm higher (1.3 degrees); `tiltp*` under a long base tilts
+0.7 degrees more than under the bare palm rest.
+**To judge on prints**: palm rest height and joint (about 50 N per front insert with a 20 N hand at mid span,
+estimate), driver reach in the bases' access bores (to 35 mm), tongue under the screw heads (1.6 mm).
+**Not done (budget), in this order**: the hub's core section with the carrier (at least 9 mm taller, a support for
+the carrier; `mech/hub/` not opened); a support under the pod's rear end (notes in the session 3 block above).
+**FreeCAD was left with** `pose_options`, `case_left`, `case_right` (new parts) open and unsaved; `case_left_pod`
+and `case_right_pod` there are still session 3's (no pose parts; the files in `build/case/*-pod/` are current).
+**Next**: fit prints (3D, ASA: the numpad pieces; then a `tent5` and the palm rest of `left`); the hub's core
+section with the carrier; the pod's rear support. The order (D7) still waits for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

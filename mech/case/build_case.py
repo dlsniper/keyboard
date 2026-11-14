@@ -65,6 +65,7 @@ TILT = (4.0, 7.0)      # negative tilt: screwed-on front foot bars, swappable (u
 BUMP_H = 2.2           # Bumpon height: the bar's underside is the desk plane less its own Bumpons
 BAR_DEPTH = 18.0
 BAR_UNDER = 3.0        # ASA under the bar screw's head (M2 x 6 into an insert set from below)
+BAR_ALT = 20.0         # second hole pair in the tilt bars, this far inward of the first: the tent base has its inserts there (pose_case.py)
 FOOT_INSERT = 4.6      # insert hole from the tray's underside, in a boss that ends POST_GAP under the board
 # ---- wireless variant (CASE_VARIANT=pod; user decisions 2026-11-14, spec 2b "Shell")
 RAIL_SIDE, RAIL_REAR, RAIL_H = 19.0, 27.0, 19.0    # battery rail: outer side leg, rear leg, top (one piece with the tray)
@@ -87,6 +88,7 @@ USB_SHELL = (8.94, 3.2, 2.51)  # GCT USB4085: width, height above the pod, shell
 DECK = 16.5                    # rail walls under the pod: 2.5 mm under its underside (through-hole tails)
 LID_Z, LID_T, LID_EDGE, GROOVE = 17.2, 1.6, 1.0, 0.7    # sliding lids: seat, body, edge flange in the groove, groove depth in the walls
 HOOD_X0 = -22.9                # cover's west end over the rail in the bay frame: room for the lead's plug beside the pod
+FLAT = {}              # part name -> the shape as it lies on the printer bed, where that is not the assembly position
 CAP_Z = (6.5, 17.5)    # keycap envelope above the plate top (for the picture and the clash checks only)
 
 Z_BOARD = FLOOR + CAVITY
@@ -273,6 +275,8 @@ def build(name):
     t0, t1 = min(tt(p) for p in foot_boss) - BAR_DEPTH / 2, max(tt(p) for p in foot_boss) + BAR_DEPTH / 2
     bar_f = poly([B(a0, t0), B(a1, t0), B(a1, t1), B(a0, t1)]).common(
         outer_f if VARIANT != "pod" else R)
+    bar_alt = [] if name == "numpad" else [foot_boss[0] + ua * BAR_ALT, foot_boss[1] - ua * BAR_ALT]
+    assert all((p - q).Length > (FOOT_D + 1.2 + HEAD_D) / 2 + 0.8 for p in bar_alt for q in feet), "second bar hole meets a foot"
     bars = {}
     for ang in TILT:
         k_ = math.tan(math.radians(ang))
@@ -281,7 +285,7 @@ def build(name):
                 B(a0 - 5, t0 - 5) + V(0, 0, zz(t0 - 5))]
         keep = Part.Face(Part.makePolygon(prof + [prof[0]])).extrude(ua * (a1 - a0 + 10))
         bar = prism(bar_f, -80, 0).common(keep)
-        for p in foot_boss:
+        for p in foot_boss + bar_alt:
             bar = bar.cut(cyl(p, SCREW_D, -90, 1)).cut(cyl(p, HEAD_D, -90, -BAR_UNDER))
         for p in rear_boss:                       # (a deep bar may reach a rear insert: keep it open)
             bar = bar.cut(cyl(p, INSERT_D, -90, 1))
@@ -396,6 +400,13 @@ def build(name):
     if VARIANT == "pod":
         pairs = [(na, parts.get(na, a), nb, parts.get(nb, refs.get(nb, b))) for na, a, nb, b in pairs] + extra[0]
         rep += extra[1]
+    if name != "numpad":                          # pose parts of an alpha half: palm rest, its tilt bars, tent bases
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("pose_case", os.path.join(ROOT, "mech", "case", "pose_case.py"))
+        ps = importlib.util.module_from_spec(spec); spec.loader.exec_module(ps)
+        pose = ps.build(dict(globals(), **locals()), parts, refs)
+        pairs += pose[0]
+        rep += pose[1]
     for na, a, nb, b in pairs:
         vol = a.common(b).Volume
         if vol > 0.01:
@@ -408,7 +419,9 @@ def build(name):
 
 
 COLOURS = {"tray": (0.25, 0.27, 0.30), "cover": (0.85, 0.45, 0.10), "spacers": (0.9, 0.8, 0.1), "sleeves": (0.9, 0.8, 0.1),
-           "board": (0.05, 0.35, 0.15), "plate": (0.75, 0.70, 0.50), "port": (0.10, 0.45, 0.25), "caps": (0.85, 0.85, 0.88), "dial-hood": (0.85, 0.45, 0.10), "dial-frame": (0.9, 0.8, 0.1), "dial": (0.10, 0.45, 0.25), "tilt4": (0.85, 0.45, 0.10), "tilt7": (0.6, 0.3, 0.1)}
+           "board": (0.05, 0.35, 0.15), "plate": (0.75, 0.70, 0.50), "port": (0.10, 0.45, 0.25), "caps": (0.85, 0.85, 0.88), "dial-hood": (0.85, 0.45, 0.10), "dial-frame": (0.9, 0.8, 0.1), "dial": (0.10, 0.45, 0.25), "tilt4": (0.85, 0.45, 0.10), "tilt7": (0.6, 0.3, 0.1),
+           "palm": (0.35, 0.55, 0.75), "tent7-long": (0.85, 0.45, 0.10)}
+SHOWN = ("tent7-long",)    # of the pose parts that share a place (tent*, tiltp*), the GUI shows these
 
 
 def main():
@@ -428,13 +441,15 @@ def main():
             o.ViewObject.ShapeColor = COLOURS.get(n_, (0.5, 0.5, 0.55))
             if n_ == "caps":
                 o.ViewObject.Transparency = 60
+            if (n_.startswith("tent") or n_.startswith("tiltp")) and n_ not in SHOWN:
+                o.ViewObject.Visibility = False
     doc.recompute()
     if App.GuiUp:
         import FreeCADGui as Gui
         Gui.ActiveDocument.ActiveView.viewIsometric(); Gui.SendMsgToActiveView("ViewFit")
         return
     for n_, s in list(parts.items()) + list(fits.items()):
-        MeshPart.meshFromShape(Shape=s, LinearDeflection=0.05, AngularDeflection=0.3).write(os.path.join(out, f"{NAME}-{n_}.stl"))
+        MeshPart.meshFromShape(Shape=FLAT.get(n_, s), LinearDeflection=0.05, AngularDeflection=0.3).write(os.path.join(out, f"{NAME}-{n_}.stl"))
     Part.makeCompound(list(parts.values()) + list(refs.values())).exportStep(os.path.join(out, f"{NAME}-case.step"))
     doc.saveAs(os.path.join(out, f"{NAME}-case.FCStd"))
 

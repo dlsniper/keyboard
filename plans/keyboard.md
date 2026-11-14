@@ -255,7 +255,39 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 - **Palm rest joint (user, 2026-11-14)**: **a 3 mm tongue of the palm rest under the tray's front, two screws into
   the tilt-bar inserts; with the palm rest fitted the pose parts go under both**: the tilt bar sits under the palm
   rest's front edge (a taller bar from the same script), the tent base is printed in a long form. Reason: a palm
-  rest hung on the tray's front is a 72 mm lever under the hand. **Neither part is drawn yet** (preview only).
+  rest hung on the tray's front is a 72 mm lever under the hand. Drawn in M3 session 4 (next point).
+- **Pose parts (M3 session 4, 2026-11-14; `mech/case/pose_case.py`, called by `build_case.py` for `left` and
+  `right`, both variants; options shown in FreeCAD by `mech/case/pose_preview.py`)**. User decisions (options UI):
+  - **Tent: 5 and 7 degrees, a base for each** (swappable as the tilt bars; the K860 was not measured: its wave is
+    curved, so a flat base at its steepest slope would over-tent). **`left`'s base is lifted so both split edges
+    stand at one height** (`right` is 91.7 mm wider, one plane from the desk would put the right hand 12 mm higher
+    at 7 degrees): lift 8.0 / 11.3 mm at 5 / 7 degrees. Base thickness: 5.0 mm at `right`'s outer edge, 13.0 /
+    16.3 mm at `left`'s, 26.5 / 35.2 mm at the split edge (wired; 28.2 / 37.5 wireless); highest cap about 59 / 67
+    mm above the desk (60 / 70 wireless). `right`'s nav keys slope with the half.
+  - **Palm rest: 100 mm deep, 26 mm high, pillow top** (23 mm at the tray, 26 mm at 40 mm, 8 mm at the front, all
+    above the tray's underside; cap tops are at 30.5). I recommended 85 x 22: at 26 the heel of the hand may touch
+    the bottom row and the thumb the rest's edge; to judge on the print. Sides run straight to the front (along the
+    split line the two rests would cross), front edge parallel to the tray's front, top edges rounded 3 mm.
+  - Parts: `palm` (tongue 3 mm under the tray's front between the bar positions, two M2 x 8 into the tilt-bar
+    inserts, head recess 1.4 mm; holes for the tray's front Bumpons; its underside lies 3 mm under the tray's, so
+    flat on the desk the tray's front stands 3 mm higher, 1.3 to 1.4 degrees; four own Bumpons; two inserts from
+    below 12 mm behind its front edge). `tiltp4` / `tiltp7`: bar under the palm rest's front edge, 13 to 16 mm /
+    26 to 30 mm at its screws. `tent5` / `tent7`: frame (18 mm rim, open middle) under the tray, four M2 x 6
+    through access bores into the tray's four inserts. `tent5-long` / `tent7-long`: under tray and palm rest,
+    stepped 3 mm for the tongue, front screws M2 x 10 through base and tongue.
+  - **Found: the base's underside cannot carry inserts where the tray has them** (the access bores for the base's
+    own screws come out there). Its two inserts lie `BAR_ALT` = 20 mm inward of the tray's along the front, and
+    **the tilt bars (`tilt4`, `tilt7` of `left` / `right`) have both hole pairs**, so the same bar fits tray and
+    base. The feet pattern is the tray's. The long base carries the tray's rear feet, the palm rest's front feet
+    and its two inserts, so `tiltp*` fits under it (0.7 degrees steeper there: the palm rest's underside is 3 mm
+    lower than the tray's and the base's is one plane).
+  - Print: bases desk face down (the STL is laid flat), palm rest standing on its outer end (the STL is turned;
+    the tongue rules out standing on the rear face; `right`'s is 246 mm tall, 265 mm wireless), bars top face
+    down. **The long bases are 270 to 304 mm deep: H2S only.** Volumes: bases 235 to 815 cm3 as frames, palm rest
+    400 to 676 cm3 as a solid (infill by the slicer).
+  - To judge on prints: the palm rest's joint (a 20 N hand at mid span with a tilt bar under the front puts about
+    50 N of pull on each of the two front inserts, estimate); the driver's reach in the access bores (up to 35 mm
+    deep, 4.8 mm wide); the tongue's 1.6 mm under the screw heads.
 - **Hub: `hub-core` and `battery` stay 94 mm (user, 2026-11-14, final)**; the room to the 114 mm shell is for walls,
   seam magnets and grips.
 
