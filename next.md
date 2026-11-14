@@ -715,6 +715,8 @@ openings; battery board entry (3.3 mm west, down, back); no grips on the walls y
 **Next**: fit prints (3D, ASA: the numpad pieces; a `tent5` and the palm rest of `left`; the hub's seam test pair,
 then core section and lid) and the changes they ask for. With that M3's CAD is drawn; nothing else is open in it.
 The order (D7) still waits for M4 step 2 (SPI over the real cable).
+**M3 session 7 opened 2026-11-14 without results: nothing printed yet, nothing changed.** The prompt with a results
+form to fill in is `plans/prompt-m3-session-7.md`; run it once the pieces are printed.
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join
