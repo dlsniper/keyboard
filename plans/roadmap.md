@@ -151,8 +151,11 @@ edges), palm rest 100 x 26 mm with a pillow top, tilt bars for under it; the tra
 pair for the base (spec §2a). Session 5 (2026-11-14): the hub's core section as a shell (`mech/hub/build_core.py`,
 0 clashes): decided (options UI, FreeCAD): the radio comes with a deeper lid (8 mm; the core section is the same
 with and without it), the carrier rests on a wall shelf and a nut sleeve (no board change), a tooth on the rail's
-rear wall under the pod's rear edge in the three wireless shells (spec §3a "Core section shell", §2b). Still to
-do: fit prints, the rest of the tower (connector section, battery modules, base, seam test print).
+rear wall under the pod's rear edge in the three wireless shells (spec §3a "Core section shell", §2b). Session 6
+(2026-11-14): the rest of the tower (`mech/hub/build_tower.py`, 0 clashes): connector section, battery module, base
+and a seam test pair; decided (options UI, FreeCAD): the core's screws end in hex standoffs that hold hub-conn,
+pin-seam magnets on the east wall and in the rear-west corner, test pair of two rings with pull holes (spec §3a
+"Tower under the core"). Still to do: fit prints (case pieces, hub seam test pair, core section and lid).
 
 **Exit check:** everything assembles with no rework; the user has typed on it for a day.
 

@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14 (after M3 session 5), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14 (after M3 session 6), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -690,8 +690,30 @@ from the west wall; horn under the pod's west edge (3 mm); `right`'s tooth under
 bring-up); magnets loose in side-entry pockets.
 **FreeCAD was left with** `hub_core`, `hub_core_options`, `case_left_pod` (new) open and unsaved; the other
 `case_*_pod` documents there are older than the files in `build/case/*-pod/`.
-**Next**: fit prints (3D, ASA: the numpad pieces; then a `tent5` and the palm rest of `left`); the rest of the
-tower in `mech/hub/` (connector section with the screw question, battery modules, base, seam test print).
+**M3 session 6 done (2026-11-14): the tower under the core: connector section, battery module, base, seam test
+pair. 0 clashes (28 solids). No board changed; nothing is placed or routed again.** Details: spec §3a "Tower under
+the core".
+**User decisions (options UI; FreeCAD documents `hub_tower_options` with `S1_` standoff, `S2_` long screw, `M1_`
+diag, `M2_` sides, `M3_` three; `hub_tower` = the chosen tower with the test pair 150 mm to its right)**: **hex
+standoffs** (M2 x 8 + 6 hold hub-conn, the core's M2 x 14 end in them), **magnets on the east wall and in the
+rear-west corner**, **test pair of two rings with pull holes**. Fit prints: none reported this session either.
+**Critique given first**: a long screw leaves hub-conn loose when the core is pulled off the stack connector;
+inserts beside the board need a board change (no room); the lid's rear-wall magnets do not hold a pin seam (ratio
+0.8: the pins push in front of them).
+**Script**: `mech/hub/build_tower.py` (`HUB_SCREWS=standoff|long`, `HUB_MAGNETS=diag|sides|three`, `HUB_OPTIONS=1`;
+defaults are the decided ones), writes `build/mech/hub/tower/` (`report.txt` ends with the clash count; `hold`
+lines = holding / lifting moment per wall edge). It imports `build_core.py`, whose `main()` then does not run.
+**Changed in `build_core.py`, by me**: the core section's bottom seam is a rabbet in the wall (the connector
+section's lip is the wall's inner 0.9 mm: the band and lip of the magnet seams would block hub-conn), plus a
+0.4 mm notch over the host receptacle. `build/mech/hub/core/` is rebuilt: print these, not older files.
+**Estimates the test pair replaces**: 10 N a magnet pair through 2 x 0.6 mm, 60 g a spring pin (827 drawing not
+found), 2 N of weight above the seam.
+**To check on parts**: standoff thread depth for M2 x 14 and its 6 mm stud; plug overmould in the 13 x 7 mm
+openings; battery board entry (3.3 mm west, down, back); no grips on the walls yet.
+**FreeCAD was left with** `hub_tower` and `hub_tower_options` (new, unsaved); `hub_core` there is older than
+`build/mech/hub/core/`.
+**Next**: fit prints (3D, ASA: the numpad pieces; a `tent5` and the palm rest of `left`; the hub's seam test pair,
+then core section and lid) and the changes they ask for. With that M3's CAD is drawn; nothing else is open in it.
 The order (D7) still waits for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be

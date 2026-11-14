@@ -123,3 +123,22 @@ POD_A, POD_T = 15.0, (1.5, 52.19)           # pod board: half width, front / rea
 POD_TOP = 3.2                   # tallest part on the pod: the USB4085 shell (the radio module is 2.05)
 RADIO_AIR = 1.0                 # roof above the pod's tallest part
 NUT = (4.1, 1.6)                # M2 nut: across flats (pocket), thickness
+
+# --- sections under the core: connector section, battery module, base (M3 session 6, mech/hub/build_tower.py) ----------
+SKIRT = 5.0                     # [rev8] a pin seam lies this far under the board above it (levels() uses the same 5.0)
+RAB_T, RAB_H, RAB_CLR = 0.9, 2.0, 0.2       # screwed seam core / connector: lip in the wall's inner half (hub-conn fills the tower)
+HOST_NOTCH = 0.4                # the host receptacle's shell ends 0.06 mm above that seam: notch in the core section's rear wall
+INSERT = (3.2, 5.0)             # [rev8] Ruthex RX-M2x4: hole diameter, depth
+# Magnets of the pin seams (base / battery module / connector section): (wall, centre along it). The pins push at
+# CHAIN_PADS_XY, so the magnets have to stand around that point: rear-wall magnets alone (as the lid has) let the front
+# of the seam lift. A side-wall shelf overhangs the 94 mm battery board by 3 mm (the lane is 8 mm, a shelf 11).
+PIN_SHELVES = {"diag": (("east", 0.0), ("rear", -43.5)),                    # one overhang: the board goes in 3.3 mm to the west, then down
+               "sides": (("east", 0.0), ("west", 0.0)),                     # rev 8: both overhang, the board goes in under one of them
+               "three": (("east", 0.0), ("rear", -43.5), ("rear", 43.5))}   # 6 magnets a seam
+PIN_FORCE = 0.59                # N per spring pin at mid stroke (Mill-Max standard spring, 60 g) [check] 827 drawing
+MAGNET_PULL = 10.0              # N per pair through 2 x SKIN [estimate, grade unknown]: the seam test piece measures it
+PORT_CUT = (13.0, 7.0)          # module-port openings in the front wall: USB-C plug overmold (12.35 x 6.5 max) + play [check] on the cable
+STANDOFF = (4.0, 8.0, 6.0)      # M2 hex standoff, male / female: across flats, body (= hub-conn top to the core seam), stud
+BASE_FLOOR = 2.0                # [rev8]
+FOOT = (13.3, 1.0, 3.5)         # [rev8] 3M Bumpon SJ5012: recess diameter, recess depth, foot height
+FOOT_IN = 10.0                  # foot centres from the outer faces

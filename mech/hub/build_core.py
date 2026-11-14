@@ -159,7 +159,14 @@ def build(height="lid", support="shelf", radio=True):
     sec = tube(z0, z1).fuse(top)
     cuts = list(pockets)
     c = g.LIP_CLR
-    cuts.append(box(g.KEY_X - g.KEY_W / 2 - g.KEY_CLR, g.KEY_X + g.KEY_W / 2 + g.KEY_CLR, YF + c - g.KEY_D - g.KEY_CLR, YF + 0.1, z0 - 1, z0 + g.LIP_H + g.KEY_CLR))
+    # screwed seam to the connector section (M3 session 6): a rabbet in the wall's inner half takes that section's lip (hub-conn fills
+    # the tower, so nothing may stand inside the wall there); the rabbet is left out over the key's width (rib in a gap of the lip)
+    ri = g.RAB_T + g.RAB_CLR
+    zr = z0 + g.RAB_H + g.RAB_CLR
+    rab = box(-XI - ri, XI + ri, YF - ri, YR + ri, z0 - 1, zr).fuse(Part.makeLoft([rect(-ri, zr), rect(0, zr + ri)], True))   # 45 degrees above: printable
+    rab = rab.cut(box(-XI, XI, YF, YR, z0 - 2, z0 + 5))
+    cuts.append(rab.cut(box(g.KEY_X - g.KEY_W / 2, g.KEY_X + g.KEY_W / 2, YF - 2, YF + 1, z0 - 2, z0 + 5)))
+    cuts.append(box(g.UP_REC_X - g.USB4085[0] / 2 - 0.3, g.UP_REC_X + g.USB4085[0] / 2 + 0.3, YR - 1, g.REAR_Y + 1, z0 - 1, z0 + g.HOST_NOTCH))  # host receptacle's top
     for x, y in g.CORE_XY:                              # bosses under the board, fused to the side wall; the screw passes through
         sx = 1 if x > 0 else -1
         sec = sec.fuse(cyl(g.BOSS_D, x, y, z0, ZC)).fuse(box(min(x, sx * (XI + 0.5)), max(x, sx * (XI + 0.5)), y - g.BOSS_D / 2, y + g.BOSS_D / 2, z0, ZC))
@@ -325,4 +332,5 @@ def main():
     open(os.path.join(OUT, "options.txt" if os.environ.get("HUB_OPTIONS") else "report.txt"), "w").write("\n".join(report) + "\n")
 
 
-main()
+if globals().get("__name__") != "build_core":       # build_tower.py imports this file for its helpers and build()
+    main()

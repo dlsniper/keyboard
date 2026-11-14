@@ -597,10 +597,47 @@ tables and the boards against each other).
   - **Pod's far end** (it points to the front, 32 mm past its screws): a horn on the west wall under the pod's west
     edge (y 9.3 .. 21.3, 3 mm of bearing, behind the antenna area), rising 6 mm above the seam inside the lid's wall.
   - Clash checks (shell parts against boards, parts, pod and each other): 0, with and without the radio.
-  - **Open**: the connector section is not drawn, and the core board's screws stand above `hub-conn`'s own
-    screws (user, M2 session 7): the core section's bosses end at the seam, 8 mm above `hub-conn`; whether one
-    long screw goes through both boards or the connector section brings inserts up beside its board is settled
-    there. Connector section, battery modules, base, the seam test print (spring-pin force against magnet pull).
+  - Bottom seam since M3 session 6: a rabbet in the wall's inner half (next point) in place of the inner key notch,
+    and a 0.4 mm notch in the rear wall over the host receptacle. 0 clashes still.
+- **Tower under the core: connector section, battery module, base, seam test pair (M3 session 6, 2026-11-14)**,
+  `mech/hub/build_tower.py` (imports `build_core.py` for helpers and the core section), numbers in `hub_geom.py`
+  (block "sections under the core"); output `build/mech/hub/tower/` (`base`, `battery-module`, `connector-section`,
+  `seam-test-lower`, `seam-test-upper` as STL, all printed bottom down, `report.txt`); options with `HUB_OPTIONS=1`
+  (document `hub_tower_options`), whole tower in document `hub_tower`. No board changed.
+  - **Core screws (user, options UI, FreeCAD): hex standoffs.** hub-conn is screwed down by four M2 x 8 + 6
+    male / female standoffs (stud through the board, 4.4 mm into the Ruthex insert of the boss under it); the core
+    section's bosses stand on them and four M2 x 14 through the core board end in them. hub-conn stays down when
+    the core is pulled off the 2x25 stack connector. Checked on `hub-conn`: 4.15 mm free of copper around H1-H4
+    (hex 2.3 mm). Critique given first: one long M2 x 25 with a loose sleeve leaves hub-conn loose with the screws
+    out (drawn, `HUB_SCREWS=long`); inserts beside the board have no room (hub-conn 108 mm in 110 mm) without
+    notching `hub-conn` or moving `hub-core`'s holes (not drawn). To judge on the print: the seam's height is set
+    by standoff and wall together; the standoff's thread depth for M2 x 14.
+  - **Screwed seam core / connector, by me**: the lip is the inner 0.9 mm of the wall, 2 mm high, in a rabbet of the
+    core section (45 degrees above it, printable); key = a gap in the lip at x = -15 with a rib left in the
+    rabbet. The magnet seams' band and lip cannot be used here: they stand 1.4 mm inside the wall and hub-conn
+    would not pass.
+  - **Connector section** 14.6 mm (5 mm under hub-conn to 8 mm above it): four insert bosses under the board on
+    bridges to the side walls, three front openings 13 x 7 mm for the cable plugs' overmould (check on the cable),
+    rear slot for the host receptacle open to the seam, so hub-conn goes in from the top with the host port board
+    on it and the core section closes the slot (the receptacle's shell ends 0.06 mm above the seam).
+  - **Magnets of the pin seams (user): one shelf mid-way on the east wall, one in the rear-west corner**, same
+    shelves, pockets and wedges as the lid's. The lid's rear-wall pair does not hold a pin seam: the 16 spring pins
+    push with about 9.4 N (60 g each at mid stroke, Mill-Max standard spring, to check on the 827 drawing) at
+    (22, 29), in front of the magnets, and the front lifts (holding / lifting moment 0.8 with 10 N a pair and 2 N
+    of weight, all three estimates). Chosen pattern: least ratio 1.8 (about the west edge). A side-wall shelf
+    overhangs the 94 mm battery board by 3 mm: the board goes in 3.3 mm to the west, down, then to the middle.
+    Offered and not taken: east wall and both rear corners (2.8, six magnets a seam), both side walls as rev 8
+    (1.5, board tilted in under one shelf), the same with a notched battery board.
+  - **Battery module** 19.1 mm: bosses and upper shelves at the bottom, band, lip, key and lower shelves on wedges
+    at the top; the lip has gaps for the shelves and the boss bridges of the section above. **Base** 6 mm: 2 mm
+    floor, shelves standing on it, four Bumpon recesses 10 mm in from the corners; with no battery module the
+    stack connector's tails end 0.95 mm above its floor.
+  - **Seam test pair (user): two low rings** (12 and 8 mm) with the real lip, key, pockets and bosses and a bar
+    with a 5 mm hole at the pins' place in each: lift by the upper hole, hang weight on the lower one until the
+    seam opens; it has to carry more than 1 kg. Offered and not taken: a small coupon, waiting for the boards.
+  - Clash checks (28 solids, sections against boards, parts and each other, with two battery modules): 0.
+  - **Open**: no grips on the outer walls (judge on the test pair whether a module comes off by hand); module-port
+    openings are plain rectangles; the test pair's result decides pattern and skin.
 - **Hub board layouts (M2 session 5, 2026-11-14)**, `tools/pcb_hub.py` (placement) and `tools/route_hub.py` (routing):
   - **`hub-conn` has 4 copper layers (user, 2026-11-13)**: top = parts and signals, inner 1 = unbroken GND plane (no
     tracks), inner 2 = power trunks and signals, bottom = signals. All SMD parts stay on top. The heavy copper is
