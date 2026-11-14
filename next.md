@@ -717,6 +717,14 @@ then core section and lid) and the changes they ask for. With that M3's CAD is d
 The order (D7) still waits for M4 step 2 (SPI over the real cable).
 **M3 session 7 opened 2026-11-14 without results: nothing printed yet, nothing changed.** The prompt with a results
 form to fill in is `plans/prompt-m3-session-7.md`; run it once the pieces are printed.
+**User decisions on the open pod review items (options UI, 2026-11-14), decided but NOT applied yet**:
+`pod-power` gets the 0603 capacitor across the 5 V converter's VIN and VOUT pins and the 100 nF at the TPS2553's
+input (review 1, 15), VPACK wider than 0.5 mm and the next fuse value up (review 14; value from the series' curves at
+50 C, a lookup): **`pod-power` is to be placed and routed again in its own session** (schematic via
+`tools/sch_pod.py`, board via `tools/pcb_pod.py`, then DRC, parity, fab outputs, and the shell's bosses, posts and
+notches in `mech/case/pod_case.py` checked against it). `pod`'s D+ stub at the ESD array (review 10) **stays as it
+is** (full-speed service port; `pod` is not touched). Split paste and the inductors' start-lead mark: not asked,
+unchanged. Next session: the user waits for the prints (no M4 or hand-check session asked for).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

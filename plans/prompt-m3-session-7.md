@@ -54,3 +54,16 @@ Hub
 
 Not printed:
 ```
+
+# Prompt for the pod-power session (decided 2026-11-14, any time before the order)
+
+```
+Keyboard project, rev 9.1, branch rev9-go. Read next.md (last session block and the "User decisions on the open pod
+review items" lines), plans/keyboard.md §2b and plans/roadmap.md M3b, nothing else to start.
+M3b session 5: pod-power, as decided: 0603 capacitor across the 5 V converter's VIN and VOUT pins, 100 nF at the
+TPS2553's input, VPACK wider, next fuse value up (pick it from the series' curves at 50 C; show me the value before
+using it). pod-power is placed and routed again; no other board changes without asking. Then ERC / DRC / parity 0,
+fab outputs, and the wireless shells' bosses, posts and notches checked against the new board (0 clashes).
+Budget: tokens are tight. PCB and CAD work stays with you; delegate only lookups.
+No leftover background processes. End by updating next.md, committing, and giving me the prompt for the next session.
+```
