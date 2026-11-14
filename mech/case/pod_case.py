@@ -182,6 +182,18 @@ def build(c, parts, refs, fits):
             end_cut,                                                                     # its entry: the end wall lowered
             rbox(tops[0], tops[1], ly0, T_R - W, LZ, 99)]                                # divider and holder tops under the lid
     body = body.cut(fuse(cuts))
+    # ---- tooth under the pod's rear edge (M3 session 5; the pod overhangs its screws by 32 mm): on the rear wall's inner
+    # face, 45 degrees underneath, standing free inside the cover above DECK. Along a: as near the service port as the
+    # port's through-hole tails, the pack plug and the lead connector on the power board allow.
+    tw, td = g.POD_TOOTH
+    taken = [(g.POD_USB_A - 5.0, g.POD_USB_A + 5.0), (bx0 - 0.5, bx0 + 12.1), (bx0 + 35.8, bx0 + 47.8)]
+    free = [k / 2 for k in range(-24, 25) if all(k / 2 + tw / 2 + 0.5 <= lo or k / 2 - tw / 2 - 0.5 >= hi for lo, hi in taken)]
+    ta = min(free, key=lambda a: abs(a - g.POD_USB_A))
+    zt, tf = g.Z_PORT - 0.1, T_R - W
+    pr = [(tf, zt), (tf - td, zt), (tf - td, zt - 2.9), (tf, zt - 2.9 - td)]
+    pts = [Rf(ta - tw / 2, t) + V(0, 0, z) for t, z in pr]
+    tooth = Part.Face(Part.makePolygon(pts + pts[:1])).extrude(ua * tw).fuse(rbox(ta - tw / 2, ta + tw / 2, tf - 0.01, tf + 0.3, zt - 2.9 - td, g.DECK))
+    body = body.fuse(tooth)
     for q in g.feet:
         body = body.cut(g.cyl(q, g.FOOT_D, -1, g.FOOT_DEPTH))
     body = body.removeSplitter()
@@ -253,7 +265,7 @@ def build(c, parts, refs, fits):
     names = [("tray", "power"), ("tray", "cells"), ("cover", "power"), ("cover", "cells"), ("cover", "lid-rear"), ("cover", "lid-side"),
              ("lid-side", "tray"), ("lid-rear", "tray"), ("lid-side", "cells"), ("lid-rear", "cells"), ("lid-side", "power"),
              ("lid-rear", "power"), ("port", "power"), ("port", "cells"), ("port", "lid-rear"), ("port", "lid-side"), ("power", "cells"),
-             ("lid-side", "lid-rear")]
+             ("lid-side", "lid-rear"), ("tray", "port"), ("cover", "tray")]
     if "dial-hood" in P:
         names += [("dial-hood", "lid-rear"), ("dial-hood", "cells"), ("dial-hood", "tray")]
     pairs = [(a, P.get(a, F.get(a)), b, P.get(b, F.get(b))) for a, b in names]
@@ -275,5 +287,7 @@ def build(c, parts, refs, fits):
            f"rear {max(lid_rear.BoundBox.XLength, lid_rear.BoundBox.YLength):.1f} x {min(lid_rear.BoundBox.XLength, lid_rear.BoundBox.YLength):.1f} mm "
            f"(bounding boxes), {g.LID_T} mm, top {TOP - LZ - g.LID_T:.1f} mm under the rail top; cell top to lid {LZ - RF - g.AA_D:.1f} mm",
            f"cover: {cov.BoundBox.XLength:.1f} x {cov.BoundBox.YLength:.1f} mm (bounding box), top {g.Z_COVER:.2f}; USB-C opening {uw + 0.6:.1f} x {uh + 0.6:.1f} mm, "
-           f"switch slot {g.SW_SLOT[0]} x {g.SW_SLOT[1]} mm at z {zs:.1f}; pod overhangs its screws by {g.POD_T1 - 20.0:.1f} mm"]
+           f"switch slot {g.SW_SLOT[0]} x {g.SW_SLOT[1]} mm at z {zs:.1f}; pod overhangs its screws by {g.POD_T1 - 20.0:.1f} mm",
+           f"pod rear support: tooth on the rear wall at a = {ta - tw / 2:.1f} .. {ta + tw / 2:.1f}, {g.POD_T1 - (tf - td):.2f} mm under the pod's rear edge, "
+           f"top {zt:.2f} (pod underside {g.Z_PORT:.2f}); {abs(ta - g.POD_USB_A):.1f} mm from the service port's centre line"]
     return pairs, rep

@@ -99,3 +99,27 @@ def levels(n_batt=1):
     out["conn"] = z
     out["core"] = z + PITCH
     return out
+
+# --- core section shell, lid and the radio (M3 session 5, mech/hub/build_core.py) -------------------------------------
+SPLIT = 9.5                     # [rev8] core / connector seam below the core board's bottom face (screwed seam)
+LID_SEAM = GAP                  # core / lid seam above the core board's TOP face: the UB bezels end 0.65 mm under it
+LIP_T, LIP_H, LIP_CLR = 1.2, 2.0, 0.2       # [rev8] lip inside the upper wall; here it stands on a 1.4 mm band of the wall
+KEY_X, KEY_W, KEY_D, KEY_CLR = -15.0, 5.0, 1.0, 0.2     # [rev8] key on the front lip, between the power and reset buttons
+MAGNET = (20.0, 10.0, 2.0)      # [rev8] the user's NdFeB blocks: along the wall, depth, thickness
+POCKET_CLR, SKIN, SHELF_FLOOR = 0.3, 0.6, 0.6           # [rev8] loose side-entry pocket, skin towards the seam
+# Lid seam magnets on the REAR wall, behind the core board (rev 8 had them mid-way on the side walls: there they would
+# overhang the core board, which has to drop straight onto the stack socket, and the west one would lie under the
+# pod's antenna). x centres; both east of the carrier and the pod.
+SHELF_X = (-8.0, 38.0)
+LID_RIM, LID_ROOF = 4.0, 2.0    # flat lid: rim (takes the magnet shelf) and roof
+BOSS_D, M2_CLEAR = 6.5, 2.4     # [rev8]
+UB_BEZEL = 17.8                 # [rev8] NKK UB bezel, square
+# radio: hub-radio carrier on the expansion header, the pod on its bay header (tools/pcb_pod.py CAR_*, POD_*)
+CAR_OUT = [(-52.0, 32.5), (-24.5, 32.5), (-24.5, 38.0), (-26.6, 38.0), (-26.6, 52.5), (-52.0, 52.5)]
+CAR_XY = (-39.5, 55.5)          # bay frame (a, t) -> hub (CAR_XY[0] - a, CAR_XY[1] - t)
+BAY_GAP = 11.04                 # board top to the underside of the board plugged on it: 2.54 header body + 8.5 socket
+BAY_SCREWS = ((-11.5, 20.0), (9.0, 20.0))
+POD_A, POD_T = 15.0, (1.5, 52.19)           # pod board: half width, front / rear edge in the bay frame
+POD_TOP = 3.2                   # tallest part on the pod: the USB4085 shell (the radio module is 2.05)
+RADIO_AIR = 1.0                 # roof above the pod's tallest part
+NUT = (4.1, 1.6)                # M2 nut: across flats (pocket), thickness

@@ -86,6 +86,7 @@ POD_T1 = 52.19                 # pod rear edge in the bay frame (tools/pcb_pod.p
 POD_USB_A, POD_MOD_A = -9.0, 7.0
 USB_SHELL = (8.94, 3.2, 2.51)  # GCT USB4085: width, height above the pod, shell beyond the pod's rear edge (flush with the rail's rear face)
 DECK = 16.5                    # rail walls under the pod: 2.5 mm under its underside (through-hole tails)
+POD_TOOTH = (6.0, 2.5)         # support under the pod's rear edge: width along the rear wall, depth from its inner face (pod_case.py)
 LID_Z, LID_T, LID_EDGE, GROOVE = 17.2, 1.6, 1.0, 0.7    # sliding lids: seat, body, edge flange in the groove, groove depth in the walls
 HOOD_X0 = -22.9                # cover's west end over the rail in the bay frame: room for the lead's plug beside the pod
 FLAT = {}              # part name -> the shape as it lies on the printer bed, where that is not the assembly position

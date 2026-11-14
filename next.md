@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14 (after M3b session 3), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14 (after M3 session 5), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -658,8 +658,41 @@ estimate), driver reach in the bases' access bores (to 35 mm), tongue under the 
 the carrier; `mech/hub/` not opened); a support under the pod's rear end (notes in the session 3 block above).
 **FreeCAD was left with** `pose_options`, `case_left`, `case_right` (new parts) open and unsaved; `case_left_pod`
 and `case_right_pod` there are still session 3's (no pose parts; the files in `build/case/*-pod/` are current).
-**Next**: fit prints (3D, ASA: the numpad pieces; then a `tent5` and the palm rest of `left`); the hub's core
-section with the carrier; the pod's rear support. The order (D7) still waits for M4 step 2 (SPI over the real cable).
+(Session 5 did the hub's core section and the pod's rear support: next block.)
+**M3 session 5 done (2026-11-14): the hub's core section as a shell with lid and carrier support; a tooth under the
+pod's rear edge in the three wireless shells. 0 clashes everywhere. No board changed; nothing is placed or routed
+again.** Details and numbers: spec §3a "Core section shell", §2b "Pod rear support".
+**User decisions (options UI; FreeCAD documents `hub_core_options` with `H1_` deep lid, `H2_` tall section, `H3_`
+ring, `S2_` tab, `W_` wired; `hub_core` = the chosen one; `case_left_pod` re-run with the tooth)**: **deep lid**
+(core section the same with and without the radio; `lid` 6 mm, `lid-radio` 14 mm), **wall shelf + nut sleeve**
+for the carrier, **tooth on the rear wall** under the pod, **fit prints: still none** ("nothing printed yet", third
+time asked).
+**Critique given first (and recorded in the spec)**: not 9 mm on the core section: the USB-C shell is the tallest
+part on the pod (28.5 mm above the core board), the room is 29.5 mm and the radio costs 8 mm against a wired
+hub's lid; standoffs under the carrier need board changes (one screw is outside `hub-core`, no hole under the other).
+**Script**: `mech/hub/build_core.py` (header explains the options; `HUB_HEIGHT=lid|section|ring`,
+`HUB_SUPPORT=shelf|tab`, `HUB_OPTIONS=1`; defaults are the decided ones), writes `build/mech/hub/core/`
+(`core-section.stl`, `lid.stl`, `lid-radio.stl`, `carrier-sleeve.stl`, lids roof down; `report.txt` ends with the
+clash count: read it, freecadcmd exits 0 on an exception). Numbers in `mech/hub/hub_geom.py` (new block at the end).
+`mech/hub/build_hub.py` (the stack section) is unchanged and still passes. In the FreeCAD GUI an old `hub_geom`
+may be cached: `sys.modules.pop("hub_geom", None)` before `exec`.
+`mech/case/pod_case.py`: the tooth (`POD_TOOTH` in `build_case.py`), placed by a search along the rear wall; clash
+pairs tray / pod and cover / tray added. The three `build/case/*-pod/` folders are rebuilt (the numpad's `tray`
+and `fit-power` now carry the tooth: print these, not older files).
+**Changed from rev 8, by me, to judge on the print**: lid magnets on the rear wall behind the core board (side-wall
+shelves would overhang the board, which must drop straight onto the stack socket, and one would lie under the
+pod's antenna), so the lid's front is held by the lip only; the lip stands on a band of the wall.
+**Open, for the connector section's session**: the core board's screws stand above `hub-conn`'s own screws (user,
+M2 session 7) and the core section's bosses end 8 mm above `hub-conn`: one long screw through both boards with a
+sleeve, or inserts brought up beside the board, is not decided (options UI there).
+**To check on parts**: M2 nut in the shelf's half-open pocket (4.1 mm across flats) and in the sleeve; pod 0.5 mm
+from the west wall; horn under the pod's west edge (3 mm); `right`'s tooth under the module's end (range at
+bring-up); magnets loose in side-entry pockets.
+**FreeCAD was left with** `hub_core`, `hub_core_options`, `case_left_pod` (new) open and unsaved; the other
+`case_*_pod` documents there are older than the files in `build/case/*-pod/`.
+**Next**: fit prints (3D, ASA: the numpad pieces; then a `tent5` and the palm rest of `left`); the rest of the
+tower in `mech/hub/` (connector section with the screw question, battery modules, base, seam test print).
+The order (D7) still waits for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

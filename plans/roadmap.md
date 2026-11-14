@@ -148,8 +148,11 @@ on two new holes in `plate-right`, tent base screwed with four M2 and repeating 
 a screwed tongue with the pose parts under both, square split-side rail end. Session 4 (2026-11-14): pose parts of `left` / `right` in both variants
 (`mech/case/pose_case.py`, 0 clashes): tent bases 5 and 7 degrees (short and long, `left` lifted to level the split
 edges), palm rest 100 x 26 mm with a pillow top, tilt bars for under it; the tray's tilt bars got a second hole
-pair for the base (spec §2a). Still to do: fit prints, the hub tower (core section with the carrier first), the
-pod's rear support.
+pair for the base (spec §2a). Session 5 (2026-11-14): the hub's core section as a shell (`mech/hub/build_core.py`,
+0 clashes): decided (options UI, FreeCAD): the radio comes with a deeper lid (8 mm; the core section is the same
+with and without it), the carrier rests on a wall shelf and a nut sleeve (no board change), a tooth on the rail's
+rear wall under the pod's rear edge in the three wireless shells (spec §3a "Core section shell", §2b). Still to
+do: fit prints, the rest of the tower (connector section, battery modules, base, seam test print).
 
 **Exit check:** everything assembles with no rework; the user has typed on it for a day.
 

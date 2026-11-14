@@ -510,11 +510,17 @@ and are checked against their datasheets when the schematics are written.
     `left` / `right` (the numpad's cover the same features).
   - **Tight, to check on the lead**: on `right` the pod's lead connector faces the split-side wall with 5.8 mm
     from its mouth to the cover's inside (9.6 mm on `left` and the numpad).
-- **Open**: the pod's rear end overhangs its two screws by 32 mm with nothing under it (looked at again: on `left`
-  the power board's free front-east notch lies under the pod, 10 to 17 mm behind the screws; a ledge on the rear
-  wall meets the lead connector's envelope on `left`; nothing drawn); lid snap, groove play, plate slots and
-  spring heights on the fit print; slide switch actuator against its slot (C&K drawing); the tower's core section
-  height and a support for the carrier; USB4085 shell overhang (2.51 mm, from KiCad's footprint) against the GCT drawing; on `pod-power` the
+- **Pod rear support (M3 session 5, user, 2026-11-14, options UI, FreeCAD)**: a tooth on the rail's rear wall
+  under the pod's rear edge (`POD_TOOTH` 6 x 2.5 mm, 2.0 mm of bearing, top 0.1 mm under the pod, 45 degrees
+  underneath, standing free inside the cover above the lowered wall). `pod_case.py` puts it as near the service
+  port as the port's solder tails, the pack plug and the lead connector on the power board allow: a = -3.5 .. 2.5
+  on `left` (8.5 mm from the port's centre line), 1.0 .. 7.0 on `numpad` (13 mm), 8.0 .. 14.0 on `right` (20 mm;
+  there it lies under the radio module's end, plain ASA: range is measured at bring-up). Offered and not taken: a
+  post beside the power board (only `left` has a free spot, 13 mm behind the screws), no support. Clash pairs
+  tray / pod and cover / tray added; 0 clashes on all three.
+- **Hub: core section, lid and carrier support: §3a "Core section shell".**
+- **Open**: lid snap, groove play, plate slots and
+  spring heights on the fit print; slide switch actuator against its slot (C&K drawing); USB4085 shell overhang (2.51 mm, from KiCad's footprint) against the GCT drawing; on `pod-power` the
   finishing pass closed one +5V_RAW link and the +3V3 line at 0.2 mm (review before the order).
 
 ## 3. Power
@@ -559,6 +565,42 @@ tables and the boards against each other).
   leads to JST XH plugs on the core board. Module ports: Amphenol 12401548E4-2A on the connector layer's front edge.
   Chain seam: riser (Samtec DW-08-17-T-D-254) and cap board with a Mill-Max 827 2x8 spring-pin strip on each battery
   board, Mill-Max 1578 target discs under the board above. Placed and routed (next point).
+- **Core section shell, lid and the radio (M3 session 5, 2026-11-14)**, `mech/hub/build_core.py`, numbers in
+  `hub_geom.py` (block "core section shell"); output `build/mech/hub/core/` (`core-section`, `lid`, `lid-radio`,
+  `carrier-sleeve` as STL, `report.txt`); options side by side with `HUB_OPTIONS=1` (document `hub_core_options`).
+  Heights below are from the core board's top face. No board changed.
+  - **Shell**: ring of wall from 9.5 mm under the core board (screwed seam to the connector section: bosses with
+    through holes at the board's four screws, fused to the side walls) to the lid seam at 17.5 mm (the button
+    bezels end 0.65 mm under it). The lip (1.2 x 2.0 mm, key at x = -15 between the power and reset buttons)
+    stands on a 1.4 mm band of the wall, chamfered underneath (rev 8's lip had nothing under it).
+  - **Lid magnets on the rear wall, by me (rev 8: mid-way on the side walls)**: two shelves behind the core board
+    (x = -8 and 38, 11 mm deep, on 45 degree wedges) for the user's 20 x 10 x 2 mm magnets. On the side walls the
+    shelves would overhang the core board by 3 mm, and the board has to drop straight onto the stack socket; the
+    west one would lie 10 mm under the pod's antenna. The lid's front is held by the lip and the key only: to
+    judge on the print.
+  - **Height with the radio (user, options UI, FreeCAD): a deeper lid, the core section is the same with and
+    without the radio.** Measured: the tallest part on the pod is its USB-C shell (28.48 mm), not the module
+    (27.33), so the room is 29.5 mm (1 mm of air); without the radio 21.5 mm (lid rim 4 mm for the magnet
+    shelf). `lid` 4 + 2 mm, `lid-radio` 12 + 2 mm: **the radio costs 8 mm (tower top at 101.4 instead of 93.4 mm
+    with two battery modules), not 9 on the core section.** Offered and not taken: a taller core section (the pod
+    lies 0.5 mm from the west wall, so the lip would be missing along 55 mm of it; every hub 8 mm taller), a
+    spacer ring (one more seam, four more magnets).
+  - **Carrier support (user): a shelf on the west wall and a nut sleeve, no board change.** Standoffs under the
+    carrier's two screws are not possible: the west screw (-48.5, 35.5) lies 1.5 mm outside the core board, and
+    `hub-core` has no hole under the east one (-28, 35.5; the spot is free of footprints). The shelf (top at
+    11.04 mm, to x = -47.3, 0.3 mm outside the board's edge; -47.9 beside the bay header's solder tails) carries
+    the carrier's west edge and an M2 nut in a half-open pocket; the loose `carrier-sleeve` (6 x 11.04 mm, nut
+    pocket on top) stands on the core board under the east screw. Two M2 x 16 through pod, bay sleeve (the
+    modules' `sleeves`) and carrier into the nuts. Order: core board, nut and sleeve, carrier, sleeves, pod.
+    Offered and not taken: a tab on the carrier to the core board's west-rear screw on a standoff (`hub-radio`
+    placed and routed again; FR4 4 mm from the Pico's antenna).
+  - **Pod's far end** (it points to the front, 32 mm past its screws): a horn on the west wall under the pod's west
+    edge (y 9.3 .. 21.3, 3 mm of bearing, behind the antenna area), rising 6 mm above the seam inside the lid's wall.
+  - Clash checks (shell parts against boards, parts, pod and each other): 0, with and without the radio.
+  - **Open**: the connector section is not drawn, and the core board's screws stand above `hub-conn`'s own
+    screws (user, M2 session 7): the core section's bosses end at the seam, 8 mm above `hub-conn`; whether one
+    long screw goes through both boards or the connector section brings inserts up beside its board is settled
+    there. Connector section, battery modules, base, the seam test print (spring-pin force against magnet pull).
 - **Hub board layouts (M2 session 5, 2026-11-14)**, `tools/pcb_hub.py` (placement) and `tools/route_hub.py` (routing):
   - **`hub-conn` has 4 copper layers (user, 2026-11-13)**: top = parts and signals, inner 1 = unbroken GND plane (no
     tracks), inner 2 = power trunks and signals, bottom = signals. All SMD parts stay on top. The heavy copper is
