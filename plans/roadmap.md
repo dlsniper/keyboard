@@ -158,6 +158,12 @@ order (D7) and before the user tests anything**. Software stack open until the h
 2. Pod schematic and board on the frozen 2x6 bay header (spec §1, O10); hub side if it needs hardware.
 3. Shell: pod variant of the bay cover / tray; re-check the numpad shell of M3 session 1 against it.
 
+**Progress:** session 1 (2026-11-14): step 1 decided (spec §2b): radio-only pod in the bay with a soldered nRF52840
+module and a USB-C service port; power board (3.3 V always on, capped 5 V for LEDs) and 4 AA (`numpad`) or 6 AA
+(`left`, `right`) in a rail along the rear edge and the outer side; the same pod on a passive carrier on the hub's
+expansion header. No key board changes. Preview `mech/case/pod_preview.py`. Boards now to draw: `pod`, `pod-power`,
+`hub-radio` (carrier). Open: the sixth cell on `left`, cell holders, pack switch, rail joint.
+
 **Exit check:** ERC / DRC 0, review closed, both variants fit the same key board and tray.
 
 ## M4, firmware bring-up

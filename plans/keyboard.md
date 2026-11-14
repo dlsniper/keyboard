@@ -116,7 +116,8 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   **User, 2026-11-14 (M3 session 1): the cable-free (wireless) variant of the modules must be part of the final
   hardware design before anything is built and tested**, beside the wired one: pod electronics, its board and its
   place in the shell are designed before the order (D7). The software stack is left open until the hardware
-  exists. Nothing of the pod is designed yet (roadmap M3b).
+  exists. **Decided at M3b session 1 (2026-11-14): §2b** (radio-only pod with an nRF52840 module, power board and
+  4 / 6 AA in a rail along the rear and outer side, the same pod as the hub's receiver); nothing is drawn yet.
 - The hub has a rear **expansion port**; each key board keeps a few spare expander
   pins on a header.
 
@@ -236,6 +237,71 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
 - Feet: four 3M Bumpon recesses (8.4 mm); the tilt bars carry their own.
 - **Hub: `hub-core` and `battery` stay 94 mm (user, 2026-11-14, final)**; the room to the 114 mm shell is for walls,
   seam magnets and grips.
+
+## 2b. Wireless variant of the modules (M3b session 1, user, 2026-11-14)
+
+Hardware only; the software stack (link protocol, pairing, firmware of pod and receiver) is open until the boards
+exist. Decided through the options UI, the numpad shell shown in FreeCAD. **No key board, hole, outline or bay
+changes: no board is placed or routed again.** Nothing below is drawn yet; parts marked "candidate" are from memory
+and are checked against their datasheets when the schematics are written.
+
+```
+ cells (4 or 6 AA, in the rail)                      radio pod, in the bay (2 screws)
+   |                                                +---------------------------------+
+   v                                                |  nRF52840 module                |
+ +-- power board (in the rail, behind the bay) --+  |   SPI master, INT (wake), CS    |
+ | fuse, reverse protection                      |  |   LED data -> 5 V level shifter |
+ | 3.3 V buck, always on, uA idle  --- +3V3 -----+--+-> 3.3 V                         |
+ | 5 V buck-boost, about 0.5 A     --- +5V_LED --+--+-> 5 V                           |
+ |   enable (off by default)      <--- EN_5V ----+--+   USB-C (USB 2.0): flashing     |
+ | pack divider                    --- VBAT_S ---+--+   SWD pads, reset button        |
+ +-----------------------------------------------+  +----------- 2x6 socket ----------+
+              6-wire lead                                             |
+                                                      frozen 2x6 bay header (key board)
+                                                      or the hub's carrier board
+```
+
+- **Radio pod = the bay board, radio only (user)**: a soldered **nRF52840 module** (MDBT50Q class, candidate) on a
+  board of the port board's size and holes (30 x 23.5 mm, 2x6 socket underneath, two M2 screws), so a dead radio is a
+  two-screw swap of a small board. On it: the module, a single-gate 5 V level shifter for LED data (fed from the
+  5 V pins), CS and INT pull-ups, series resistors, the lead connector, a **16-pin USB-C receptacle on the module's
+  own USB for flashing and a console (user; it does not power the module and does not make it wired)**, SWD pads,
+  a reset button. The pod is the SPI master of the module's expander(s) and wakes on the INT line. Header pins as
+  the port board (§1): 5 V and 3.3 V are fed INTO the key board from the lead.
+- **Power board at the cells (user)**: converters, fuse and the pack input are on a second small board in the
+  battery rail, behind the bay; a 6-wire lead joins it to the pod (+5V_LED, +3V3, 2 x GND, EN_5V, VBAT_SENSE). A
+  dead converter is a swap of that board only. Input **4.0 to about 10 V, so the same board takes 4 or 6 cells**:
+  3.3 V by an always-on buck with microamp idle current (candidate TPS629210), 5 V for the LED rail by a
+  buck-boost that is off unless the pod enables it (candidate TPS63070 family, as the hub's first converter).
+- **Cells (user): 6 x AA on `left` and `right`, 4 x AA on `numpad`**, NiMH (alkaline tolerated), charged outside
+  the keyboard, as the hub's packs. The user first asked for cells under the modules; shown and withdrawn: an AA
+  is 14.5 mm and the tray has 4 mm under the board, so cells under the keys raise every key by about 19 mm.
+- **Place (user): a battery rail along the rear edge and the outer side of each module**, at desk level, 19 mm wide
+  and 19 mm high (lower than the bay cover, key height unchanged), cells in single file, changed from above. The
+  rear part ends behind the bay, so the lead to the pod is short on every module. `numpad`: 3 cells along the
+  right side, 1 cell and the power board (about 48 x 14 mm, provisional) along the rear; the module grows from
+  88.6 x 154.4 to 107.6 x 173.4 mm. The pod's service port faces the rear above the rail (bay board top 20.64 mm,
+  rail top 19 mm; the plug's overmould needs a notch of about 0.5 mm in the rail's lid). Preview:
+  `mech/case/pod_preview.py` (envelopes only). **Found, open: `left` takes only 5 cells in single file** (side 3,
+  rear 2 beside the power board; its rear edge is 141 mm); the sixth needs a doubled piece of rail or another
+  place for the power board. `right` (241 mm rear edge) takes 6.
+- **LEDs on battery (user): capped.** The 5 V converter is sized for about 0.5 A (2.5 W) and is off by default;
+  the LED rail is on only while LEDs are lit (the dark chain alone draws 22 / 36 / 52 mA). Estimates, to measure:
+  months per charge without LEDs; at 5 mA per LED about 15 h on `numpad` (4 cells) and about 9 h on `right`
+  (6 cells). Full brightness needs the cable.
+- **Hub side (user): the same radio pod on a carrier board** on the core's 2x5 expansion header (found: it
+  carries +3V3, +5V, GND and GP0 / GP1, which are also UART0; SP1-SP4 reach no Pico pin). The carrier is passive:
+  2x5 socket, a 2x6 header and two M2 holes as a key board's bay, the pod's 3.3 V pin fed from the Pico, UART on
+  two of the pod's SPI pins, the spare pin tied low so the pod knows it sits in the hub. `hub-core` and `hub-conn`
+  do not change; the Pico's own radio stays free for the host link (M6). Chosen over the Pico 2 W's radio
+  (Bluetooth only, 7.5 ms connection interval at best, one radio for three pods and the host) and over a Nordic
+  core board. One radio board design in four places.
+- **One design for all three modules**: one radio pod, one power board; the rail print and the cell count differ
+  per module.
+- **Open for the schematic session (to ask)**: a pack on / off switch on the power board; how the cells are held
+  and joined in the rail (bought single-cell holders or printed pockets with contact springs); the lead's
+  connector family; a 32 kHz crystal on the pod; the sixth cell on `left`; how the rail is fixed to the tray (two
+  inserts in the rear wall are assumed) and how it goes with the tilt bars and the tent base.
 
 ## 3. Power
 
@@ -644,7 +710,7 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
   Open under it: pogo parts for 2x8.
 - **O9** n-key USB report in TinyGo (M4).
 - **O10** cable-free pods (**hardware now required before the order, user, 2026-11-14; roadmap M3b**): they take the port board's place in the bay (2x6 header,
-  two M2 screws; D3); bay size and header position frozen at M1; the pods themselves (controller, radio link to the hub, latency
-  over radio) come after M6.
+  two M2 screws; D3); bay size and header position frozen at M1. **Hardware decided 2026-11-14 (§2b)**; schematics, boards and
+  the shell's rail are next; the radio link, its latency and the firmware come after the hardware exists.
 - O4, O5 closed 2026-11-13 (archive move; Pico 2 W, test image compiles for `pico2-w`;
   RP2350 erratum E9 avoided by pull-up scanning, which the expander's pull-ups give).

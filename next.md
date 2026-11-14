@@ -434,8 +434,34 @@ high on the port board with its mouth at the board edge (Amphenol drawing does n
 **Not done in session 1**: `left` and `right` shells (the script is general but only run for numpad; `right` needs the dial
 board's mounting, `left` / `right` the tent base and palm rest joints); the tent angle (measure the K860); tilt bar with
 tenting combined; hub tower shell and the seam test print (roadmap M3 step 2).
-**Next**: M3b decisions (wireless module hardware) or M3 session 2 (`left` / `right` shells, tent base, palm rest): the
-user's call, see the session-end prompt. The order (D7) waits for M3b and for M4 step 2 (SPI over the real cable).
+**M3b session 1 done (2026-11-14): the wireless decisions; block diagram and place in the shell in spec §2b. Nothing
+is drawn (no schematic this session). No hole, outline or bay moved: no board has to be placed or routed again.**
+**User decisions (options UI; the numpad shell with each cell placement shown in FreeCAD)**:
+- **Pod = the bay board, radio only**: soldered nRF52840 module (MDBT50Q class), 2x6 socket and two M2 holes as the
+  port board, LED data level shifter, **USB-C (USB 2.0) for flashing + SWD pads**. The user asked for the radio on an
+  add-in board so that a dead radio is swapped alone; a card stacked in the bay was shown as 6-8 mm too tall, so the
+  bay board itself became that board and the power parts moved out.
+- **Power board at the cells**, 6-wire lead to the pod (+5V_LED, +3V3, 2 x GND, EN_5V, VBAT_SENSE); input 4.0 to
+  about 10 V so one board takes 4 or 6 cells; 3.3 V always on, **5 V for LEDs capped at about 0.5 A, off by default**.
+- **6 AA on `left` and `right`, 4 AA on `numpad`** (user's own wording).
+- **Cells in a rail along the rear edge and the outer side** (user's own choice; offered and rejected: rear pack,
+  base under the module, side only, front + side; the user's first wish, cells under the module, was withdrawn
+  after the 19 mm height cost was shown). Rail 19 x 19 mm, single file; numpad 107.6 x 173.4 mm with it.
+- **Hub listens with the same pod on a passive carrier** on the core's expansion header (GP0 / GP1 = UART0; SP1-SP4
+  reach no Pico pin); hub-core and hub-conn unchanged.
+**Preview = `mech/case/pod_preview.py`** (envelopes only; in the FreeCAD GUI: open `build/case/numpad/numpad-case.FCStd`,
+then `exec(open("mech/case/pod_preview.py").read())`; objects `RAIL_*`, `POD_*`). The numpad document in the GUI was
+left open with the preview, not saved.
+**Found, open**: `left` holds only 5 cells in single file (side 3, rear 2 beside the power board); converter parts
+are candidates from memory (TPS629210, TPS63070 family, MDBT50Q-1MV2: read the datasheets before drawing); the power
+board's 48 x 14 mm is a guess. **Not asked yet (ask at the schematic session)**: pack on / off switch, cell holders
+or printed pockets with springs, lead connector family, 32 kHz crystal, rail joint to the tray (with tilt bars and
+tent base), the sixth cell on `left`.
+**Not mine, left uncommitted**: `hardware/hub-conn/hub-conn.kicad_pro` changed during the session (KiCad rewrote it,
+as it did the five rev 8 project files).
+**Next**: M3b session 2: schematics by script for `pod`, `pod-power` and the carrier `hub-radio` (ERC 0), then
+boards and the rail in the shell. Or M3 session 2 (`left` / `right` shells, tent base, palm rest), which the rail
+and the sixth cell on `left` also need. The order (D7) waits for M3b and for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join
