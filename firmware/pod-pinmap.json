@@ -1,0 +1,165 @@
+{
+  "board": "pod",
+  "module": "Raytac MDBT50Q-1MV2",
+  "mcu": "nRF52840",
+  "source": "tools/sch_pod.py",
+  "supply": "VDD = VDDH = 3.3 V from the lead (key module) or the Pico (hub); REG1 DC/DC may be enabled (inductor in the module); USB VBUS feeds only the USB regulator",
+  "lfclk": "32.768 kHz crystal on P0.00 / P0.01",
+  "pins": {
+    "SCK": {
+      "gpio": "P0.19",
+      "module_pin": 42,
+      "net": "SCK_R",
+      "note": "SPI clock to the expander(s), 33 R at the pod"
+    },
+    "MOSI": {
+      "gpio": "P0.21",
+      "module_pin": 43,
+      "net": "MOSI_R",
+      "note": "33 R at the pod; in the hub: UART TX of the pod (to GP1)"
+    },
+    "MISO": {
+      "gpio": "P0.20",
+      "module_pin": 44,
+      "net": "MISO",
+      "note": "in the hub: UART RX of the pod (from GP0)"
+    },
+    "CS": {
+      "gpio": "P0.23",
+      "module_pin": 45,
+      "net": "CS",
+      "note": "active low, 100 k pull-up on the pod"
+    },
+    "INT": {
+      "gpio": "P0.22",
+      "module_pin": 46,
+      "net": "INT",
+      "note": "expander interrupt, open drain, active low, 100 k pull-up on the pod; wake source"
+    },
+    "LED_DATA": {
+      "gpio": "P0.24",
+      "module_pin": 48,
+      "net": "LED_3V3",
+      "note": "to the 5 V level shifter (74AHCT1G125), 100 k pull-down; hold low while the key board's LED rail is off"
+    },
+    "HUB_DETECT": {
+      "gpio": "P0.25",
+      "module_pin": 49,
+      "net": "HUB_DET",
+      "note": "through 1 k to bay pin 6: tied low on the hub carrier, open on a key board; read once with the internal pull-up, then pull-up off, never drive"
+    },
+    "EN_5V": {
+      "gpio": "P0.15",
+      "module_pin": 39,
+      "net": "EN_5V",
+      "note": "high = LED rail converter on; 100 k pull-down on the power board (off by default)"
+    },
+    "VBAT_SENSE": {
+      "gpio": "P0.04",
+      "module_pin": 20,
+      "net": "VBAT_SENSE",
+      "note": "AIN2; pack voltage x 680 / 2880 (2.2 M / 680 k), 100 nF at the pin: sample slowly",
+      "ain": 2
+    },
+    "STATUS_LED": {
+      "gpio": "P0.06",
+      "module_pin": 22,
+      "net": "STATUS",
+      "note": "high = on (1 k, LED to GND)"
+    },
+    "XL1": {
+      "gpio": "P0.00",
+      "module_pin": 17,
+      "net": "XL1",
+      "note": "32.768 kHz crystal"
+    },
+    "XL2": {
+      "gpio": "P0.01",
+      "module_pin": 18,
+      "net": "XL2",
+      "note": "32.768 kHz crystal"
+    },
+    "RESET": {
+      "gpio": "P0.18",
+      "module_pin": 40,
+      "net": "RESET",
+      "note": "nRESET: button to GND, debug header pin 10; works only once UICR PSELRESET[0] and [1] select P0.18"
+    },
+    "SWO": {
+      "gpio": "P1.00",
+      "module_pin": 47,
+      "net": "SWO",
+      "note": "debug header pin 6"
+    }
+  },
+  "usb": {
+    "d_plus_module_pin": 35,
+    "d_minus_module_pin": 34,
+    "vbus_module_pin": 32
+  },
+  "swd": {
+    "swdio_module_pin": 51,
+    "swdclk_module_pin": 53,
+    "header": "2x5 1.27 mm Cortex debug"
+  },
+  "active_levels": {
+    "CS": "low",
+    "INT": "low",
+    "EN_5V": "high",
+    "STATUS_LED": "high",
+    "HUB_DETECT": "low = hub",
+    "RESET": "low"
+  },
+  "pack_cutoff": {
+    "per_cell_on_v": 1.0,
+    "per_cell_off_v": 0.9,
+    "note": "hardware, on the 3.3 V converter; drop EN_5V at about 1.1 V per cell in firmware"
+  },
+  "vbat": {
+    "divider_top_ohm": 2200000.0,
+    "divider_bottom_ohm": 680000.0,
+    "pack_volts_per_pin_volt": 4.2353,
+    "note": "reads 0 while the pack switch is off (then the pod is unpowered too); in the hub the pin is open"
+  },
+  "led_rail": {
+    "limit_ma": [
+      475,
+      520,
+      565
+    ],
+    "note": "TPS2553 constant-current cap; keep the firmware's LED budget below 450 mA"
+  },
+  "key_module": {
+    "spi": {
+      "sck": "P0.19",
+      "mosi": "P0.21",
+      "miso": "P0.20",
+      "cs": "P0.23"
+    },
+    "int": "P0.22",
+    "led_data": "P0.24",
+    "expander_addresses": {
+      "left": [
+        0
+      ],
+      "numpad": [
+        1
+      ],
+      "right": [
+        2,
+        3
+      ]
+    }
+  },
+  "hub": {
+    "uart": {
+      "pod_tx": "P0.21",
+      "pod_rx": "P0.20",
+      "pico_tx": "GP0",
+      "pico_rx": "GP1",
+      "pico_uart": "uart0"
+    },
+    "note": "HUB_DETECT reads low; hub firmware must not start I2C0 on GP0 / GP1 with a carrier fitted (hub-pinmap.json lists them as I2C0); the Pico's I2C0 pull-ups (4.7 k) hold both lines high; CS, SCK, INT go to SP1, SP2, SP3 (no Pico pin)",
+    "hub_pinmap": "firmware/hub-pinmap.json"
+  }
+}

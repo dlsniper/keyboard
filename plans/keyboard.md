@@ -298,10 +298,52 @@ and are checked against their datasheets when the schematics are written.
   core board. One radio board design in four places.
 - **One design for all three modules**: one radio pod, one power board; the rail print and the cell count differ
   per module.
-- **Open for the schematic session (to ask)**: a pack on / off switch on the power board; how the cells are held
-  and joined in the rail (bought single-cell holders or printed pockets with contact springs); the lead's
-  connector family; a 32 kHz crystal on the pod; the sixth cell on `left`; how the rail is fixed to the tray (two
-  inserts in the rear wall are assumed) and how it goes with the tilt bars and the tent base.
+- **Decided at M3b session 2 (user, options UI, 2026-11-14)**: **on / off slide switch on the converters' enables**
+  (carries no load current); **cells in printed pockets with bought spring / button contacts**, wired in a printed
+  channel (slots need a fit print); **lead = JST GH, 6 pins, 1:1**; **32.768 kHz crystal fitted, and the pod board
+  made roomier** (user's own wording: easy to work on, good properties; how it grows is decided at the board session
+  with the shell in FreeCAD: the bay is 30 mm wide between the screws' key-board parts, so the room is to the rear,
+  over the rail, which also gives the antenna its free edge). **Sixth cell on `left`: the user proposes a wider left
+  shell on its outer side**, the strip beside the keys kept for later LEDs or buttons. My estimate, not modelled:
+  about 20 mm more width makes the rear run three cells long (3 rear + 3 side); anything in that strip would be a
+  small board on the spare-pin header, the key board stays as routed. To show in FreeCAD at left's shell (M3).
+- **Schematics (M3b session 2): `tools/sch_pod.py`** writes `hardware/pod`, `hardware/pod-power`, `hardware/hub-radio`
+  and `firmware/pod-pinmap.json`, then checks the netlists (bay socket against the key boards' table, the lead pin
+  for pin on both boards, every module pin, IC pins against a second copy of the datasheet tables, the carrier
+  against hub-core's expansion header). ERC 0 on all three. Datasheets read: TPS629210, TPS63070, TPS2553,
+  MDBT50Q-1MV2, nRF52840, SN74AHCT1G125, AO3401A, MF-MSMF, JST GH, USB4085 (`build/ds/`).
+  - **`pod`**: MDBT50Q-1MV2 with VDD = VDDH = 3.3 V (normal-voltage mode; the 32 MHz crystal and the REG1 inductor
+    are inside the module). SPI on pins that are not "low frequency only": SCK P0.19, MOSI P0.21 (33 R each),
+    MISO P0.20, CS P0.23 and INT P0.22 (100 k pull-ups), LED data P0.24 through a 74AHCT1G125 on the 5 V pins
+    (100 R out, 100 k pull-down in), EN_5V P0.15, pack sense P0.04 (AIN2), status LED P0.06, hub detect P0.25
+    through 1 k to bay pin 6, crystal on P0.00 / P0.01 with 12 pF. USB-C (GCT USB4085) on the module's USB: VBUS
+    feeds only the USB regulator pin (2.2 R, 10 uF), 27 R in D+ / D-, Rd on both CC, USBLC6-2. **The pod must be
+    powered from the lead or the hub to be flashed.** Debug: 2x5 1.27 mm Cortex header (my choice over bare pads:
+    any debugger's cable fits), reset button. Lead J2: 1 +5V, 2 GND, 3 EN_5V, 4 VBAT_SENSE, 5 GND, 6 +3V3.
+  - **`pod-power`**: pack on a 2-pin JST XH (my choice: 3 A contacts; the GH's 1 A is too little for the pack
+    line), MF-MSMF110/16X fuse, AO3401A against a reversed pack (10 V Zener on its gate, 47 uF on the pack rail),
+    slide switch C&K OS102011MA1QN1. **TPS629210** (27.4 k on MODE/S-CONF: VSET mode, automatic power save, output
+    discharge; FB/VSET open = 3.3 V; 2.2 uH, 22 uF). **TPS630701** (fixed 5.0 V, power save, 1.5 uH, 2 x 22 uF +
+    10 uF), enabled only by EN_5V (1 k, 100 k pull-down), **behind a TPS2553 with 49.9 k: the LED rail is capped at
+    475-565 mA in hardware** (added by me: the converter alone would give 2 A and the lead's contacts carry 1 A).
+    Pack divider 2.2 M / 680 k behind the switch. Test pads for the pack rail, 3.3 V, 5 V, GND.
+    **Pack cut-off (review finding, added)**: a divider on the 3.3 V converter's precise enable turns the module
+    off at 0.9 V per cell and on again at 1.0 V per cell; without it the converter runs a NiMH pack down to
+    2.75 V. **Its top resistor depends on the cell count: 1 M for 4, 1.33 M for 5, 1.65 M for 6 (drawn)**: the one
+    part that differs between modules. Idle cost: the two dividers draw about 6 uA at 7.2 V. Off: 3 to 13 uA.
+  - **`hub-radio`**: 2x5 socket onto hub-core's expansion header, a bay header, 10 uF. GP0 (UART0 TX) to bay pin 9
+    (the pod's MISO pin), GP1 (UART0 RX) from bay pin 10 (its MOSI pin); bay pin 6 to GND; CS, SCK, INT to
+    SP1-SP3 (no Pico pin today, for a later core board). **Hub firmware must not start I2C0 on GP0 / GP1 when the
+    carrier is fitted** (`firmware/hub-pinmap.json` still lists them as I2C0; it is hub-core's file, not changed).
+  - **Independent review (Opus, datasheets and netlists only)**: nothing wrong in pins, ratings or UART
+    direction; 3 should-fix and 9 notes, all taken into the generator except two left as limits: the fuse holds
+    only 0.85 A at 50 C, which is the pack current if the LED rail sits in its limit at a 4.0 V pack (firmware
+    budget: 450 mA); `hub-pinmap.json` as above. Not checkable from the files: USBLC6-2 pinning (no datasheet on
+    disk), whether the slide switch is break-before-make (its third contact is left unused, so it cannot short
+    the pack either way), capacitor derating (no part numbers yet).
+- **Open**: footprints for the TPS630701 (RNM) and the two inductors (XGL3530, XFL4020); the pod's outline; the
+  contact part for the printed pockets; how the rail is fixed to the tray (two inserts in the rear wall are
+  assumed) and how it goes with the tilt bars and the tent base; left's width.
 
 ## 3. Power
 

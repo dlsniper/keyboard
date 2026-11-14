@@ -459,9 +459,41 @@ or printed pockets with springs, lead connector family, 32 kHz crystal, rail joi
 tent base), the sixth cell on `left`.
 **Not mine, left uncommitted**: `hardware/hub-conn/hub-conn.kicad_pro` changed during the session (KiCad rewrote it,
 as it did the five rev 8 project files).
-**Next**: M3b session 2: schematics by script for `pod`, `pod-power` and the carrier `hub-radio` (ERC 0), then
-boards and the rail in the shell. Or M3 session 2 (`left` / `right` shells, tent base, palm rest), which the rail
-and the sixth cell on `left` also need. The order (D7) waits for M3b and for M4 step 2 (SPI over the real cable).
+**M3b session 2 done (2026-11-14): schematics of `pod`, `pod-power`, `hub-radio` by `tools/sch_pod.py`; ERC 0 on
+all three; netlist checks 123 / 59 / 43 assertions, 0 failed; pin map `firmware/pod-pinmap.json`; independent review
+(Opus) closed. No key board, hub-core or hub-conn file changed; nothing is placed or routed again.** Circuits,
+values and the review's outcome: spec §2b.
+**User decisions (options UI)**: slide switch on the converters' enables; printed cell pockets with bought
+contacts; JST GH lead; crystal fitted **and a roomier pod board** (user's wording; not yet said how: to the rear
+over the rail is the only direction that leaves the key boards alone; show it in FreeCAD first); **sixth cell on
+`left`: user proposes a wider left shell with the spare strip kept for later LEDs / buttons** (not modelled, my
+estimate is about 20 mm; show in FreeCAD at left's shell).
+**Added by me, not asked, each reversible in the generator (told to the user in the session's summary)**:
+TPS2553 hardware cap on the LED rail (475-565 mA); pack cut-off divider on the 3.3 V converter's enable **with a
+top resistor per cell count** (`UVLO_TOP`, 6 cells drawn; costs about 3.6 uA while on); status LED on the pod;
+2x5 1.27 mm Cortex debug header instead of bare pads; JST XH for the pack; test pads; CS / SCK / INT of the
+carrier on SP1-SP3; 10 V gate Zener and 47 uF can on the pack rail (review).
+**For the board session**: draw footprints for TPS630701 RNM (VQFN-15 2.5 x 3, `build/ds/tps63070.pdf`),
+XGL3530-222 and XFL4020-152 (download the Coilcraft drawings); `sch_pod.py`'s footprint check lists exactly these
+three as missing and fails on any other. The pod's 2x6 socket and the carrier's 2x5 socket go on the underside
+(mirror rule above). MDBT50Q: antenna end at a board edge, no copper on any layer under it (3.8 mm), pad pitch is
+only in Raytac's separate footprint guide (KiCad's `RF_Module:Raytac_MDBT50Q` is assigned: check it against that
+guide). The 47 uF can is 6.3 mm in diameter and 5.8 mm high: check it against the rail's inside.
+**For the firmware (M4 / M6)**: UICR PSELRESET must select P0.18 or the reset button does nothing; hub firmware
+must not start I2C0 on GP0 / GP1 with the carrier fitted (`hub-pinmap.json` still says I2C0); LED data low while
+a key board's LED rail is off; LED budget under 450 mA on battery; EN_5V off at about 1.1 V per cell.
+**To check on parts**: USBLC6-2 pinning (datasheet still not on disk); the 32.768 kHz crystal's 12 pF (Raytac's
+figure, read from an image by the lookup agent; Nordic's formula gives 9-10 pF for a 9 pF crystal); 27 R in
+D+ / D- (same source).
+**Library note**: `tools/gen_kicad.py` now also regenerates three symbols (TPS629210DRL, TPS630701RNM, TPS2553DBV)
+and the three project stubs. Running it rewrites every footprint's identifiers (reverted with `git checkout --
+hardware/lib/keyboard.pretty`) and sets the `USB_C_Receptacle_24P` symbol's default footprint to the Amphenol part,
+which makes ERC warn on hub-conn and port-module (their embedded copies say JAE): that one line of
+`keyboard.kicad_sym` was put back by hand. Settle it when those two schematics are next regenerated.
+`tools/kicad-check.sh` skips DRC for boards without footprints (the three new ones) and runs `sch_pod.py --verify`.
+**Next**: M3b session 3: footprints, then `pod`, `pod-power`, `hub-radio` placed and routed, the pod's outline
+and the rail shown in FreeCAD first. Or M3 session 2 (`left` / `right` shells, tent base, palm rest), which the
+rail and left's width also need. The order (D7) waits for M3b and for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

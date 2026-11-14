@@ -25,7 +25,11 @@ while IFS= read -r pro; do
   # errors only: kicad-cli counts warnings as violations too, and a few are known and written into the fab notes
   # (via pairs 0.47-0.49 mm hole to hole on hub-conn and port-module, the USB4085's outline at usb-port's edge);
   # tools/pcb_check.sh lists the warnings and checks schematic parity
-  "$KICAD_CLI" pcb drc --severity-error --exit-code-violations --output "$OUT/$name-drc.rpt" "$dir/$name.kicad_pcb" || status=1
+  if grep -q '(footprint ' "$dir/$name.kicad_pcb"; then
+    "$KICAD_CLI" pcb drc --severity-error --exit-code-violations --output "$OUT/$name-drc.rpt" "$dir/$name.kicad_pcb" || status=1
+  else
+    echo "   board not placed yet: DRC skipped"   # pod, pod-power, hub-radio until their board session
+  fi
 done < <(find "$ROOT/hardware" -name '*.kicad_pro' -not -path '*/lib/*' | sort)
 
 echo "== key boards: netlist self-check against layout/keys.json and the spec"
@@ -33,6 +37,9 @@ echo "== key boards: netlist self-check against layout/keys.json and the spec"
 
 echo "== hub boards: netlist check against the tools/sch_hub.py tables, cross-board checks"
 "$ROOT/.venv/bin/python" "$ROOT/tools/sch_hub.py" --verify 2>&1 | grep -v "^INFO\|^WARNING" || status=1
+
+echo "== wireless boards (pod, pod-power, hub-radio): netlist check against the tools/sch_pod.py tables, lead, bay and expansion header"
+"$ROOT/.venv/bin/python" "$ROOT/tools/sch_pod.py" --verify 2>&1 | grep -v "^INFO\|^WARNING" || status=1
 
 echo "== interconnect"
 "$ROOT/.venv/bin/python" "$ROOT/tools/check_interconnect.py" > "$OUT/interconnect.rpt" || status=1

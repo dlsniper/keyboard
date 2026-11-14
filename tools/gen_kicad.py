@@ -33,6 +33,9 @@ PROJECTS = [
     ("hub-core", 100, 1.6),
     ("hub-conn", 200, 1.6),
     ("battery", 800, 1.6),
+    ("pod", 1, 1.6),
+    ("pod-power", 1, 1.6),
+    ("hub-radio", 1, 1.6),
 ]
 # Key boards (tools/sch_keys.py) carry the vendored kiswitch footprint libraries
 KEY_BOARDS = {"left", "right", "numpad"}
@@ -193,6 +196,38 @@ SYMBOLS = [
         left=[("B1", "VIN", "power_in"), ("A1", "ON", "input"), ("C2", "ILIM", "passive")],
         right=[("B2", "VOUT", "power_out"), ("A2", "~{FLT}", "open_collector")],
         bottom=[("C1", "GND", "power_in")],
+    ),
+    # TI TPS629210 SLVSGE0B, Table 6-1 (DRL, SOT-583): 3.3 V buck of the wireless power board (tools/sch_pod.py)
+    symbol(
+        "TPS629210DRL", "U", "Package_TO_SOT_SMD:SOT-583-8",
+        "https://www.ti.com/lit/ds/symlink/tps629210.pdf",
+        "Buck converter, 3-17 V in, 1 A, 4 uA quiescent, VSET / Smart-CONFIG, SOT-583 (DRL)",
+        "buck converter low Iq TI",
+        left=[("6", "VIN", "power_in"), ("7", "EN", "input"), ("8", "MODE/S-CONF", "passive")],
+        right=[("4", "SW", "passive"), ("3", "VOS", "input"), ("1", "FB/VSET", "passive"), ("2", "PG", "open_collector")],
+        bottom=[("5", "GND", "power_in")],
+    ),
+    # TI TPS63070 SLVSC58, Pin Functions (RNM, 15-pin VQFN 2.5 x 3 mm); TPS630701 = fixed 5.0 V. Footprint: board session.
+    symbol(
+        "TPS630701RNM", "U", "",
+        "https://www.ti.com/lit/ds/symlink/tps63070.pdf",
+        "Buck-boost converter, 2-16 V in, fixed 5.0 V out, 2 A at 4 V in, power save mode, VQFN-15 (RNM)",
+        "buck-boost converter TI",
+        left=[("12", "VIN", "power_in"), ("13", "VIN", "power_in"), ("14", "EN", "input"), ("1", "PS/SYNC", "input"),
+              ("15", "VSEL", "input"), ("11", "L1", "passive"), ("9", "L2", "passive")],
+        right=[("7", "VOUT", "passive"), ("8", "VOUT", "passive"), ("5", "FB", "input"), ("6", "FB2", "passive"),
+               ("2", "PG", "open_collector"), ("3", "VAUX", "passive")],
+        bottom=[("4", "GND", "power_in"), ("10", "PGND", "power_in")],
+    ),
+    # TI TPS2553 SLVS841, Pin Functions (DBV, SOT-23-6; EN active high): current cap of the wireless LED rail
+    symbol(
+        "TPS2553DBV", "U", f"{LIBNAME}:TI_SOT-23-6_DBV0006A",
+        "https://www.ti.com/lit/ds/symlink/tps2553.pdf",
+        "Current-limited power switch, 2.5-6.5 V, limit 75 mA-1.7 A by RILIM, EN active high, SOT-23-6 (DBV)",
+        "current limit power switch",
+        left=[("1", "IN", "power_in"), ("3", "EN", "input"), ("5", "ILIM", "passive")],
+        right=[("6", "OUT", "passive"), ("4", "~{FAULT}", "open_collector")],
+        bottom=[("2", "GND", "power_in")],
     ),
     # TI TPS22918 SLVSCY5 (DBV, SOT-23-6): key-board LED rail switch
     symbol(

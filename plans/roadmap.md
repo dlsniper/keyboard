@@ -162,7 +162,12 @@ order (D7) and before the user tests anything**. Software stack open until the h
 module and a USB-C service port; power board (3.3 V always on, capped 5 V for LEDs) and 4 AA (`numpad`) or 6 AA
 (`left`, `right`) in a rail along the rear edge and the outer side; the same pod on a passive carrier on the hub's
 expansion header. No key board changes. Preview `mech/case/pod_preview.py`. Boards now to draw: `pod`, `pod-power`,
-`hub-radio` (carrier). Open: the sixth cell on `left`, cell holders, pack switch, rail joint.
+`hub-radio` (carrier). Session 2 (2026-11-14): decided (options UI): on / off slide switch on the converters'
+enables, printed cell pockets with bought contacts, JST GH lead, 32.768 kHz crystal fitted and a roomier pod board
+(user); `left`'s sixth cell: the user proposes a wider left shell (to show in FreeCAD at left's shell). Schematics
+by `tools/sch_pod.py` for `pod`, `pod-power`, `hub-radio` (ERC 0, netlist checks in `kicad-check.sh`), pin map
+`firmware/pod-pinmap.json`, independent review (Opus). Next: footprints (TPS630701 RNM, two inductors), boards,
+the rail in the shell. Open: rail joint, pod outline (how it grows), left's width.
 
 **Exit check:** ERC / DRC 0, review closed, both variants fit the same key board and tray.
 
