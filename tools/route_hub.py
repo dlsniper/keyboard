@@ -4,7 +4,8 @@
 Run with KiCad's Python (KiCad closed), on a board fresh from tools/pcb_hub.py --force:
     /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3 tools/route_hub.py <board> [--passes 30]
 One command that repeats until the check is clean: tools/route_hub.sh <board> [tries].
-On a routed board, without routing again: `--finish` (close what is open), `--tidy` (loose stubs, close via pairs).
+On a routed board, without routing again: `--finish` (close what is open), `--tidy` (loose stubs, close via pairs),
+`--through-vias` (vias the router's import marked as buried, F to B, become through vias; nothing moves).
 port-module (tools/pcb_port.py, 4 layers) is routed here too, the same way as hub-conn (port_module_copper).
 
 hub-core and battery (2 layers): everything by Freerouting, then GND pours on both sides.
@@ -713,16 +714,17 @@ def cap_copper(b):
     return c.count
 
 
+ANT_BAND_A, ANT_BAND_T = -3.6, 4.15    # pod: ground-free band beside the antenna, bay a from here eastwards, this deep from the rear edge
 # ---- autorouter ----------------------------------------------------------------------------------------------------
-def keep_out(b, x0, y0, x1, y1, name):
-    """Rule area (no tracks, no vias, all copper layers), KiCad units. The RT_ ones are for the router only and are
-    taken off the board again after it has run."""
+def keep_out(b, x0, y0, x1, y1, name, fills=False):
+    """Rule area (no tracks, no vias, all copper layers; fills=True: no zone copper either), KiCad units. The RT_ ones
+    are for the router only and are taken off the board again after it has run."""
     z = pcbnew.ZONE(b)
     z.SetIsRuleArea(True)
     z.SetLayerSet(pcbnew.LSET.AllCuMask())
     z.SetZoneName(name)
     z.SetDoNotAllowTracks(True); z.SetDoNotAllowVias(True); z.SetDoNotAllowPads(False)
-    z.SetDoNotAllowZoneFills(False); z.SetDoNotAllowFootprints(False)
+    z.SetDoNotAllowZoneFills(fills); z.SetDoNotAllowFootprints(False)
     o = z.Outline()
     o.NewOutline()
     for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
@@ -1443,6 +1445,21 @@ def main():
         subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
         sys.stdout.flush()
         os._exit(0)
+    if "--through-vias" in sys.argv:                # on a routed board: vias marked "buried" (F to B) become through vias
+        pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
+        b = pcbnew.LoadBoard(str(pcb))
+        n = 0
+        for v in b.GetTracks():
+            if v.Type() == pcbnew.PCB_VIA_T and v.GetViaType() != pcbnew.VIATYPE_THROUGH:
+                if (v.TopLayer(), v.BottomLayer()) != (F, B):
+                    sys.exit(f"{name}: a via does not span F to B, not touched")
+                v.SetViaType(pcbnew.VIATYPE_THROUGH)
+                n += 1
+        pcbnew.SaveBoard(str(pcb), b)
+        subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)], capture_output=True)
+        print(f"{name}: {n} vias set to through")
+        sys.stdout.flush()
+        os._exit(0)
     if "--power-areas" in sys.argv:                 # on a routed board: only the power areas and their vias
         pcb = ROOT / "hardware" / name / f"{name}.kicad_pcb"
         b = pcbnew.LoadBoard(str(pcb))
@@ -1532,6 +1549,10 @@ def main():
         if name == "pod-power":                     # the cut-away front-east corner (pcb_pod.NOTCH): the router, the via
             e = b.GetBoardEdgesBoundingBox()        # pass and the finishing pass know the outline only as a rectangle
             keep_out(b, mm(132.5 - 0.35), mm(115.4 - 0.35), e.GetRight() + mm(1), e.GetBottom() + mm(1), "EDGE_notch")
+            keep_out(b, e.GetLeft() - mm(1), mm(109.0 - 0.35), mm(104.0 + 0.35), e.GetBottom() + mm(1), "EDGE_notch_w")
+        if name == "pod":                           # user, 2026-11-14 (review item 5): no copper of any kind beside the
+            e = b.GetBoardEdgesBoundingBox()        # antenna along the rear edge, from the USB-C shell's lug to the east edge
+            keep_out(b, mm(100 + ANT_BAND_A), e.GetTop() - mm(1), e.GetRight() + mm(1), e.GetTop() + mm(ANT_BAND_T), "ANT_band", fills=True)
         gnd_vias(b)                                 # before the router, so that it leaves them their room
         router_fences(b)
     if "--no-route" not in sys.argv:
@@ -1544,7 +1565,7 @@ def main():
     for v in b.GetTracks():                         # imported vias take the net class drill: 0.4 mm in a 0.6 mm via
         if v.Type() == pcbnew.PCB_VIA_T and not v.IsLocked() and v.GetWidth(F) < mm(0.7):
             v.SetDrill(mm(0.3))
-    if name in ("pod", "pod-power"):                # review: with inner 1 taken out of the router's input its vias come back
+    if four:                                        # review: with inner 1 taken out of the router's input its vias come back
         for v in b.GetTracks():                     # marked as buried (F to B); the older 4-layer boards still carry that mark
             if v.Type() == pcbnew.PCB_VIA_T:
                 v.SetViaType(pcbnew.VIATYPE_THROUGH)

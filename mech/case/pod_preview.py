@@ -1,4 +1,5 @@
 """Wireless variant of the numpad shell, PREVIEW ONLY (M3b sessions 1 and 3, user decisions 2026-11-14).
+Superseded for the numpad by mech/case/pod_case.py (the real parts, CASE_VARIANT=pod); still the hub carrier's preview.
 
 Envelopes, not printable parts: the battery rail along the rear edge (27 mm deep since session 3: the power board
 is 48 x 22 mm) and the outer side (19 mm), 4 x AA, the power board behind the bay, the radio pod (30 x 50.7 mm, from

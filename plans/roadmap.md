@@ -141,7 +141,8 @@ only after M4 step 2 has proven SPI over the real cable (spec O2).
 Hub boards stay 94 mm.
 
 **Progress:** session 1 (2026-11-14): `mech/case/build_case.py` + `tools/case_dump.py`, numpad tray, bay cover,
-spacers, sleeves, tilt bars, two fit-print pieces; the key boards' M2 holes are final as routed.
+spacers, sleeves, tilt bars, two fit-print pieces; the key boards' M2 holes are final as routed. Session 2
+(2026-11-14): the wireless numpad shell (see M3b session 4); `left`, `right` and the hub tower still to do.
 
 **Exit check:** everything assembles with no rework; the user has typed on it for a day.
 
@@ -175,6 +176,12 @@ added parts kept. Footprints drawn (TPS630701 RNM, XGL3530, XFL4020), `tools/pcb
 all four layers; socket checked against the three key boards, carrier against hub-core), fab outputs, independent
 PCB review. No key board, hub-core or hub-conn changed. Next: step 3, the shell (rail, lids, cover over the pod),
 with `left` / `right` (M3 session 2).
+Session 4 = M3 session 2 (2026-11-14): decided (options UI, FreeCAD): service port stays at the rear with a
+ground-free band beside the antenna (`pod` routed again), one-piece wireless tray, Keystone 5201 / 5223 contacts
+(springs at both ends of the column), power board notched for the rear cell's spring (`pod-power` placed and routed
+again), two sliding cell lids; "buried" via mark fixed on hub-conn, port-module, usb-port. Wireless numpad shell by
+`mech/case/pod_case.py` (`CASE_VARIANT=pod`), 0 clashes, fit pieces. Next: fit prints, `left` / `right` with the
+rail, left's width, hub core section with the carrier.
 
 **Exit check:** ERC / DRC 0, review closed, both variants fit the same key board and tray.
 

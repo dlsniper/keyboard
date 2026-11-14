@@ -23219,7 +23219,7 @@
 		(descr "8-Lead Plastic Dual Flat, No Lead Package (MF) - 3.3x3.3x1 mm Body [VSON] http://www.ti.com/lit/ds/symlink/csd87334q3d.pdf")
 		(tags "VSON 0.65")
 		(property "Reference" "Q11"
-			(at -5.53825 -0.0475 360)
+			(at -5.53825 -0.0475 0)
 			(layer "F.SilkS")
 			(uuid "640e64d5-66d3-4c56-9319-00993ecc4d1c")
 			(effects
@@ -50059,7 +50059,7 @@
 		(net "/SCK_B")
 		(uuid "d24ec897-a816-418e-b36d-0eea96225e93")
 	)
-	(via buried
+	(via
 		(at 94.4692 126.9308)
 		(size 0.6)
 		(drill 0.3)
@@ -50067,7 +50067,7 @@
 		(net "/SCK_B")
 		(uuid "09d6a84d-6cb0-488f-8f87-65331937f874")
 	)
-	(via buried
+	(via
 		(at 96.923 135.6085)
 		(size 0.6)
 		(drill 0.3)
@@ -50075,7 +50075,7 @@
 		(net "/SCK_B")
 		(uuid "18a1ae89-032e-45d8-b5f9-b8de87b29bc5")
 	)
-	(via buried
+	(via
 		(at 104.4077 141.2977)
 		(size 0.6)
 		(drill 0.3)
@@ -50237,7 +50237,7 @@
 		(net "/EN_C")
 		(uuid "be9a57d3-12b0-465d-8b88-4b4e19aaa621")
 	)
-	(via buried
+	(via
 		(at 134.0889 121.7329)
 		(size 0.6)
 		(drill 0.3)
@@ -50245,7 +50245,7 @@
 		(net "/EN_C")
 		(uuid "43be045a-0df9-494a-9572-7f3a1492ffc2")
 	)
-	(via buried
+	(via
 		(at 138.216 127.3847)
 		(size 0.6)
 		(drill 0.3)
@@ -50253,7 +50253,7 @@
 		(net "/EN_C")
 		(uuid "70e19694-e3ae-4b67-b452-aadf082594e3")
 	)
-	(via buried
+	(via
 		(at 148.0317 123.0092)
 		(size 0.6)
 		(drill 0.3)
@@ -53823,7 +53823,7 @@
 		(net "/OK2")
 		(uuid "c5ce2baf-d280-445a-807b-099c024c631a")
 	)
-	(via buried
+	(via
 		(at 99.3037 109.2357)
 		(size 0.6)
 		(drill 0.3)
@@ -53831,7 +53831,7 @@
 		(net "/OK2")
 		(uuid "4267ea94-6ebf-4438-b091-dcb2ed75a37d")
 	)
-	(via buried
+	(via
 		(at 96.2323 97.0227)
 		(size 0.6)
 		(drill 0.3)
@@ -53839,7 +53839,7 @@
 		(net "/OK2")
 		(uuid "6b4bd98c-d8cf-4109-ba72-cb65ac7a3094")
 	)
-	(via buried
+	(via
 		(at 106.8137 97.1488)
 		(size 0.6)
 		(drill 0.3)
@@ -54007,7 +54007,7 @@
 		(net "/BLK2")
 		(uuid "ef235354-4536-4270-8ad6-0617a5435db4")
 	)
-	(via buried
+	(via
 		(at 98.2159 103.9484)
 		(size 0.6)
 		(drill 0.3)
@@ -54015,7 +54015,7 @@
 		(net "/BLK2")
 		(uuid "7feb9f0a-ac43-4b96-8c4a-8a4e959a5cb0")
 	)
-	(via buried
+	(via
 		(at 100.471 109.4058)
 		(size 0.6)
 		(drill 0.3)
@@ -54023,7 +54023,7 @@
 		(net "/BLK2")
 		(uuid "939b2218-2f85-432e-9255-83b70e5113da")
 	)
-	(via buried
+	(via
 		(at 107.8861 98.8436)
 		(size 0.6)
 		(drill 0.3)
@@ -54482,7 +54482,7 @@
 		(net "/PACK1")
 		(uuid "ff22ee5f-d945-421a-85a7-9b30739417ed")
 	)
-	(via buried
+	(via
 		(at 108.2809 88.9823)
 		(size 0.8)
 		(drill 0.4)
@@ -54499,7 +54499,7 @@
 		(net "/PACK1")
 		(uuid "6d0f48cb-4694-4f73-9677-d838b5c651ef")
 	)
-	(via buried
+	(via
 		(at 106.9312 83.8173)
 		(size 0.8)
 		(drill 0.4)
@@ -54934,7 +54934,7 @@
 		(net "/SYS")
 		(uuid "ff1a18c0-70dd-44f1-9509-9725ad158f46")
 	)
-	(via buried
+	(via
 		(at 77.1618 70.7651)
 		(size 0.8)
 		(drill 0.4)
@@ -54942,7 +54942,7 @@
 		(net "/SYS")
 		(uuid "0d3500c0-6037-4995-9ff8-8d0e0529c8cb")
 	)
-	(via buried
+	(via
 		(at 86.5698 70.7903)
 		(size 0.6)
 		(drill 0.3)
@@ -55022,7 +55022,7 @@
 		(net "/QU_G")
 		(uuid "df9c110a-1079-4a60-bc2f-b1636b40c2c3")
 	)
-	(via buried
+	(via
 		(at 77.826 67.1876)
 		(size 0.6)
 		(drill 0.3)
@@ -55030,7 +55030,7 @@
 		(net "/QU_G")
 		(uuid "22dc9b68-53e4-4274-a7c1-42d2d2d76251")
 	)
-	(via buried
+	(via
 		(at 86.937 68.5)
 		(size 0.6)
 		(drill 0.3)
@@ -55339,7 +55339,7 @@
 		(net "/VBUS_IN")
 		(uuid "d31b1013-0538-470f-878a-6ae7f1cf6171")
 	)
-	(via buried
+	(via
 		(at 90.6196 71.7705)
 		(size 0.8)
 		(drill 0.4)
@@ -55347,7 +55347,7 @@
 		(net "/VBUS_IN")
 		(uuid "d6f7ae00-feb0-4246-8b10-e627a0e08079")
 	)
-	(via buried
+	(via
 		(at 87.7005 67.9234)
 		(size 0.8)
 		(drill 0.4)
@@ -55485,7 +55485,7 @@
 		(net "/UVLO_VDD")
 		(uuid "ef8e6167-00c4-4780-b534-061e1defec63")
 	)
-	(via buried
+	(via
 		(at 94.7667 82.3646)
 		(size 0.6)
 		(drill 0.3)
@@ -55493,7 +55493,7 @@
 		(net "/UVLO_VDD")
 		(uuid "b5009cc6-975e-4252-819b-39cc1d7564dc")
 	)
-	(via buried
+	(via
 		(at 100.2244 78.6872)
 		(size 0.6)
 		(drill 0.3)
@@ -56131,7 +56131,7 @@
 		(net "/+5V")
 		(uuid "37909c09-2ff0-4a49-9734-4924263fbe14")
 	)
-	(via buried
+	(via
 		(at 82.2156 77.0643)
 		(size 0.8)
 		(drill 0.4)
@@ -56193,7 +56193,7 @@
 		(net "/+5V")
 		(uuid "9292ca5c-d5fd-42cd-8853-efc0d49011ef")
 	)
-	(via buried
+	(via
 		(at 146.4698 67.0238)
 		(size 0.8)
 		(drill 0.4)
@@ -56210,7 +56210,7 @@
 		(net "/+5V")
 		(uuid "9bc3bc40-2b25-44b7-9f03-fdc98ba33f18")
 	)
-	(via buried
+	(via
 		(at 82.6518 134.9467)
 		(size 0.8)
 		(drill 0.4)
@@ -56512,7 +56512,7 @@
 		(net "/PWR_SW_A")
 		(uuid "b0fe53e6-1f0a-4cde-9c38-6332956d9052")
 	)
-	(via buried
+	(via
 		(at 99.7035 80.1215)
 		(size 0.6)
 		(drill 0.3)
@@ -56664,7 +56664,7 @@
 		(net "/EN_B")
 		(uuid "be874965-a654-435e-a358-dcc899b241fe")
 	)
-	(via buried
+	(via
 		(at 91.5722 117.2622)
 		(size 0.6)
 		(drill 0.3)
@@ -56672,7 +56672,7 @@
 		(net "/EN_B")
 		(uuid "456f6205-9868-4f1e-8324-9b3e0abf8e1d")
 	)
-	(via buried
+	(via
 		(at 90.1575 112.5148)
 		(size 0.6)
 		(drill 0.3)
@@ -56680,7 +56680,7 @@
 		(net "/EN_B")
 		(uuid "510eda64-e375-4fe4-92d5-943fb9a46265")
 	)
-	(via buried
+	(via
 		(at 114.1659 130.25)
 		(size 0.6)
 		(drill 0.3)
@@ -56688,7 +56688,7 @@
 		(net "/EN_B")
 		(uuid "68b2559f-8463-462e-a5c7-9a39f4d498aa")
 	)
-	(via buried
+	(via
 		(at 89.4874 128.9704)
 		(size 0.6)
 		(drill 0.3)
@@ -57145,7 +57145,7 @@
 		(net "/SCK_A")
 		(uuid "f098351c-b13f-4a61-9ac6-7a746fc29596")
 	)
-	(via buried
+	(via
 		(at 76.4061 141.2961)
 		(size 0.6)
 		(drill 0.3)
@@ -57153,7 +57153,7 @@
 		(net "/SCK_A")
 		(uuid "55e6eaff-5a8c-4438-a8cd-fbb73811d2ac")
 	)
-	(via buried
+	(via
 		(at 69.7488 135.9764)
 		(size 0.6)
 		(drill 0.3)
@@ -57332,7 +57332,7 @@
 		(net "/MOSI_A")
 		(uuid "ea816640-1380-40c9-847a-b8e8fad44912")
 	)
-	(via buried
+	(via
 		(at 74.1814 144.004)
 		(size 0.6)
 		(drill 0.3)
@@ -57340,7 +57340,7 @@
 		(net "/MOSI_A")
 		(uuid "527f4253-b469-4b89-8838-1df1b6700443")
 	)
-	(via buried
+	(via
 		(at 68.7948 126.9052)
 		(size 0.6)
 		(drill 0.3)
@@ -57348,7 +57348,7 @@
 		(net "/MOSI_A")
 		(uuid "92f1e4a3-83a1-4f6e-89b3-6756add486f0")
 	)
-	(via buried
+	(via
 		(at 67.9112 131.882)
 		(size 0.6)
 		(drill 0.3)
@@ -57638,7 +57638,7 @@
 		(net "/MISO_A")
 		(uuid "f14a8884-2ad4-458b-8aa7-f08892aad42c")
 	)
-	(via buried
+	(via
 		(at 73.1069 134.6656)
 		(size 0.6)
 		(drill 0.3)
@@ -57646,7 +57646,7 @@
 		(net "/MISO_A")
 		(uuid "4c8e4ed4-c63e-46eb-8840-ac411c3c4861")
 	)
-	(via buried
+	(via
 		(at 70.3318 132.407)
 		(size 0.6)
 		(drill 0.3)
@@ -57654,7 +57654,7 @@
 		(net "/MISO_A")
 		(uuid "bbae8427-0cda-473b-84b1-fee43d238e5d")
 	)
-	(via buried
+	(via
 		(at 69.0951 116.5817)
 		(size 0.6)
 		(drill 0.3)
@@ -58506,7 +58506,7 @@
 		(net "/VBAT")
 		(uuid "98937d30-704a-4074-ad60-2ed0bd744162")
 	)
-	(via buried
+	(via
 		(at 123.1032 107.9289)
 		(size 0.8)
 		(drill 0.4)
@@ -58523,7 +58523,7 @@
 		(net "/VBAT")
 		(uuid "a9a1693c-c4dd-474a-bbb9-080f8e6a417e")
 	)
-	(via buried
+	(via
 		(at 88.1018 106.6119)
 		(size 0.8)
 		(drill 0.4)
@@ -58540,7 +58540,7 @@
 		(net "/VBAT")
 		(uuid "ba4095ed-7781-4ebe-8fc5-988d162b5c85")
 	)
-	(via buried
+	(via
 		(at 81.1471 108.7184)
 		(size 0.8)
 		(drill 0.4)
@@ -58548,7 +58548,7 @@
 		(net "/VBAT")
 		(uuid "c0875c11-8540-4998-8a72-979e8be35086")
 	)
-	(via buried
+	(via
 		(at 101.823 71.4601)
 		(size 0.8)
 		(drill 0.4)
@@ -58810,7 +58810,7 @@
 		(net "/PEN2")
 		(uuid "b5d06c23-1125-4396-92ee-1016aa082692")
 	)
-	(via buried
+	(via
 		(at 104.025782 103.272218)
 		(size 0.6)
 		(drill 0.3)
@@ -58818,7 +58818,7 @@
 		(net "/PEN2")
 		(uuid "54c5351c-0b87-457a-ad87-28f54c4ec2c5")
 	)
-	(via buried
+	(via
 		(at 98.4999 109.175)
 		(size 0.6)
 		(drill 0.3)
@@ -59151,7 +59151,7 @@
 		(net "/PACK3")
 		(uuid "e8cde9bb-d07c-4712-83a3-a8955078cce2")
 	)
-	(via buried
+	(via
 		(at 60.8163 108.3837)
 		(size 0.8)
 		(drill 0.4)
@@ -59168,7 +59168,7 @@
 		(net "/PACK3")
 		(uuid "1666b7d3-6acd-48f0-9f3f-d13f9e1f67fd")
 	)
-	(via buried
+	(via
 		(at 81.4416 90.4223)
 		(size 0.8)
 		(drill 0.4)
@@ -59212,7 +59212,7 @@
 		(net "/PACK3")
 		(uuid "afe13c58-833b-46f4-be7c-a28f88cdc6b1")
 	)
-	(via buried
+	(via
 		(at 80.9045 110.1212)
 		(size 0.8)
 		(drill 0.4)
@@ -59238,7 +59238,7 @@
 		(net "/PACK3")
 		(uuid "d1d41f29-872a-44ec-855a-522ee4ea3937")
 	)
-	(via buried
+	(via
 		(at 89.8416 109.4396)
 		(size 0.8)
 		(drill 0.4)
@@ -59440,7 +59440,7 @@
 		(net "/BLD3")
 		(uuid "c6446643-ff18-4a68-a2cd-e9dadf42947f")
 	)
-	(via buried
+	(via
 		(at 64.0145 108.2233)
 		(size 0.6)
 		(drill 0.3)
@@ -59448,7 +59448,7 @@
 		(net "/BLD3")
 		(uuid "5751ecf7-0a89-4808-8d40-f94067ccc171")
 	)
-	(via buried
+	(via
 		(at 88.8705 93.0474)
 		(size 0.6)
 		(drill 0.3)
@@ -59456,7 +59456,7 @@
 		(net "/BLD3")
 		(uuid "b75e9a70-23b8-4dcb-8ca4-fcf7f52b965a")
 	)
-	(via buried
+	(via
 		(at 105.9205 70.3016)
 		(size 0.6)
 		(drill 0.3)
@@ -59998,7 +59998,7 @@
 		(net "/+3V3")
 		(uuid "fcb32771-ce2b-4542-b68f-893d676ca490")
 	)
-	(via buried
+	(via
 		(at 106.9457 75.8511)
 		(size 0.8)
 		(drill 0.4)
@@ -60006,7 +60006,7 @@
 		(net "/+3V3")
 		(uuid "091630a1-c05d-40cf-ab44-80d7db63c130")
 	)
-	(via buried
+	(via
 		(at 80.8476 118.8078)
 		(size 0.8)
 		(drill 0.4)
@@ -60023,7 +60023,7 @@
 		(net "/+3V3")
 		(uuid "33c3eaa2-bdb4-407d-ac6c-0f867986a260")
 	)
-	(via buried
+	(via
 		(at 92.9888 75.786)
 		(size 0.8)
 		(drill 0.4)
@@ -60031,7 +60031,7 @@
 		(net "/+3V3")
 		(uuid "4600c6ed-f3a5-417f-939f-9d5ec608120a")
 	)
-	(via buried
+	(via
 		(at 67.7607 119.7107)
 		(size 0.8)
 		(drill 0.4)
@@ -60039,7 +60039,7 @@
 		(net "/+3V3")
 		(uuid "8730070b-8ddf-4274-b5d4-6b2946f2cb7b")
 	)
-	(via buried
+	(via
 		(at 81.1232 112.3793)
 		(size 0.8)
 		(drill 0.4)
@@ -60056,7 +60056,7 @@
 		(net "/+3V3")
 		(uuid "ca1776e7-c97e-4605-8610-3cefda4da7d0")
 	)
-	(via buried
+	(via
 		(at 76.0008 120.825)
 		(size 0.8)
 		(drill 0.4)
@@ -60064,7 +60064,7 @@
 		(net "/+3V3")
 		(uuid "d812bc2d-4574-4f75-9c9a-b825236ae3f1")
 	)
-	(via buried
+	(via
 		(at 110.912 69.0389)
 		(size 0.8)
 		(drill 0.4)
@@ -60347,7 +60347,7 @@
 		(net "/DET_C")
 		(uuid "dc4535c1-6162-45e1-a446-f5c8209c7d0c")
 	)
-	(via buried
+	(via
 		(at 110.5016 74.501)
 		(size 0.6)
 		(drill 0.3)
@@ -60355,7 +60355,7 @@
 		(net "/DET_C")
 		(uuid "25adf52f-ea2b-4e5d-a400-2784d263b48d")
 	)
-	(via buried
+	(via
 		(at 137.6882 134.1671)
 		(size 0.6)
 		(drill 0.3)
@@ -60363,7 +60363,7 @@
 		(net "/DET_C")
 		(uuid "2bca6125-6560-4022-b877-8ef8c88ef3c8")
 	)
-	(via buried
+	(via
 		(at 123.825 116.5846)
 		(size 0.6)
 		(drill 0.3)
@@ -60371,7 +60371,7 @@
 		(net "/DET_C")
 		(uuid "6bcec468-aa20-4847-a4f0-d885f2a2cb27")
 	)
-	(via buried
+	(via
 		(at 119.1401 120.825)
 		(size 0.6)
 		(drill 0.3)
@@ -60675,7 +60675,7 @@
 		(net "/BLK3")
 		(uuid "f29b9a1f-c1d5-4bba-a1ff-9f3d33b30439")
 	)
-	(via buried
+	(via
 		(at 86.9778 109.2507)
 		(size 0.6)
 		(drill 0.3)
@@ -60683,7 +60683,7 @@
 		(net "/BLK3")
 		(uuid "934f86d9-573b-456a-b30a-1926acd49005")
 	)
-	(via buried
+	(via
 		(at 89.543 103.9035)
 		(size 0.6)
 		(drill 0.3)
@@ -60691,7 +60691,7 @@
 		(net "/BLK3")
 		(uuid "ac160503-dce3-42f7-8be8-4c664983c66a")
 	)
-	(via buried
+	(via
 		(at 89.7002 107.4116)
 		(size 0.6)
 		(drill 0.3)
@@ -60865,7 +60865,7 @@
 		(net "/PWR_SW_B")
 		(uuid "ea33f39a-3bea-4503-82f1-e9e4abbb4bb1")
 	)
-	(via buried
+	(via
 		(at 104.536 67.0445)
 		(size 0.6)
 		(drill 0.3)
@@ -60873,7 +60873,7 @@
 		(net "/PWR_SW_B")
 		(uuid "a6c46e14-796f-4f7d-94cd-01977f536f45")
 	)
-	(via buried
+	(via
 		(at 123.7006 66.5896)
 		(size 0.6)
 		(drill 0.3)
@@ -61073,7 +61073,7 @@
 		(net "/CS_C")
 		(uuid "fc0b0159-6592-4cac-b8f6-146b320b54c5")
 	)
-	(via buried
+	(via
 		(at 134.2704 118.7356)
 		(size 0.6)
 		(drill 0.3)
@@ -61081,7 +61081,7 @@
 		(net "/CS_C")
 		(uuid "19238bda-b25a-42b9-8c0b-64baca093060")
 	)
-	(via buried
+	(via
 		(at 138.1426 57.1685)
 		(size 0.6)
 		(drill 0.3)
@@ -61089,7 +61089,7 @@
 		(net "/CS_C")
 		(uuid "1a22f6d9-9018-4aef-b0b5-d9f429a43133")
 	)
-	(via buried
+	(via
 		(at 147.7509 111.19)
 		(size 0.6)
 		(drill 0.3)
@@ -61097,7 +61097,7 @@
 		(net "/CS_C")
 		(uuid "2c367e41-919e-4473-b271-095b240e47f2")
 	)
-	(via buried
+	(via
 		(at 126.9182 120.7723)
 		(size 0.6)
 		(drill 0.3)
@@ -61193,7 +61193,7 @@
 		(net "/SCK")
 		(uuid "e515f9b7-e06b-40da-bb43-8c6e4f362b0a")
 	)
-	(via buried
+	(via
 		(at 70.4895 124.9744)
 		(size 0.6)
 		(drill 0.3)
@@ -61201,7 +61201,7 @@
 		(net "/SCK")
 		(uuid "4d97fe24-a50c-4f65-b782-4c4d7ac26a45")
 	)
-	(via buried
+	(via
 		(at 123.895 124.0771)
 		(size 0.6)
 		(drill 0.3)
@@ -61209,7 +61209,7 @@
 		(net "/SCK")
 		(uuid "85671619-5d5a-4130-96ba-716f1046a226")
 	)
-	(via buried
+	(via
 		(at 66.7567 112.5248)
 		(size 0.6)
 		(drill 0.3)
@@ -61217,7 +61217,7 @@
 		(net "/SCK")
 		(uuid "e24eb3a1-fa47-40f9-91ea-dc0c01c5c1a8")
 	)
-	(via buried
+	(via
 		(at 96.46 124.2233)
 		(size 0.6)
 		(drill 0.3)
@@ -61665,7 +61665,7 @@
 		(net "/MOSI")
 		(uuid "fc28f825-975b-445b-a7ab-af8eff168b65")
 	)
-	(via buried
+	(via
 		(at 103.693 120.8312)
 		(size 0.6)
 		(drill 0.3)
@@ -61673,7 +61673,7 @@
 		(net "/MOSI")
 		(uuid "43bacd42-6727-42d9-a2bb-f51768e63084")
 	)
-	(via buried
+	(via
 		(at 78.7409 111.733)
 		(size 0.6)
 		(drill 0.3)
@@ -61681,7 +61681,7 @@
 		(net "/MOSI")
 		(uuid "646fdad7-6bef-441d-b853-6edb14433744")
 	)
-	(via buried
+	(via
 		(at 80.6685 107.4949)
 		(size 0.6)
 		(drill 0.3)
@@ -61689,7 +61689,7 @@
 		(net "/MOSI")
 		(uuid "78a0f8c3-bb40-40e2-bfd7-e490510bd246")
 	)
-	(via buried
+	(via
 		(at 80.1444 119.8628)
 		(size 0.6)
 		(drill 0.3)
@@ -61697,7 +61697,7 @@
 		(net "/MOSI")
 		(uuid "869ecb18-e615-441d-b98b-3217b3340bd2")
 	)
-	(via buried
+	(via
 		(at 86.2986 123.1823)
 		(size 0.6)
 		(drill 0.3)
@@ -61705,7 +61705,7 @@
 		(net "/MOSI")
 		(uuid "90610ba1-b9b6-4dec-9605-1905a08985e3")
 	)
-	(via buried
+	(via
 		(at 127.1353 124.2173)
 		(size 0.6)
 		(drill 0.3)
@@ -62065,7 +62065,7 @@
 		(net "/CSB_C")
 		(uuid "d585afa2-2b38-4717-92b0-cb8b889772ac")
 	)
-	(via buried
+	(via
 		(at 128.8245 127.0168)
 		(size 0.6)
 		(drill 0.3)
@@ -62073,7 +62073,7 @@
 		(net "/CSB_C")
 		(uuid "77c5069c-23e8-46f5-9f2d-30d1ef21948a")
 	)
-	(via buried
+	(via
 		(at 130.3131 119.19)
 		(size 0.6)
 		(drill 0.3)
@@ -62185,7 +62185,7 @@
 		(net "/MISO")
 		(uuid "f8aed6c7-4303-49da-a000-12932e5b65e0")
 	)
-	(via buried
+	(via
 		(at 98.5127 119.1887)
 		(size 0.6)
 		(drill 0.3)
@@ -62193,7 +62193,7 @@
 		(net "/MISO")
 		(uuid "163a5115-ceb9-4156-9cd8-133386bc4635")
 	)
-	(via buried
+	(via
 		(at 75.6603 116.47)
 		(size 0.6)
 		(drill 0.3)
@@ -62201,7 +62201,7 @@
 		(net "/MISO")
 		(uuid "18c36175-38ad-4b44-9270-a1130ad5b327")
 	)
-	(via buried
+	(via
 		(at 109.1452 83.6879)
 		(size 0.6)
 		(drill 0.3)
@@ -62209,7 +62209,7 @@
 		(net "/MISO")
 		(uuid "2acfaf3c-3809-4a57-a484-fda24cb8e60d")
 	)
-	(via buried
+	(via
 		(at 108.8577 75.691)
 		(size 0.6)
 		(drill 0.3)
@@ -62217,7 +62217,7 @@
 		(net "/MISO")
 		(uuid "7a614bcc-27f2-4398-a0b8-702b567df51d")
 	)
-	(via buried
+	(via
 		(at 110.0893 97.9051)
 		(size 0.6)
 		(drill 0.3)
@@ -62225,7 +62225,7 @@
 		(net "/MISO")
 		(uuid "e2de2cff-d142-4e8a-a860-9a46f1b66934")
 	)
-	(via buried
+	(via
 		(at 127.3092 119.2794)
 		(size 0.6)
 		(drill 0.3)
@@ -62490,7 +62490,7 @@
 		(net "/MISO_C")
 		(uuid "f0ec0953-3260-4d75-94b4-524b55f1ebe2")
 	)
-	(via buried
+	(via
 		(at 122.9066 131.0434)
 		(size 0.6)
 		(drill 0.3)
@@ -62498,7 +62498,7 @@
 		(net "/MISO_C")
 		(uuid "08778c94-a760-4c01-ae10-e49b92f2cafe")
 	)
-	(via buried
+	(via
 		(at 129.3498 135.7288)
 		(size 0.6)
 		(drill 0.3)
@@ -62506,7 +62506,7 @@
 		(net "/MISO_C")
 		(uuid "17c4795f-3a30-4e57-8a5f-9a4c29af6d1a")
 	)
-	(via buried
+	(via
 		(at 125.487 119.2922)
 		(size 0.6)
 		(drill 0.3)
@@ -62514,7 +62514,7 @@
 		(net "/MISO_C")
 		(uuid "80ae0623-9f9a-4919-850d-784843d12aa7")
 	)
-	(via buried
+	(via
 		(at 116.3407 118.7407)
 		(size 0.6)
 		(drill 0.3)
@@ -62660,7 +62660,7 @@
 		(net "/CC2")
 		(uuid "dc1889c1-7024-417f-a111-4635dc414d69")
 	)
-	(via buried
+	(via
 		(at 60.3255 65.9392)
 		(size 0.6)
 		(drill 0.3)
@@ -62668,7 +62668,7 @@
 		(net "/CC2")
 		(uuid "67b4d869-222a-4a96-a9c7-c6c45f035529")
 	)
-	(via buried
+	(via
 		(at 60.6145 70.645)
 		(size 0.6)
 		(drill 0.3)
@@ -62676,7 +62676,7 @@
 		(net "/CC2")
 		(uuid "b4941407-3e58-4329-b7be-d342847a9141")
 	)
-	(via buried
+	(via
 		(at 90.9286 77.8)
 		(size 0.6)
 		(drill 0.3)
@@ -62756,7 +62756,7 @@
 		(net "/CC2_SENSE")
 		(uuid "a1775c15-4260-4f5b-ba6e-1bd1b56e095e")
 	)
-	(via buried
+	(via
 		(at 100.5632 75.9879)
 		(size 0.6)
 		(drill 0.3)
@@ -62764,7 +62764,7 @@
 		(net "/CC2_SENSE")
 		(uuid "b0bc458a-76dd-4cc8-b6e3-ba5d96d8781a")
 	)
-	(via buried
+	(via
 		(at 94.9061 78.7041)
 		(size 0.6)
 		(drill 0.3)
@@ -63036,7 +63036,7 @@
 		(net "/OK5")
 		(uuid "f3630ee9-6da7-4128-a552-a88af8345125")
 	)
-	(via buried
+	(via
 		(at 132.5952 107.5784)
 		(size 0.6)
 		(drill 0.3)
@@ -63044,7 +63044,7 @@
 		(net "/OK5")
 		(uuid "0677a9da-e0b2-4890-a2a7-075fce17309d")
 	)
-	(via buried
+	(via
 		(at 122.9944 104.125)
 		(size 0.6)
 		(drill 0.3)
@@ -63364,7 +63364,7 @@
 		(net "/BLK4")
 		(uuid "fbabd41e-d217-4316-9ab9-c37a4003d79b")
 	)
-	(via buried
+	(via
 		(at 99.7713 112.12)
 		(size 0.6)
 		(drill 0.3)
@@ -63372,7 +63372,7 @@
 		(net "/BLK4")
 		(uuid "cec92f73-7e80-4dd7-be82-7d1cc2650b9b")
 	)
-	(via buried
+	(via
 		(at 83.962 104.0854)
 		(size 0.6)
 		(drill 0.3)
@@ -63516,7 +63516,7 @@
 		(net "/LED_B")
 		(uuid "f4f10b98-f8e6-4203-9847-c486e1fca798")
 	)
-	(via buried
+	(via
 		(at 123.7166 120.1948)
 		(size 0.6)
 		(drill 0.3)
@@ -63524,7 +63524,7 @@
 		(net "/LED_B")
 		(uuid "7de972aa-fd40-4f93-aabe-a874b2550cea")
 	)
-	(via buried
+	(via
 		(at 139.4634 112.5334)
 		(size 0.6)
 		(drill 0.3)
@@ -63532,7 +63532,7 @@
 		(net "/LED_B")
 		(uuid "db4f62e3-503b-4896-b0d8-9665ac5d59f7")
 	)
-	(via buried
+	(via
 		(at 133.9054 69.73)
 		(size 0.6)
 		(drill 0.3)
@@ -63788,7 +63788,7 @@
 		(net "/PVDD4")
 		(uuid "cd15c18c-5622-4ea1-b9a1-182287beb7ef")
 	)
-	(via buried
+	(via
 		(at 122.6935 98.725)
 		(size 0.6)
 		(drill 0.3)
@@ -63796,7 +63796,7 @@
 		(net "/PVDD4")
 		(uuid "02ddaee6-6cd8-4122-a84d-42df9ddd7dc9")
 	)
-	(via buried
+	(via
 		(at 125.2346 104.3999)
 		(size 0.6)
 		(drill 0.3)
@@ -63804,7 +63804,7 @@
 		(net "/PVDD4")
 		(uuid "a1f65ad6-c1fd-4b3e-968f-a7c72d21d74f")
 	)
-	(via buried
+	(via
 		(at 122.5321 111.0179)
 		(size 0.6)
 		(drill 0.3)
@@ -64180,7 +64180,7 @@
 		(net "/CS_A")
 		(uuid "f9543952-400b-49e8-af45-a738c3a00eb0")
 	)
-	(via buried
+	(via
 		(at 81.9825 110.7448)
 		(size 0.6)
 		(drill 0.3)
@@ -64324,7 +64324,7 @@
 		(net "/SCKB_A")
 		(uuid "83c41bf7-8f65-46de-b81a-5c89d0b88772")
 	)
-	(via buried
+	(via
 		(at 66.4769 127.0769)
 		(size 0.6)
 		(drill 0.3)
@@ -64332,7 +64332,7 @@
 		(net "/SCKB_A")
 		(uuid "a81d3809-aa65-4c50-9bef-702c2003f22a")
 	)
-	(via buried
+	(via
 		(at 70.84 124.2263)
 		(size 0.6)
 		(drill 0.3)
@@ -64468,7 +64468,7 @@
 		(net "/CSB_A")
 		(uuid "e8946950-22ac-43df-930f-c8f8b2043ff6")
 	)
-	(via buried
+	(via
 		(at 72.8896 127.0747)
 		(size 0.6)
 		(drill 0.3)
@@ -64476,7 +64476,7 @@
 		(net "/CSB_A")
 		(uuid "01f46f2d-8ac0-42ab-8167-be187af3ee77")
 	)
-	(via buried
+	(via
 		(at 75.5873 117.8)
 		(size 0.6)
 		(drill 0.3)
@@ -64676,7 +64676,7 @@
 		(net "/DET_A")
 		(uuid "fc1df9fa-985f-4193-884e-2c5e97223549")
 	)
-	(via buried
+	(via
 		(at 72.3148 62.2627)
 		(size 0.6)
 		(drill 0.3)
@@ -64684,7 +64684,7 @@
 		(net "/DET_A")
 		(uuid "116f3fe2-5838-4dd5-b72d-4a66451314d9")
 	)
-	(via buried
+	(via
 		(at 74.5075 120.4446)
 		(size 0.6)
 		(drill 0.3)
@@ -64692,7 +64692,7 @@
 		(net "/DET_A")
 		(uuid "2c58fed0-9991-4e9f-b80a-38625ef54c93")
 	)
-	(via buried
+	(via
 		(at 81.7186 134.1777)
 		(size 0.6)
 		(drill 0.3)
@@ -64700,7 +64700,7 @@
 		(net "/DET_A")
 		(uuid "5d04a7fa-6a10-4d3c-a100-f47a376212f4")
 	)
-	(via buried
+	(via
 		(at 67.9054 112.5244)
 		(size 0.6)
 		(drill 0.3)
@@ -64900,7 +64900,7 @@
 		(net "/OK3")
 		(uuid "f7d80af1-8775-4bff-9ff1-94b031972536")
 	)
-	(via buried
+	(via
 		(at 94.5224 103.2701)
 		(size 0.6)
 		(drill 0.3)
@@ -64908,7 +64908,7 @@
 		(net "/OK3")
 		(uuid "7a0156d9-80c8-4f50-b5ca-78f6a1be2ddd")
 	)
-	(via buried
+	(via
 		(at 87.7396 109.3356)
 		(size 0.6)
 		(drill 0.3)
@@ -64916,7 +64916,7 @@
 		(net "/OK3")
 		(uuid "c6da6dcb-ba93-488c-a6b8-6810d5cb0444")
 	)
-	(via buried
+	(via
 		(at 83.4097 97.775)
 		(size 0.6)
 		(drill 0.3)
@@ -65068,7 +65068,7 @@
 		(net "/PG2")
 		(uuid "e938da00-1f32-4ede-bc0b-cd34202d0eb4")
 	)
-	(via buried
+	(via
 		(at 101.736 106.7488)
 		(size 0.6)
 		(drill 0.3)
@@ -65076,7 +65076,7 @@
 		(net "/PG2")
 		(uuid "588cc65f-5f86-4b81-9095-c387a2f00d4e")
 	)
-	(via buried
+	(via
 		(at 103.2606 97.7294)
 		(size 0.6)
 		(drill 0.3)
@@ -65084,7 +65084,7 @@
 		(net "/PG2")
 		(uuid "f8aa2095-2c28-4b40-bc24-4352063da9bf")
 	)
-	(via buried
+	(via
 		(at 103.2078 103.3297)
 		(size 0.6)
 		(drill 0.3)
@@ -65220,7 +65220,7 @@
 		(net "/PORT_FLT")
 		(uuid "adc54fce-1b94-4a63-b0dd-6331e73febee")
 	)
-	(via buried
+	(via
 		(at 93.0879 73.8859)
 		(size 0.6)
 		(drill 0.3)
@@ -65228,7 +65228,7 @@
 		(net "/PORT_FLT")
 		(uuid "0f853977-3321-4c4b-98ee-b73093c6cf94")
 	)
-	(via buried
+	(via
 		(at 86.3589 117.6952)
 		(size 0.6)
 		(drill 0.3)
@@ -65236,7 +65236,7 @@
 		(net "/PORT_FLT")
 		(uuid "4b14d77b-3e57-49ef-b1eb-bf2498c82cb0")
 	)
-	(via buried
+	(via
 		(at 136.8475 134.6536)
 		(size 0.6)
 		(drill 0.3)
@@ -65244,7 +65244,7 @@
 		(net "/PORT_FLT")
 		(uuid "bd70abe8-e172-4edd-9b92-ba863243ba16")
 	)
-	(via buried
+	(via
 		(at 85.6674 133.4406)
 		(size 0.6)
 		(drill 0.3)
@@ -65252,7 +65252,7 @@
 		(net "/PORT_FLT")
 		(uuid "cf45a89f-4666-4db3-8241-893773c2d659")
 	)
-	(via buried
+	(via
 		(at 88.7779 112.0281)
 		(size 0.6)
 		(drill 0.3)
@@ -65260,7 +65260,7 @@
 		(net "/PORT_FLT")
 		(uuid "fca01125-e2da-4eba-b0ba-ec6040e5472a")
 	)
-	(via buried
+	(via
 		(at 110.4551 134.1709)
 		(size 0.6)
 		(drill 0.3)
@@ -65724,7 +65724,7 @@
 		(net "/CHG_HI")
 		(uuid "f7238b73-4e37-4deb-94f6-2e594f6725c8")
 	)
-	(via buried
+	(via
 		(at 104.7739 116.4894)
 		(size 0.6)
 		(drill 0.3)
@@ -65732,7 +65732,7 @@
 		(net "/CHG_HI")
 		(uuid "10f00a41-2e9e-4747-baaf-24cd2c9875ed")
 	)
-	(via buried
+	(via
 		(at 89.3988 85.7541)
 		(size 0.6)
 		(drill 0.3)
@@ -65740,7 +65740,7 @@
 		(net "/CHG_HI")
 		(uuid "1172c949-66a7-4fea-9f64-9a647a215fdf")
 	)
-	(via buried
+	(via
 		(at 109.4578 128.1042)
 		(size 0.6)
 		(drill 0.3)
@@ -65748,7 +65748,7 @@
 		(net "/CHG_HI")
 		(uuid "51ce757f-6aa0-49d3-aa77-520a2896c23a")
 	)
-	(via buried
+	(via
 		(at 82.0775 128.7787)
 		(size 0.6)
 		(drill 0.3)
@@ -65756,7 +65756,7 @@
 		(net "/CHG_HI")
 		(uuid "54b5f458-176f-4112-8546-fdb160a2233a")
 	)
-	(via buried
+	(via
 		(at 96.5415 97.9589)
 		(size 0.6)
 		(drill 0.3)
@@ -65764,7 +65764,7 @@
 		(net "/CHG_HI")
 		(uuid "870d5e10-0d97-463a-8768-aad8adcdecbf")
 	)
-	(via buried
+	(via
 		(at 137.2379 128.3931)
 		(size 0.6)
 		(drill 0.3)
@@ -66181,7 +66181,7 @@
 		(net "/CC1_B")
 		(uuid "ae2b50a1-a353-40d4-8789-4263c396bc4c")
 	)
-	(via buried
+	(via
 		(at 98.6084 135.0901)
 		(size 0.6)
 		(drill 0.3)
@@ -66189,7 +66189,7 @@
 		(net "/CC1_B")
 		(uuid "22fece52-9b1c-443a-84ef-5f749093c948")
 	)
-	(via buried
+	(via
 		(at 107.7166 130.5166)
 		(size 0.6)
 		(drill 0.3)
@@ -66197,7 +66197,7 @@
 		(net "/CC1_B")
 		(uuid "370e3371-40b7-4c7c-916e-b65edc1693b0")
 	)
-	(via buried
+	(via
 		(at 102.45 131.3266)
 		(size 0.6)
 		(drill 0.3)
@@ -66293,7 +66293,7 @@
 		(net "/CC2_B")
 		(uuid "f909d334-f1a0-457c-826b-a1fbc25e4c4e")
 	)
-	(via buried
+	(via
 		(at 107.161916 131.120526)
 		(size 0.6)
 		(drill 0.3)
@@ -66440,7 +66440,7 @@
 		(net "/DET_B")
 		(uuid "fdb70683-0cd3-4282-ad72-a3053a4540ef")
 	)
-	(via buried
+	(via
 		(at 103.4161 116.562)
 		(size 0.6)
 		(drill 0.3)
@@ -66448,7 +66448,7 @@
 		(net "/DET_B")
 		(uuid "037f08ba-0be1-4375-9b00-99eaaa66cdc3")
 	)
-	(via buried
+	(via
 		(at 109.6189 134.1925)
 		(size 0.6)
 		(drill 0.3)
@@ -66456,7 +66456,7 @@
 		(net "/DET_B")
 		(uuid "5838a3db-3f07-45b6-affc-4d0da35978f5")
 	)
-	(via buried
+	(via
 		(at 108.5873 134.1925)
 		(size 0.6)
 		(drill 0.3)
@@ -66464,7 +66464,7 @@
 		(net "/DET_B")
 		(uuid "6235323b-8e1b-49f3-83ef-6e96de18851d")
 	)
-	(via buried
+	(via
 		(at 101.7713 83.4821)
 		(size 0.6)
 		(drill 0.3)
@@ -66472,7 +66472,7 @@
 		(net "/DET_B")
 		(uuid "7ab05fb2-e9a8-41a7-97c6-ded1b2fbcc56")
 	)
-	(via buried
+	(via
 		(at 95.2105 96.9814)
 		(size 0.6)
 		(drill 0.3)
@@ -66480,7 +66480,7 @@
 		(net "/DET_B")
 		(uuid "ea123438-96e2-41a2-bea7-fd0eda8262e2")
 	)
-	(via buried
+	(via
 		(at 104.3044 78.8917)
 		(size 0.6)
 		(drill 0.3)
@@ -66721,7 +66721,7 @@
 		(net "/INTO_C")
 		(uuid "d455e77d-6103-44f2-8f97-f5f41d8d193a")
 	)
-	(via buried
+	(via
 		(at 129.8487 131.6)
 		(size 0.6)
 		(drill 0.3)
@@ -66890,7 +66890,7 @@
 		(net "/LEDO_C")
 		(uuid "f424fe6d-b286-4cc1-94cb-83fd5e6a6636")
 	)
-	(via buried
+	(via
 		(at 132.35 134.7448)
 		(size 0.6)
 		(drill 0.3)
@@ -66898,7 +66898,7 @@
 		(net "/LEDO_C")
 		(uuid "ba88b277-cfe0-4ce4-b518-52f65b369279")
 	)
-	(via buried
+	(via
 		(at 131.6758 126.9242)
 		(size 0.6)
 		(drill 0.3)
@@ -67226,7 +67226,7 @@
 		(net "/CC1_C")
 		(uuid "8ae2f99f-e376-4317-80f0-ac49b503ff5d")
 	)
-	(via buried
+	(via
 		(at 127.4048 134.2404)
 		(size 0.6)
 		(drill 0.3)
@@ -67234,7 +67234,7 @@
 		(net "/CC1_C")
 		(uuid "75f80a4a-d0a4-4749-b5cc-00100f4f1c4f")
 	)
-	(via buried
+	(via
 		(at 135.724 130.2528)
 		(size 0.6)
 		(drill 0.3)
@@ -67454,7 +67454,7 @@
 		(net "/PACK2")
 		(uuid "06ce1a6c-54ea-43d6-b66a-60f5c481cb43")
 	)
-	(via buried
+	(via
 		(at 109.0297 98.7403)
 		(size 0.8)
 		(drill 0.4)
@@ -67471,7 +67471,7 @@
 		(net "/PACK2")
 		(uuid "698e505a-daff-46f7-b1d3-8a9e95066a3a")
 	)
-	(via buried
+	(via
 		(at 103.929 109.134)
 		(size 0.8)
 		(drill 0.4)
@@ -67675,7 +67675,7 @@
 		(net "/BLD2")
 		(uuid "d88e97d7-1b66-4f63-ac5e-4538be601211")
 	)
-	(via buried
+	(via
 		(at 113.8464 68.0563)
 		(size 0.6)
 		(drill 0.3)
@@ -67683,7 +67683,7 @@
 		(net "/BLD2")
 		(uuid "7790d4da-ea53-4c1c-b4f7-c52142bc504a")
 	)
-	(via buried
+	(via
 		(at 128.1937 63.3907)
 		(size 0.6)
 		(drill 0.3)
@@ -67691,7 +67691,7 @@
 		(net "/BLD2")
 		(uuid "8c90ed0e-cd1e-4cb3-bac4-5fac4909985c")
 	)
-	(via buried
+	(via
 		(at 115.5489 65.4635)
 		(size 0.6)
 		(drill 0.3)
@@ -67998,7 +67998,7 @@
 		(net "/PACK5")
 		(uuid "e4df8610-1f76-45df-a0e8-2114e0b48f6e")
 	)
-	(via buried
+	(via
 		(at 138.0588 104.4533)
 		(size 0.6)
 		(drill 0.3)
@@ -68042,7 +68042,7 @@
 		(net "/PACK5")
 		(uuid "4dcd6177-5921-4074-9127-18e41bfafd12")
 	)
-	(via buried
+	(via
 		(at 71.6481 65.3535)
 		(size 0.8)
 		(drill 0.4)
@@ -68050,7 +68050,7 @@
 		(net "/PACK5")
 		(uuid "77d00d3f-b3e2-4266-b286-40c8ab5766f1")
 	)
-	(via buried
+	(via
 		(at 69.986 108.416)
 		(size 0.8)
 		(drill 0.4)
@@ -68527,7 +68527,7 @@
 		(net "/PG3")
 		(uuid "e38f914c-6c11-4645-a350-aaeadcaffa02")
 	)
-	(via buried
+	(via
 		(at 89.1135 96.96)
 		(size 0.6)
 		(drill 0.3)
@@ -68535,7 +68535,7 @@
 		(net "/PG3")
 		(uuid "96c7787e-f1a8-4a6f-80a3-6d5d266cd3d1")
 	)
-	(via buried
+	(via
 		(at 89.7192 108.2205)
 		(size 0.6)
 		(drill 0.3)
@@ -68663,7 +68663,7 @@
 		(net "/OK4")
 		(uuid "c5062fb1-74a0-481d-bc7b-1de87ad727f4")
 	)
-	(via buried
+	(via
 		(at 83.6911 102.225)
 		(size 0.6)
 		(drill 0.3)
@@ -68671,7 +68671,7 @@
 		(net "/OK4")
 		(uuid "51bf17ea-08db-4077-ae26-c4952b0a4ff2")
 	)
-	(via buried
+	(via
 		(at 120.0927 111.715)
 		(size 0.6)
 		(drill 0.3)
@@ -68679,7 +68679,7 @@
 		(net "/OK4")
 		(uuid "619161a9-2837-472c-b2e3-37854778b42d")
 	)
-	(via buried
+	(via
 		(at 122.4182 97.0389)
 		(size 0.6)
 		(drill 0.3)
@@ -68863,7 +68863,7 @@
 		(net "/PVDD2")
 		(uuid "f6a83759-cca2-43d7-bd09-61420f3b73b0")
 	)
-	(via buried
+	(via
 		(at 98.9893 104.9887)
 		(size 0.6)
 		(drill 0.3)
@@ -68871,7 +68871,7 @@
 		(net "/PVDD2")
 		(uuid "73386093-5253-40dc-9cc7-cb9d8799ef03")
 	)
-	(via buried
+	(via
 		(at 96.705676 98.762296)
 		(size 0.6)
 		(drill 0.3)
@@ -68879,7 +68879,7 @@
 		(net "/PVDD2")
 		(uuid "a124f73b-c274-4f71-83fb-96686ca92f0f")
 	)
-	(via buried
+	(via
 		(at 96.3332 111.0168)
 		(size 0.6)
 		(drill 0.3)
@@ -69223,7 +69223,7 @@
 		(net "/CS_B")
 		(uuid "f92cd8d8-2bd5-4f64-b5ac-860199721369")
 	)
-	(via buried
+	(via
 		(at 106.2732 116.9172)
 		(size 0.6)
 		(drill 0.3)
@@ -69231,7 +69231,7 @@
 		(net "/CS_B")
 		(uuid "8a35c7a9-beac-4a6e-a68f-eef1e8c1fb4d")
 	)
-	(via buried
+	(via
 		(at 99.7457 119.9506)
 		(size 0.6)
 		(drill 0.3)
@@ -69239,7 +69239,7 @@
 		(net "/CS_B")
 		(uuid "b43296b1-8467-40b3-8f9e-c37c113b8191")
 	)
-	(via buried
+	(via
 		(at 86.2987 112.0158)
 		(size 0.6)
 		(drill 0.3)
@@ -69561,7 +69561,7 @@
 		(net "/INTO_B")
 		(uuid "dcc04b6c-4852-4a3a-b33b-5f4a7a4c937a")
 	)
-	(via buried
+	(via
 		(at 100.329 135.1)
 		(size 0.6)
 		(drill 0.3)
@@ -69643,7 +69643,7 @@
 		(net "/LEDO_B")
 		(uuid "fc799fa9-c882-47f9-ad27-3835d2114d1b")
 	)
-	(via buried
+	(via
 		(at 103.6936 126.9064)
 		(size 0.6)
 		(drill 0.3)
@@ -69651,7 +69651,7 @@
 		(net "/LEDO_B")
 		(uuid "5e7dd88b-9bcb-4a5c-b02f-e6c05dd2e9a7")
 	)
-	(via buried
+	(via
 		(at 104.386588 134.76472)
 		(size 0.6)
 		(drill 0.3)
@@ -69975,7 +69975,7 @@
 		(net "/MISO_B")
 		(uuid "fe680c33-e194-433b-bf1e-0aece34dbaee")
 	)
-	(via buried
+	(via
 		(at 95.65 131.3142)
 		(size 0.6)
 		(drill 0.3)
@@ -69983,7 +69983,7 @@
 		(net "/MISO_B")
 		(uuid "0dd28f7f-b1a8-4654-a2bf-f2bb848cfe7a")
 	)
-	(via buried
+	(via
 		(at 102.7414 135.6764)
 		(size 0.6)
 		(drill 0.3)
@@ -70292,7 +70292,7 @@
 		(net "/MOSI_B")
 		(uuid "faffc8a8-eb9e-4e2a-baaa-ea1e4afac742")
 	)
-	(via buried
+	(via
 		(at 96.5662 128.6863)
 		(size 0.6)
 		(drill 0.3)
@@ -70300,7 +70300,7 @@
 		(net "/MOSI_B")
 		(uuid "ad35f6f7-efc6-4ec7-a216-634f45b78f6d")
 	)
-	(via buried
+	(via
 		(at 98.8604 134.3265)
 		(size 0.6)
 		(drill 0.3)
@@ -70308,7 +70308,7 @@
 		(net "/MOSI_B")
 		(uuid "b21793f9-43b7-492c-9fae-26ccfd341368")
 	)
-	(via buried
+	(via
 		(at 106.1617 144.925)
 		(size 0.6)
 		(drill 0.3)
@@ -70510,7 +70510,7 @@
 		(net "/QB_G")
 		(uuid "e9d3e2a6-4e72-406c-b9ca-2e7793551eb3")
 	)
-	(via buried
+	(via
 		(at 99.899 68.2156)
 		(size 0.6)
 		(drill 0.3)
@@ -70518,7 +70518,7 @@
 		(net "/QB_G")
 		(uuid "2f54ccb2-d46a-4af7-bd2d-4bfd8996b7f7")
 	)
-	(via buried
+	(via
 		(at 91.5525 79.3078)
 		(size 0.6)
 		(drill 0.3)
@@ -70526,7 +70526,7 @@
 		(net "/QB_G")
 		(uuid "8f4d79c9-bf8b-46aa-b1d0-9e289e6f76b0")
 	)
-	(via buried
+	(via
 		(at 104.5775 63.8656)
 		(size 0.6)
 		(drill 0.3)
@@ -70827,7 +70827,7 @@
 		(net "/SCK_C")
 		(uuid "fb24a331-c0a0-4da6-a016-32f6fca8c83f")
 	)
-	(via buried
+	(via
 		(at 133.1876 141.2961)
 		(size 0.6)
 		(drill 0.3)
@@ -70835,7 +70835,7 @@
 		(net "/SCK_C")
 		(uuid "3239fc5f-cbb4-4bbc-af43-d906e5264747")
 	)
-	(via buried
+	(via
 		(at 122.4948 126.9052)
 		(size 0.6)
 		(drill 0.3)
@@ -70843,7 +70843,7 @@
 		(net "/SCK_C")
 		(uuid "8f212080-2bf5-4535-bd00-d4949a152fd7")
 	)
-	(via buried
+	(via
 		(at 125.4855 136.2421)
 		(size 0.6)
 		(drill 0.3)
@@ -70965,7 +70965,7 @@
 		(net "/REF_C")
 		(uuid "f642c695-10ba-4774-a099-ba80338932f5")
 	)
-	(via buried
+	(via
 		(at 136.5838 129.6)
 		(size 0.6)
 		(drill 0.3)
@@ -70973,7 +70973,7 @@
 		(net "/REF_C")
 		(uuid "7854ad7a-16ff-4154-b337-8cd297952257")
 	)
-	(via buried
+	(via
 		(at 116.3343 124.7343)
 		(size 0.6)
 		(drill 0.3)
@@ -70981,7 +70981,7 @@
 		(net "/REF_C")
 		(uuid "8450a0af-21ee-419a-a05a-0233a7571726")
 	)
-	(via buried
+	(via
 		(at 121.3712 130.0728)
 		(size 0.6)
 		(drill 0.3)
@@ -71069,7 +71069,7 @@
 		(net "/REFR_C")
 		(uuid "f803f03e-e0da-4c41-81cf-7eeca80cbae4")
 	)
-	(via buried
+	(via
 		(at 118.33 124.73)
 		(size 0.6)
 		(drill 0.3)
@@ -71077,7 +71077,7 @@
 		(net "/REFR_C")
 		(uuid "5818beae-abcf-4eb8-973e-7526e8d934fc")
 	)
-	(via buried
+	(via
 		(at 134.1169 128.8321)
 		(size 0.6)
 		(drill 0.3)
@@ -71224,7 +71224,7 @@
 		(net "/LED_C")
 		(uuid "f9fbb758-7912-42a6-82ba-e07315349a8f")
 	)
-	(via buried
+	(via
 		(at 147.4709 110.2726)
 		(size 0.6)
 		(drill 0.3)
@@ -71232,7 +71232,7 @@
 		(net "/LED_C")
 		(uuid "821fed86-c55c-4fef-a454-d6d8dc02044d")
 	)
-	(via buried
+	(via
 		(at 122.3921 122.7988)
 		(size 0.6)
 		(drill 0.3)
@@ -71240,7 +71240,7 @@
 		(net "/LED_C")
 		(uuid "b43e7a74-1242-4f67-ac3a-c1f6afc04cab")
 	)
-	(via buried
+	(via
 		(at 138.9913 70.2908)
 		(size 0.6)
 		(drill 0.3)
@@ -71496,7 +71496,7 @@
 		(net "/USB_OK")
 		(uuid "f0ffa77f-de97-4ae8-bd6f-df8f54d563b1")
 	)
-	(via buried
+	(via
 		(at 89.2894 67.6325)
 		(size 0.6)
 		(drill 0.3)
@@ -71504,7 +71504,7 @@
 		(net "/USB_OK")
 		(uuid "1d52a444-b5c2-43f5-9ad6-ed6acde2a4d6")
 	)
-	(via buried
+	(via
 		(at 84.585 62.8748)
 		(size 0.6)
 		(drill 0.3)
@@ -71744,7 +71744,7 @@
 		(net "/NVBUS")
 		(uuid "f196148a-0388-485e-9c0b-3a75ff54668c")
 	)
-	(via buried
+	(via
 		(at 85.883 69.1022)
 		(size 0.6)
 		(drill 0.3)
@@ -71752,7 +71752,7 @@
 		(net "/NVBUS")
 		(uuid "064a38e5-ec83-4ea4-90da-80268cf6c2b6")
 	)
-	(via buried
+	(via
 		(at 96.7298 66.7397)
 		(size 0.6)
 		(drill 0.3)
@@ -72085,7 +72085,7 @@
 		(net "/PACK4")
 		(uuid "0f2dbf00-5529-4cef-8949-cac39306e57c")
 	)
-	(via buried
+	(via
 		(at 130.1259 109.1058)
 		(size 0.8)
 		(drill 0.4)
@@ -72093,7 +72093,7 @@
 		(net "/PACK4")
 		(uuid "0f4aa44d-7ad7-442c-8ec1-f39395a34004")
 	)
-	(via buried
+	(via
 		(at 65.4185 108.3825)
 		(size 0.8)
 		(drill 0.4)
@@ -72119,7 +72119,7 @@
 		(net "/PACK4")
 		(uuid "47619dfa-d62b-4421-9168-810e13e2f3e3")
 	)
-	(via buried
+	(via
 		(at 105.4862 84.0639)
 		(size 0.8)
 		(drill 0.4)
@@ -72699,7 +72699,7 @@
 		(net "/SENSE_K")
 		(uuid "fea36dcd-780b-42cc-b89d-4ee8421484b5")
 	)
-	(via buried
+	(via
 		(at 75.272 64.6471)
 		(size 0.6)
 		(drill 0.3)
@@ -72707,7 +72707,7 @@
 		(net "/SENSE_K")
 		(uuid "0bf55968-61da-4798-88ea-e996ac692fba")
 	)
-	(via buried
+	(via
 		(at 84.4282 64.6755)
 		(size 0.6)
 		(drill 0.3)
@@ -72843,7 +72843,7 @@
 		(net "/INT_C")
 		(uuid "fa6948cf-27c8-47ec-ae57-769981688955")
 	)
-	(via buried
+	(via
 		(at 126.7302 106.5935)
 		(size 0.6)
 		(drill 0.3)
@@ -73035,7 +73035,7 @@
 		(net "/LEDB_A")
 		(uuid "af10cbf7-0194-45f6-ae63-57b29292b1cb")
 	)
-	(via buried
+	(via
 		(at 119.125 116.4808)
 		(size 0.6)
 		(drill 0.3)
@@ -73043,7 +73043,7 @@
 		(net "/LEDB_A")
 		(uuid "243f20fd-35f6-43d4-a273-5e4eaa92326b")
 	)
-	(via buried
+	(via
 		(at 124.3139 98.9085)
 		(size 0.6)
 		(drill 0.3)
@@ -73051,7 +73051,7 @@
 		(net "/LEDB_A")
 		(uuid "450a25b6-1e94-412b-80a2-4a5d1acb2036")
 	)
-	(via buried
+	(via
 		(at 77.7693 128)
 		(size 0.6)
 		(drill 0.3)
@@ -73059,7 +73059,7 @@
 		(net "/LEDB_A")
 		(uuid "72911232-0efd-4197-81fa-ec57c732275a")
 	)
-	(via buried
+	(via
 		(at 128.8408 66.6418)
 		(size 0.6)
 		(drill 0.3)
@@ -73508,7 +73508,7 @@
 		(net "/LEDO_A")
 		(uuid "feca67b2-89d1-4fc9-bce2-9949b48bc6bb")
 	)
-	(via buried
+	(via
 		(at 72.7536 135.6849)
 		(size 0.6)
 		(drill 0.3)
@@ -73516,7 +73516,7 @@
 		(net "/LEDO_A")
 		(uuid "32c341ea-cca0-4981-8958-064591972508")
 	)
-	(via buried
+	(via
 		(at 75.6941 126.9059)
 		(size 0.6)
 		(drill 0.3)
@@ -73672,7 +73672,7 @@
 		(net "/MOSI_C")
 		(uuid "ef58b345-e5c6-4683-aa14-36110b98e676")
 	)
-	(via buried
+	(via
 		(at 130.3471 135.7166)
 		(size 0.6)
 		(drill 0.3)
@@ -73680,7 +73680,7 @@
 		(net "/MOSI_C")
 		(uuid "7ebf8617-c8db-4df7-b573-97897fcef01a")
 	)
-	(via buried
+	(via
 		(at 126.3137 132.9)
 		(size 0.6)
 		(drill 0.3)
@@ -73688,7 +73688,7 @@
 		(net "/MOSI_C")
 		(uuid "a3543534-6b88-498a-898b-ee0efe97b772")
 	)
-	(via buried
+	(via
 		(at 130.1893 144.0154)
 		(size 0.6)
 		(drill 0.3)
@@ -73696,7 +73696,7 @@
 		(net "/MOSI_C")
 		(uuid "b8bcf004-9231-4467-8767-8cc2c0ae025d")
 	)
-	(via buried
+	(via
 		(at 124.8579 127.016)
 		(size 0.6)
 		(drill 0.3)
@@ -74188,7 +74188,7 @@
 		(net "/PEN4")
 		(uuid "b74bfe39-16ef-4114-8cb9-d54c6f8ab985")
 	)
-	(via buried
+	(via
 		(at 133.032 97.5843)
 		(size 0.6)
 		(drill 0.3)
@@ -74196,7 +74196,7 @@
 		(net "/PEN4")
 		(uuid "171b1296-8697-48a3-8aed-0c81a06cbe0a")
 	)
-	(via buried
+	(via
 		(at 124.967 109.3248)
 		(size 0.6)
 		(drill 0.3)
@@ -74364,7 +74364,7 @@
 		(net "/DIV_G")
 		(uuid "eabf5fe1-54a5-46c6-8dfe-ae70d3e3c074")
 	)
-	(via buried
+	(via
 		(at 140.1057 73.789)
 		(size 0.6)
 		(drill 0.3)
@@ -74372,7 +74372,7 @@
 		(net "/DIV_G")
 		(uuid "0f8ff115-32d8-4250-bfc1-02eba6ddd716")
 	)
-	(via buried
+	(via
 		(at 137.6289 70.855)
 		(size 0.6)
 		(drill 0.3)
@@ -74380,7 +74380,7 @@
 		(net "/DIV_G")
 		(uuid "37627903-40ba-45ea-8989-e4e1c86d611f")
 	)
-	(via buried
+	(via
 		(at 131.0327 65.9262)
 		(size 0.6)
 		(drill 0.3)
@@ -74388,7 +74388,7 @@
 		(net "/DIV_G")
 		(uuid "6e1f4b4c-1d3d-42d1-bd62-026c16a798db")
 	)
-	(via buried
+	(via
 		(at 111.1757 63.3479)
 		(size 0.6)
 		(drill 0.3)
@@ -74500,7 +74500,7 @@
 		(net "/LEDB_C")
 		(uuid "e540a9ce-ed9b-4175-af84-866f4b86497a")
 	)
-	(via buried
+	(via
 		(at 149.9231 75.7324)
 		(size 0.6)
 		(drill 0.3)
@@ -74508,7 +74508,7 @@
 		(net "/LEDB_C")
 		(uuid "516a4cdc-2424-4d1b-81e2-3ea2169ad8fa")
 	)
-	(via buried
+	(via
 		(at 133.7642 128)
 		(size 0.6)
 		(drill 0.3)
@@ -74621,7 +74621,7 @@
 		(net "/BLD5")
 		(uuid "e0be9ffd-a0cf-43be-8cc1-ff4efc41369f")
 	)
-	(via buried
+	(via
 		(at 71.912 108.49)
 		(size 0.6)
 		(drill 0.3)
@@ -74629,7 +74629,7 @@
 		(net "/BLD5")
 		(uuid "78a7f250-cdcc-4612-ae61-a23ad5839f89")
 	)
-	(via buried
+	(via
 		(at 107.9155 83.6954)
 		(size 0.6)
 		(drill 0.3)
@@ -74709,7 +74709,7 @@
 		(net "/BLD4")
 		(uuid "c31ac5c8-5cec-4058-9dec-4e69b617934b")
 	)
-	(via buried
+	(via
 		(at 108.4491 80.1345)
 		(size 0.6)
 		(drill 0.3)
@@ -74717,7 +74717,7 @@
 		(net "/BLD4")
 		(uuid "63ed7a07-ae6a-410d-9d87-50bc52ebc80a")
 	)
-	(via buried
+	(via
 		(at 67.4861 109.4)
 		(size 0.6)
 		(drill 0.3)
@@ -74993,7 +74993,7 @@
 		(net "/PG1")
 		(uuid "d0ee2053-d177-45a4-9eb4-280c45f8a765")
 	)
-	(via buried
+	(via
 		(at 116.3211 96.657)
 		(size 0.6)
 		(drill 0.3)
@@ -75001,7 +75001,7 @@
 		(net "/PG1")
 		(uuid "517cffac-0291-4134-8e22-0a0342089a9a")
 	)
-	(via buried
+	(via
 		(at 111.7778 99.3371)
 		(size 0.6)
 		(drill 0.3)
@@ -75049,7 +75049,7 @@
 		(net "/REF_A")
 		(uuid "6831510f-aa57-4683-abe2-47beed08cc48")
 	)
-	(via buried
+	(via
 		(at 60.3443 133.4057)
 		(size 0.6)
 		(drill 0.3)
@@ -75057,7 +75057,7 @@
 		(net "/REF_A")
 		(uuid "41f23449-c5ff-4a35-bbb8-fabb4f5fbb9a")
 	)
-	(via buried
+	(via
 		(at 79.8574 129.784)
 		(size 0.6)
 		(drill 0.3)
@@ -75145,7 +75145,7 @@
 		(net "/REFR_A")
 		(uuid "e0e32781-291b-405b-bcaa-204740d3857d")
 	)
-	(via buried
+	(via
 		(at 62.3443 133.4057)
 		(size 0.6)
 		(drill 0.3)
@@ -75153,7 +75153,7 @@
 		(net "/REFR_A")
 		(uuid "186a2e77-bb71-4d7a-b3ab-14baffc3637e")
 	)
-	(via buried
+	(via
 		(at 79.6856 128.4218)
 		(size 0.6)
 		(drill 0.3)
@@ -75209,7 +75209,7 @@
 		(net "/USB_PRESENT")
 		(uuid "b0ae2cc4-e8b0-4cfd-b31d-f97c6ee74912")
 	)
-	(via buried
+	(via
 		(at 82.0577 71.7189)
 		(size 0.6)
 		(drill 0.3)
@@ -75217,7 +75217,7 @@
 		(net "/USB_PRESENT")
 		(uuid "406c971e-e76c-48e3-bd4d-828ba8440d16")
 	)
-	(via buried
+	(via
 		(at 104.5049 70.8859)
 		(size 0.6)
 		(drill 0.3)
@@ -75393,7 +75393,7 @@
 		(net "/USB_DN")
 		(uuid "c9476837-d20d-424c-8f7a-a6589239aa46")
 	)
-	(via buried
+	(via
 		(at 60.3264 67.0608)
 		(size 0.6)
 		(drill 0.3)
@@ -75433,7 +75433,7 @@
 		(net "/INT_A")
 		(uuid "ad0ea5bf-931c-4295-8874-beac5d1c47ff")
 	)
-	(via buried
+	(via
 		(at 85.7109 112.5179)
 		(size 0.6)
 		(drill 0.3)
@@ -75441,7 +75441,7 @@
 		(net "/INT_A")
 		(uuid "1f999c44-14a8-46e1-a7fe-95fb9557dbc7")
 	)
-	(via buried
+	(via
 		(at 75.2254 125.0746)
 		(size 0.6)
 		(drill 0.3)
@@ -75713,7 +75713,7 @@
 		(net "/INT_B")
 		(uuid "f98917ff-6051-43e2-954b-86e6f3bd4327")
 	)
-	(via buried
+	(via
 		(at 84.3725 86.3863)
 		(size 0.6)
 		(drill 0.3)
@@ -75721,7 +75721,7 @@
 		(net "/INT_B")
 		(uuid "a3cb6af3-99f9-440d-a47c-70a120038a27")
 	)
-	(via buried
+	(via
 		(at 100.5553 124.931)
 		(size 0.6)
 		(drill 0.3)
@@ -75729,7 +75729,7 @@
 		(net "/INT_B")
 		(uuid "a66ba14b-9b68-4ad2-b743-8e6db1252f37")
 	)
-	(via buried
+	(via
 		(at 94.4597 97.9421)
 		(size 0.6)
 		(drill 0.3)
@@ -75737,7 +75737,7 @@
 		(net "/INT_B")
 		(uuid "ab9f2e0b-97d3-413c-b1b3-b6744d3bc3f7")
 	)
-	(via buried
+	(via
 		(at 103.5775 117.5256)
 		(size 0.6)
 		(drill 0.3)
@@ -75873,7 +75873,7 @@
 		(net "/LED_A")
 		(uuid "ea527e5f-b361-4fa3-82fe-676c41d02208")
 	)
-	(via buried
+	(via
 		(at 134.0563 65.2108)
 		(size 0.6)
 		(drill 0.3)
@@ -75881,7 +75881,7 @@
 		(net "/LED_A")
 		(uuid "010b8363-68de-4604-9d23-e5c506d02291")
 	)
-	(via buried
+	(via
 		(at 60.3313 137.5187)
 		(size 0.6)
 		(drill 0.3)
@@ -76089,7 +76089,7 @@
 		(net "/EN_A")
 		(uuid "f66b44f9-2428-4de7-8913-95666343ee4e")
 	)
-	(via buried
+	(via
 		(at 86.1799 127.0101)
 		(size 0.6)
 		(drill 0.3)
@@ -76097,7 +76097,7 @@
 		(net "/EN_A")
 		(uuid "3ec0b470-ae51-4ca1-bcdd-96b84f395c9e")
 	)
-	(via buried
+	(via
 		(at 87.6364 112.5162)
 		(size 0.6)
 		(drill 0.3)
@@ -76105,7 +76105,7 @@
 		(net "/EN_A")
 		(uuid "52765797-247b-435c-a77c-22bea984da6a")
 	)
-	(via buried
+	(via
 		(at 94.5701 59.3979)
 		(size 0.6)
 		(drill 0.3)
@@ -76113,7 +76113,7 @@
 		(net "/EN_A")
 		(uuid "cf08a751-5fb5-4ab8-81d9-31cf27bb6087")
 	)
-	(via buried
+	(via
 		(at 80.9032 121.7562)
 		(size 0.6)
 		(drill 0.3)
@@ -76521,7 +76521,7 @@
 		(net "/CC1_SENSE")
 		(uuid "ec18de45-61b3-4b7c-b1fb-6f4521ad3254")
 	)
-	(via buried
+	(via
 		(at 102.2244 73.3896)
 		(size 0.6)
 		(drill 0.3)
@@ -76785,7 +76785,7 @@
 		(net "/VBAT_SENSE")
 		(uuid "dde6f212-cce0-4b2d-99b4-a2ebc126bf00")
 	)
-	(via buried
+	(via
 		(at 107.0215 76.904)
 		(size 0.6)
 		(drill 0.3)
@@ -76913,7 +76913,7 @@
 		(net "/BAT_DIV_EN")
 		(uuid "f959847a-0f4e-442a-ab86-12487046d9ac")
 	)
-	(via buried
+	(via
 		(at 123.3164 65.3016)
 		(size 0.6)
 		(drill 0.3)
@@ -77110,7 +77110,7 @@
 		(net "/PEN3")
 		(uuid "d713160d-cddd-47b4-91e7-49b1745b2f99")
 	)
-	(via buried
+	(via
 		(at 90.171 97.6911)
 		(size 0.6)
 		(drill 0.3)
@@ -77118,7 +77118,7 @@
 		(net "/PEN3")
 		(uuid "110e3040-01c4-4a84-81b2-e4694a8ee88d")
 	)
-	(via buried
+	(via
 		(at 85.4828 108.2672)
 		(size 0.6)
 		(drill 0.3)
@@ -77359,7 +77359,7 @@
 		(net "/CSB_B")
 		(uuid "4135c93f-a6f2-4306-9bb2-ce8cc900567a")
 	)
-	(via buried
+	(via
 		(at 100.9194 127.0806)
 		(size 0.6)
 		(drill 0.3)
@@ -77367,7 +77367,7 @@
 		(net "/CSB_B")
 		(uuid "61df02ec-7512-4107-b63e-d24d3bc71620")
 	)
-	(via buried
+	(via
 		(at 102.81 119.2772)
 		(size 0.6)
 		(drill 0.3)
@@ -77535,7 +77535,7 @@
 		(net "/PG4")
 		(uuid "a9cf9f6c-ffa3-4e21-b58f-81c09b15421d")
 	)
-	(via buried
+	(via
 		(at 130.4114 104.1558)
 		(size 0.6)
 		(drill 0.3)
@@ -77543,7 +77543,7 @@
 		(net "/PG4")
 		(uuid "4ddaa6ea-5f0e-4932-8715-5c39c967db33")
 	)
-	(via buried
+	(via
 		(at 127.936 106.7488)
 		(size 0.6)
 		(drill 0.3)
@@ -77655,7 +77655,7 @@
 		(net "/LEDB_B")
 		(uuid "e03b70a4-56e8-4dc1-ba4c-487d7fe1db00")
 	)
-	(via buried
+	(via
 		(at 148.9871 68.6604)
 		(size 0.6)
 		(drill 0.3)
@@ -77663,7 +77663,7 @@
 		(net "/LEDB_B")
 		(uuid "2a05aa5c-7d32-47c2-aa19-e0deadab7475")
 	)
-	(via buried
+	(via
 		(at 143.427 129.2282)
 		(size 0.6)
 		(drill 0.3)
@@ -77671,7 +77671,7 @@
 		(net "/LEDB_B")
 		(uuid "31faf3c0-e30c-4d92-8a40-fe191d0dd526")
 	)
-	(via buried
+	(via
 		(at 105.5171 128.9171)
 		(size 0.6)
 		(drill 0.3)
@@ -77799,7 +77799,7 @@
 		(net "/CC1")
 		(uuid "f76451f7-6891-4d09-a209-59cdc36c25c5")
 	)
-	(via buried
+	(via
 		(at 60.4679 72.75)
 		(size 0.6)
 		(drill 0.3)
@@ -77807,7 +77807,7 @@
 		(net "/CC1")
 		(uuid "6a2b3756-8329-497f-99ef-26bc20873345")
 	)
-	(via buried
+	(via
 		(at 96.603 75.1123)
 		(size 0.6)
 		(drill 0.3)
@@ -78204,7 +78204,7 @@
 		(net "/CC1_A")
 		(uuid "e4074e91-c91b-4b26-b8a3-1b1f958d216f")
 	)
-	(via buried
+	(via
 		(at 71.332 133.7163)
 		(size 0.6)
 		(drill 0.3)
@@ -78212,7 +78212,7 @@
 		(net "/CC1_A")
 		(uuid "11f3fe3a-13e3-4074-ba05-a9f8bdfeb9ef")
 	)
-	(via buried
+	(via
 		(at 79.38371 130.453341)
 		(size 0.6)
 		(drill 0.3)
@@ -78349,7 +78349,7 @@
 		(net "/INTO_A")
 		(uuid "fdfd176b-88f1-461d-bed8-86c1c73fbf74")
 	)
-	(via buried
+	(via
 		(at 73.7685 134.0422)
 		(size 0.6)
 		(drill 0.3)
@@ -78478,7 +78478,7 @@
 		(net "/CC2_A")
 		(uuid "f99fa419-625f-4049-b095-d46e7668a178")
 	)
-	(via buried
+	(via
 		(at 77.3521 131.1104)
 		(size 0.6)
 		(drill 0.3)

@@ -26,7 +26,8 @@ the west end, y 100 (rear wall of the rail) .. 122 (front, towards the tray). We
 west, into the wiring channel beside the rear cell), fuse, reverse FET, 47 uF can; slide switch on the rear edge
 (actuator through the rail's rear wall); 3.3 V converter east, 5 V converter and LED rail cap front middle,
 lead J2 (vertical: plugged from above) rear east. The front-east corner (15.5 x 6.6 mm) is cut away: on the numpad the
-three side cells and their contact end there. Two M2 holes on the front edge (the east end rests on printed posts).
+three side cells and their contact end there. The front-west corner (4 x 13 mm) is cut away too: the rear cell's
+spring contact and its wall stand there (found at the shell step: the lane was 3.9 mm short). Two M2 holes on the front edge (the east end rests on printed posts).
 
 hub-radio, 2 layers, in hub coordinates (pcb_hub.K): socket J1 on the UNDERSIDE over hub-core's expansion header
 (checked pad by pad against the routed hub-core), bay header J2 and two M2 holes as a key board's bay, turned by
@@ -203,6 +204,7 @@ def antenna_clear(name="pod"):
 # ---- pod-power -----------------------------------------------------------------------------------------------------
 U2_XY = (123.0, 113.5)
 U1_XY = (139.6, 111.0)
+NOTCH_W = (104.0, 109.0)    # front-west corner cut away (user, 2026-11-14): the rear cell's spring and its wall (4 x 13 mm)
 NOTCH = (132.5, 115.4)      # front-east corner cut away: the side cells' last cell and its contact end there (numpad)
 # prefix, value, nets, KiCad x, y, angle
 POWER_PARTS = [
@@ -239,11 +241,11 @@ POWER_PARTS = [
     ("R", "2.2M", (), 147.0, 109.6, 90),
     ("R", "680k", (), 147.0, 112.8, 90),
     ("TP", None, ("VPACK",), 116.9, 116.8, 0),
-    ("TP", None, ("GND",), 106.9, 119.5, 0),
-    ("TP", None, ("+3V3",), 109.8, 116.9, 0),
-    ("TP", None, ("+5V_LED",), 109.8, 119.5, 0),
+    ("TP", None, ("GND",), 116.6, 119.4, 0),
+    ("TP", None, ("+3V3",), 110.6, 116.9, 0),
+    ("TP", None, ("+5V_LED",), 110.6, 119.5, 0),
 ]
-POWER_HOLES = [(103.0, 118.5), (120.0, 120.2)]
+POWER_HOLES = [(106.8, 119.3), (120.0, 120.2)]
 
 
 def pod_power(force):
@@ -251,7 +253,8 @@ def pod_power(force):
     for c in bd.comps.values():                 # KiCad writes a "/" in a pin name as {slash} in the net of an open pin
         c["nets"] = {k: v.replace("/", "{slash}") if v.startswith("unconnected-(") else v for k, v in c["nets"].items()}
     bd.b.SetCopperLayerCount(4)
-    rounded(bd, [(100.0, 100.0), (100.0 + PW[0], 100.0), (100.0 + PW[0], NOTCH[1]), NOTCH, (NOTCH[0], 100.0 + PW[1]), (100.0, 100.0 + PW[1])])
+    rounded(bd, [(100.0, 100.0), (100.0 + PW[0], 100.0), (100.0 + PW[0], NOTCH[1]), NOTCH, (NOTCH[0], 100.0 + PW[1]),
+                 (NOTCH_W[0], 100.0 + PW[1]), NOTCH_W, (100.0, NOTCH_W[1])])
     for x, y in POWER_HOLES:
         bd.mech(pk.HOLE_FP, "H", x, y)
     j1 = pick(bd, "J", "PACK")

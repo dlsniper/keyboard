@@ -555,10 +555,43 @@ the USB regulator's 2.2 R moved to the port's side; (12) vias were written as "b
   which is the worst-case pack current (known from session 2).
 **The user had KiCad open during the session** (lock files in the three project folders): the boards on disk are
 newer than anything open there; reload, do not save an old view over them.
-**Next**: M3b step 3 with M3 session 2: the shells. Rail (27 mm rear leg, 19 mm side leg), cell pockets and contact
-part, lids, the bay cover over the longer pod, posts and inserts for the power board, the switch slot and the USB-C
-opening in the rear wall; `left` / `right` shells with left's width (sixth cell), tent base, palm rest; the hub
-tower's core section with the carrier. Then the order (D7) still waits for M4 step 2 (SPI over the real cable).
+**M3b session 4 = M3 session 2 done (2026-11-14): wireless numpad shell; `pod` routed again, `pod-power` placed and
+routed again, via mark fixed on three boards. No key board, hub-core changed; hub-conn only in its via type.**
+`tools/pcb_check.sh pod pod-power hub-conn port-module usb-port`: 0 errors, 0 parity, 0 unconnected on each;
+`tools/kicad-check.sh` exit 0; fab outputs of the five regenerated. Details and numbers: spec §2b "Shell".
+**User decisions (options UI, FreeCAD document `numpad_case`, groups `Q1_`..`Q4_`, left open and unsaved)**:
+service port **stays at the rear, copper cut back** (`ANT_band` rule area, `route_hub.py` `ANT_BAND_*`; 0 mm2 of
+copper in it); **one-piece wireless tray**; **two cell lids with a snap**; **Keystone 5201 spring at both ends of the
+column**; **power board notched** (west-front, 4 x 13 mm: the rear cell's lane was 3.9 mm short for a coil spring,
+my miss from session 3); **via mark fixed on all three** (`route_hub.py <board> --through-vias`: 262 / 12 / 8,
+drill files identical, copies in `build/route/<board>/*-before-*.kicad_pcb`; every 4-layer routing now sets through
+vias).
+**Shell = `mech/case/pod_case.py`**, loaded by `build_case.py` when `CASE_VARIANT=pod` (`CASE_VARIANT=pod
+CASE_MODULE=numpad /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd mech/case/build_case.py 2>&1 | grep -a
+"numpad:\|pod variant\|column\|rear cell\|lids:\|cover:\|CLASH\|clash\|valid\|xception"`), output
+`build/case/numpad-pod/` (wired stays in `build/case/numpad/`, unchanged: 48.1 cm3, 14 pairs, 0 clashes). GUI
+document `case_numpad_pod`. Parameters in `build_case.py` (block "wireless variant"); the power board's outline,
+holes and tall parts are repeated there (`PB_*`): **change them with `tools/pcb_pod.py`**. 31 clash pairs, 0 clashes.
+`mech/case/pod_preview.py` is now only the hub's carrier preview and the old numpad envelopes.
+**Changed from what the options said, by me (tell the user if it comes up)**: lids slide in grooves (snap = a
+ridge behind the lowered end wall) instead of hook-and-latch; the side lid also covers the lead corner (no small
+screwed lid); no deck plate under the pod (walls end at 16.5 mm, the cover closes it).
+**Fit print first (nothing printed yet)**: `build/case/numpad-pod/numpad-fit-rail-front.stl` + `numpad-fit-lid-side.stl`
+(slot, spring window, groove, snap), `numpad-fit-rail-rear.stl` + `numpad-fit-lid-rear.stl` (5223 slot, lane, west
+entry), `numpad-fit-power.stl` (bosses, posts, switch slot, both notches, rear spring wall), `numpad-cover.stl`
+(upside down). To check: plate slots 0.6 mm, a 5201's solid height and force (not in Keystone's drawings), groove
+play 0.1 mm, whether the rear cell tips out under the hood's arch, the switch actuator in its slot.
+**Open**: the pod's rear end overhangs its screws by 32 mm, unsupported (no free spot on the rear wall); wires are
+described, not modelled; `pod-power`: the finishing pass closed a +5V_RAW link and the +3V3 line at 0.2 mm, 10
+references hidden; review items 1, 10, 15 of session 3 still open.
+**Not done this session (budget)**: `left` / `right` with the rail (the script asserts an unrotated rear edge),
+left's width for the sixth cell, the hub's core section with the carrier (9 mm taller, carrier support), tent
+base, palm rest.
+**The user had KiCad open during the session**: reload `pod`, `pod-power`, `hub-conn`, `port-module`, `usb-port`
+there; do not save an old view over them.
+**Next**: fit prints of the pieces above; then `left` / `right` shells with the rail and left's width (FreeCAD
+first), the hub's core section with the carrier, tent base and palm rest. The order (D7) still waits for M4 step 2
+(SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

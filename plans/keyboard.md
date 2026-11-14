@@ -395,12 +395,49 @@ and are checked against their datasheets when the schematics are written.
     GND end, pack current on top at 1.0 mm, crystal under its pins, level shifter capacitor at its pin, through
     vias, module 0.3 mm inside the edge. Left open: GND copper and the USB-C shell beside the antenna area on the
     rear edge (moving the port is a user decision), an 0603 at the converter's VIN / VOUT pins, D+ on a stub at the
-    ESD array, a support for the carrier in the hub, the "buried" via mark on `hub-conn`, `port-module`, `usb-port`.
-- **Open**: the contact part for the printed pockets; how the rail is
-  fixed to the tray and how it goes with the tilt bars and the tent base; the bay cover over the longer pod and
-  the lowered rail lid under it (the pod's underside is 0.04 mm above the rail top); posts under the power
-  board's east end; left's width; the tower's core section height; USB4085 shell overhang (2.51 mm, from KiCad's
-  footprint) against the GCT drawing.
+    ESD array, a support for the carrier in the hub, the "buried" via mark on `hub-conn`, `port-module`, `usb-port`
+    (**fixed 2026-11-14, user: `route_hub.py <board> --through-vias`, 262 / 12 / 8 vias, drill files identical before
+    and after, DRC unchanged**).
+- **Shell (M3b step 3 with M3 session 2, 2026-11-14)**: `mech/case/pod_case.py`, loaded by `build_case.py` with
+  `CASE_VARIANT=pod` (output `build/case/numpad-pod/`); `numpad` only so far. **Decided by the user (options UI, each
+  shown in FreeCAD)**:
+  - **Service port stays on the pod's rear edge; the copper beside the antenna is cut back**: a rule area `ANT_band`
+    (no tracks, vias or zone copper on any layer) from 0.6 mm east of the USB-C shell's lug to the east edge, 4.15 mm
+    deep (`route_hub.py` `ANT_BAND_*`). `pod` routed again, same placement; measured: 0 mm2 of copper in the band.
+    The shell itself stays 5.3 mm from the antenna area: range is measured at bring-up, fallback MDBT50Q-U.
+  - **Tray and rail are one print** (107.6 x 181.4 x 19 mm; wired tray unchanged, 88.6 x 154.4). Feet at the four
+    corners of the larger rectangle; the tilt bars run on under the side leg and are computed from the new rear feet.
+    A wired module that goes wireless gets a new tray.
+  - **Contacts: Keystone 5201 (coil spring on an 11.2 x 12.0 x 0.51 mm plate, spring 10.5 mm high) and 5223 (button,
+    dome 1.4 mm)**, drawings in `build/ds/contacts/`. The three side cells lie end to end with **a 5201 at both ends**
+    (3.75 mm each with three 50.5 mm cells, 5.70 mm with three 49.2 mm cells); the rear cell has a 5223 at the west
+    wall and a 5201 at the east end (4.5 to 5.8 mm). Plates drop into 0.6 mm slots behind a rib with a 7 mm window.
+    **Not in any drawing: the spring's solid height and force** (fit print).
+  - **Power board notched at its west-front corner too (4 x 13 mm)**: the rear cell's lane was 3.9 mm short for a
+    coil spring (found at this step: the 48 x 22 mm board was placed in session 3 without the contacts drawn).
+    West mounting hole moved to (6.8, 19.3) from the board's west end / rear edge, three test pads moved;
+    `pod-power` placed and routed again (clean on try 1).
+  - **Lids: two sliding cell lids** (side 179.9 x 16.2 mm, out to the front; rear 47.9 x 24.7 mm, out to the west),
+    1.0 mm edge flanges in 0.7 mm grooves of the rail walls, a 0.4 mm ridge under the outer end that drops behind
+    the lowered end wall (the snap). The side lid also covers the lead's plug in the rear-east corner.
+    **Changed from the option text, by me**: sliding instead of hook-and-latch (a latch pocket does not fit a 2 mm
+    wall), no separate lid over the lead corner, no deck plate under the pod (the rail walls end at 16.5 mm there
+    and the cover closes it; the lead has to drop from the pod's west edge into the rail at that spot).
+  - **Cover over the pod**: the bay cover carried on to the rail's rear face (42.3 x 54.2 mm, same height 27.62),
+    a hood west of the pod for the lead's plug, arched over the cell lane so the rear cell tips out, USB-C opening
+    9.5 x 3.8 mm for the shell (flush with the rear face), same two M2 x 22 screws.
+  - **Power board** on two bosses with inserts and five posts, underside 6.0 mm above the desk side (can top 13.4);
+    switch slot 8.0 x 3.4 mm in the rear wall. **Wires** (not modelled): tabs up and bent over; column wires in the
+    pocket's bottom corner beside the cells, west along the 2.5 mm strip in front of the board; the column's minus
+    wire passes under the board to the pack plug.
+  - Clash checks 31 pairs, 0 clashes (wired: 14, 0). Fit pieces: `fit-rail-front`, `fit-rail-rear`, `fit-power`,
+    `fit-lid-side`, `fit-lid-rear`.
+- **Open**: the pod's rear end overhangs its two screws by 32 mm with nothing under it (a support has no free spot
+  on the rear wall: pack plug, can, switch and antenna); lid snap, groove play, plate slots and spring heights on
+  the fit print; slide switch actuator against its slot (C&K drawing); `left` and `right` (rail turned with the
+  rear strip, their cell plan, left's width for the sixth cell); the tower's core section height and a support for
+  the carrier; USB4085 shell overhang (2.51 mm, from KiCad's footprint) against the GCT drawing; on `pod-power` the
+  finishing pass closed one +5V_RAW link and the +3V3 line at 0.2 mm (review before the order).
 
 ## 3. Power
 

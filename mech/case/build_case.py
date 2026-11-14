@@ -28,6 +28,7 @@ import MeshPart
 V = App.Vector
 ROOT = os.getcwd()
 NAME = os.environ.get("CASE_MODULE", "numpad")
+VARIANT = os.environ.get("CASE_VARIANT", "wired")      # "pod" = the wireless variant (spec 2b): output in build/case/<name>-pod/
 
 # ---------------- parameters (mm) ----------------
 FLOOR = 2.4            # tray floor
@@ -65,6 +66,27 @@ BUMP_H = 2.2           # Bumpon height: the bar's underside is the desk plane le
 BAR_DEPTH = 18.0
 BAR_UNDER = 3.0        # ASA under the bar screw's head (M2 x 6 into an insert set from below)
 FOOT_INSERT = 4.6      # insert hole from the tray's underside, in a boss that ends POST_GAP under the board
+# ---- wireless variant (CASE_VARIANT=pod; user decisions 2026-11-14, spec 2b "Shell")
+RAIL_SIDE, RAIL_REAR, RAIL_H = 19.0, 27.0, 19.0    # battery rail: outer side leg, rear leg, top (one piece with the tray)
+RAIL_WALL, RAIL_FLOOR = 2.0, 2.0
+AA_D, AA_LMAX, AA_LMIN = 14.5, 50.5, 49.2
+POCKET_W = 15.0
+PLATE = (11.2, 12.0, 0.51)     # Keystone 5201 (coil spring, 10.5 mm high) / 5223 (button, dome 1.4): build/ds/contacts/
+SLOT, RIB, WINDOW, BACK = 0.6, 0.7, 7.0, 1.0       # plate slot, retaining rib in front of it, opening for the spring, wall behind
+SPRING_COL, SPRING_ONE, DOME = 3.75, 4.5, 1.4      # spring height with cells of full length: column (a spring at each end), rear cell
+PB = (48.0, 22.0)              # power board (tools/pcb_pod.py PW, NOTCH, NOTCH_W, POWER_HOLES): u from its west end, v from its rear edge
+PB_OUT = [(0, 0), (48, 0), (48, 15.4), (32.5, 15.4), (32.5, 22), (4, 22), (4, 9), (0, 9)]
+PB_HOLES = [(6.8, 19.3), (20.0, 20.2)]
+PB_POSTS = [(3.0, 4.0), (15.0, 3.0), (38.0, 3.4), (46.0, 3.4), (46.0, 12.5)]    # under the plugs and the east end, clear of through-hole tails
+PB_Z = 6.0                     # board underside: 4 mm bosses on the rail floor take a whole M2 insert
+PB_TALL = [("can", 12.75, 22.25, 0.9, 8.1, 5.8), ("lead", 35.8, 47.8, 0.1, 6.7, 8.5), ("pack", -0.5, 12.1, 0.5, 9.0, 7.0), ("conv", 21.0, 30.0, 11.0, 16.0, 2.1)]
+SW_U, SW_SLOT = 28.5, (8.0, 3.4)   # slide switch centre on the board's rear edge, slot in the rear wall (check on the C&K part)
+POD_T1 = 52.19                 # pod rear edge in the bay frame (tools/pcb_pod.py POD_REAR)
+POD_USB_A, POD_MOD_A = -9.0, 7.0
+USB_SHELL = (8.94, 3.2, 2.51)  # GCT USB4085: width, height above the pod, shell beyond the pod's rear edge (flush with the rail's rear face)
+DECK = 16.5                    # rail walls under the pod: 2.5 mm under its underside (through-hole tails)
+LID_Z, LID_T, LID_EDGE, GROOVE = 17.2, 1.6, 1.0, 0.7    # sliding lids: seat, body, edge flange in the groove, groove depth in the walls
+HOOD_X0 = -22.9                # cover's west end over the rail in the bay frame: room for the lead's plug beside the pod
 CAP_Z = (6.5, 17.5)    # keycap envelope above the plate top (for the picture and the clash checks only)
 
 Z_BOARD = FLOOR + CAVITY
@@ -187,6 +209,12 @@ def build(name):
     for p in d["corners"]:
         q = c(p); n = cen - q; n.normalize()
         feet.append(q + n * (FOOT_INSET * math.sqrt(2)))
+    tray0 = tray
+    if VARIANT == "pod":
+        ob = outer_f.BoundBox
+        rx1, ry1 = ob.XMax + RAIL_SIDE, ob.YMax + RAIL_REAR
+        feet = [V(ob.XMin + FOOT_INSET, ob.YMin + FOOT_INSET, 0), V(rx1 - FOOT_INSET, ob.YMin + FOOT_INSET, 0),
+                V(ob.XMin + FOOT_INSET, ry1 - FOOT_INSET, 0), V(rx1 - FOOT_INSET, ry1 - FOOT_INSET, 0)]
     for q in feet:
         tray = tray.cut(cyl(q, FOOT_D, -1, FOOT_DEPTH))
     tray = tray.removeSplitter()
@@ -194,8 +222,11 @@ def build(name):
     # ---- tilt bars: tray on its rear Bumpons, the bar under the front; the bar's underside is parallel to the desk
     t_rear = max(tt(q) for q in feet)
     a0, a1 = aa(foot_boss[0]) - 9.0, aa(foot_boss[1]) + 9.0
+    if VARIANT == "pod":
+        a1 = aa(V(rx1, 0, 0))                    # the bar runs on under the side leg of the rail
     t0, t1 = min(tt(p) for p in foot_boss) - BAR_DEPTH / 2, max(tt(p) for p in foot_boss) + BAR_DEPTH / 2
-    bar_f = poly([B(a0, t0), B(a1, t0), B(a1, t1), B(a0, t1)]).common(outer_f)
+    bar_f = poly([B(a0, t0), B(a1, t0), B(a1, t1), B(a0, t1)]).common(
+        outer_f if VARIANT != "pod" else poly([V(ob.XMin, ob.YMin, 0), V(rx1, ob.YMin, 0), V(rx1, ry1, 0), V(ob.XMin, ry1, 0)]).makeOffset2D(-5.7, join=2).makeOffset2D(5.7))
     bars = {}
     for ang in TILT:
         k_ = math.tan(math.radians(ang))
@@ -245,9 +276,16 @@ def build(name):
     parts.update({k_: v[0] for k_, v in bars.items()})
     refs = {"board": board, "plate": plate, "port": port, "caps": caps}
     fits = {"fit-bay": fit_bay, "fit-front": fit_front}
+    extra = []
+    if VARIANT == "pod":
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("pod_case", os.path.join(ROOT, "mech", "case", "pod_case.py"))
+        pc = importlib.util.module_from_spec(spec); spec.loader.exec_module(pc)
+        extra = pc.build(dict(globals(), **locals()), parts, refs, fits)
 
     # ---- report
     rep = []
+    bb = parts["tray"].BoundBox
     rep.append(f"{name}: tray {bb.XLength:.1f} x {bb.YLength:.1f} x {bb.ZLength:.1f} mm; cover top at {Z_COVER:.2f}, "
                f"plate top {Z_PTOP:.2f}, cap tops about {Z_PTOP + CAP_Z[1]:.1f}")
     rep.append(f"levels: board {Z_BOARD:.2f}-{Z_BTOP:.2f}, plate {Z_PLATE:.2f}-{Z_PTOP:.2f}, wall top {Z_WALL:.2f}, "
@@ -263,7 +301,10 @@ def build(name):
              ("cover", cover, "port", port), ("cover", cover, "plate", plate), ("cover", cover, "caps", caps),
              ("cover", cover, "tray", tray), ("cover", cover, "board", board), ("cover", cover, "sleeves", sleeves),
              ("spacers", spacers, "plate", plate), ("spacers", spacers, "board", board), ("tray", tray, "caps", caps)]
-    pairs += [(k_, v[0], "tray", tray) for k_, v in bars.items()]
+    pairs += [(k_, v[0], "tray", parts["tray"]) for k_, v in bars.items()]
+    if VARIANT == "pod":
+        pairs = [(na, parts.get(na, a), nb, parts.get(nb, refs.get(nb, b))) for na, a, nb, b in pairs] + extra[0]
+        rep += extra[1]
     for na, a, nb, b in pairs:
         vol = a.common(b).Volume
         if vol > 0.01:
@@ -281,19 +322,19 @@ COLOURS = {"tray": (0.25, 0.27, 0.30), "cover": (0.85, 0.45, 0.10), "spacers": (
 
 def main():
     parts, refs, fits, rep = build(NAME)
-    out = os.path.join(ROOT, "build", "case", NAME)
+    out = os.path.join(ROOT, "build", "case", NAME + ("-pod" if VARIANT == "pod" else ""))
     os.makedirs(out, exist_ok=True)
     for r in rep:
         log(r)
     open(os.path.join(out, "report.txt"), "w").write("\n".join(rep) + "\n")
-    dn = "case_" + NAME
+    dn = "case_" + NAME + ("_pod" if VARIANT == "pod" else "")
     if dn in App.listDocuments():
         App.closeDocument(dn)
     doc = App.newDocument(dn)
     for n_, s in list(parts.items()) + list(refs.items()):
         o = doc.addObject("Part::Feature", n_); o.Shape = s
         if App.GuiUp:
-            o.ViewObject.ShapeColor = COLOURS[n_]
+            o.ViewObject.ShapeColor = COLOURS.get(n_, (0.5, 0.5, 0.55))
             if n_ == "caps":
                 o.ViewObject.Transparency = 60
     doc.recompute()
