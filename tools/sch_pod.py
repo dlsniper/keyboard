@@ -182,8 +182,8 @@ def build_power():
     s = S()
     s.part("J1", "Connector_Generic:Conn_01x02", "PACK", "Connector_JST:JST_XH_S2B-XH-A_1x02_P2.50mm_Horizontal", (10, 20),
            {"1": "BAT+", "2": "GND"}, {"MPN": "JST S2B-XH-A (3 A per contact)"})
-    s.part("F1", "Device:Polyfuse", "1.1A", "Fuse:Fuse_1812_4532Metric", (24, 20),
-           {"1": "BAT+", "2": "VFUSE"}, {"MPN": "Bourns MF-MSMF110/16X (hold 1.1 A, trip 2.2 A, 16 V)"})
+    s.part("F1", "Device:Polyfuse", "1.5A", "Fuse:Fuse_1812_4532Metric", (24, 20),
+           {"1": "BAT+", "2": "VFUSE"}, {"MPN": "Bourns MF-MSMF150/16X (hold 1.5 A at 23 C, 1.08 A at 50 C, trip 3.0 A, 16 V)"})
     s.part("Q1", "Transistor_FET:AO3401A", "AO3401A", "Package_TO_SOT_SMD:SOT-23", (40, 20),
            {"1": "GATE", "2": "VPACK", "3": "VFUSE"}, {"MPN": "Alpha & Omega AO3401A"})
     s.part("SW1", "Switch:SW_SPDT", "ON / OFF", "Button_Switch_THT:SW_Slide_SPDT_Angled_CK_OS102011MA1Q", (60, 20),
@@ -227,20 +227,22 @@ def build_power():
     s.r("49.9k", "ILIM", "GND", st.next())
     s.c("10u", "+5V_LED", "GND", st.next(), fp=FP_C0805, v="16V")
     s.r(UVLO_PAR, "VSW", "UVLO_4", st.next())
+    s.c("10u", "VPACK", "GND", st.next(), v="25V", diel="X5R")     # review 1: 0603 at U2's VIN pins (datasheet C1)
+    s.c("100n", "+5V_RAW", "GND", st.next())                       # review 15: at U3's IN pin
     s.part("JP1", "Jumper:SolderJumper_2_Open", "4 AA", "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm", (150, 76),
            {"1": "UVLO_4", "2": "EN_3V3"}, {})
     s.flags = [("#FLG01", "BAT+", (10, 36)), ("#FLG02", "GND", (18, 36)), ("#FLG03", "VPACK", (26, 36)),
                ("#FLG04", "+3V3", (34, 36)), ("#FLG05", "+5V_RAW", (42, 36))]
     s.notes = [((8, 102),
         "Power board of a cable-free key module (spec 2b), in the battery rail. Pack: 4, 5 or 6 AA, NiMH or alkaline, 4.0 to about 10 V, on J1.\n"
-        "F1 1.1 A hold (worst case about 0.75 A: 2.5 W of LEDs at a 4.0 V pack). Q1 blocks a reversed pack (gate to GND through 100 k; |VGS| = pack voltage, 12 V absolute maximum).\n"
+        "F1 1.5 A hold at 23 C, 1.08 A at 50 C (user, 2026-11-14; worst case 0.85 A: LEDs at the cap on a 4.0 V pack). Q1 blocks a reversed pack (gate to GND through 100 k; |VGS| = pack voltage, 12 V absolute maximum).\n"
         "D1 clamps its gate (10 V Zener, conducts only above a fresh alkaline pack); C20 damps the ringing when the pack is plugged in.\n"
         "SW1 is the on / off switch: it carries no load current (third contact unused). On: VSW = VPACK feeds the cut-off divider on the 3.3 V converter's enable and the pack divider.\n"
         "Cut-off (review): R2 / 330 k on the precise enable (1.0 V rising, 0.9 V falling) = on at 1.0 V per cell, off at 0.9 V per cell. R2 = 1.65 M: 6 cells, as delivered.\n"
         "4 cells (numpad): bridge JP1, which puts 2.55 M in parallel (1.0 M). One board for every module (user). Off: VSW pulled to GND by the dividers, both converters in shutdown (the pod is dead, so EN_5V is low); 3 to 13 uA left (shutdown currents, 85 C worst case).\n"
         "U1 TPS629210: MODE/S-CONF 27.4 k = VSET mode, auto PFM/PWM with AEE, up to 2.5 MHz, output discharge on; FB/VSET open = 3.3 V; 2.2 uH, 22 uF; 4 uA quiescent.\n"
-        "U2 TPS630701 (fixed 5.0 V): FB on VOUT, VSEL low, PS/SYNC high through 100 k = power save, 1.5 uH, 2 x 22 uF, VAUX 100 nF. Enabled only by EN_5V from the pod\n"
-        "(1 k in series, 100 k pull-down: off by default). U3 TPS2553 caps the LED rail: RILIM 49.9 k = 475-565 mA, constant current (not latching); FAULT is not wired.\n"
+        "U2 TPS630701 (fixed 5.0 V): FB on VOUT, VSEL low, PS/SYNC high through 100 k = power save, 1.5 uH, 2 x 22 uF, VAUX 100 nF; a 10 uF 0603 at the VIN pins and one (C8) at the VOUT pins, as the datasheet. Enabled only by EN_5V from the pod\n"
+        "(1 k in series, 100 k pull-down: off by default). U3 TPS2553 caps the LED rail: RILIM 49.9 k = 475-565 mA, constant current (not latching); FAULT is not wired; 100 nF at its IN pin.\n"
         "Pack divider 2.2 M / 680 k: 10 V -> 2.36 V at the pod's ADC pin (100 nF there); the two dividers draw 2.5 + 3.6 uA at 7.2 V while the switch is on.\n"
         "Lead J2 (JST GH, 1 A per contact, 1:1 to the pod): 1 +5V_LED, 2 GND, 3 EN_5V, 4 VBAT_SENSE, 5 GND, 6 +3V3.\n"
         "Board: tools/pcb_pod.py, 48 x 22 mm in the rear leg of the battery rail (27 mm deep; user).")]
@@ -406,8 +408,8 @@ def verify_power():
     c.eq("3.3 V inductor", sorted([c.net("L1", 1), c.net("L1", 2)]) + [c.comps["L1"]], ["+3V3", "SW_3V3", "2.2u"])
     c.eq("3.3 V output capacitor", parts_on(c, "U1", 3, "C"), [("22u", "GND")])
     c.eq("5 V inductor", sorted([c.net("L2", 1), c.net("L2", 2)]) + [c.comps["L2"]], ["L5A", "L5B", "1.5u"])
-    c.eq("5 V output capacitors", parts_on(c, "U2", 7, "C"), [("10u", "GND"), ("22u", "GND"), ("22u", "GND")])
-    c.eq("input capacitors", parts_on(c, "U1", 6, "C"), [("10u", "GND"), ("10u", "GND"), ("47u", "GND")])
+    c.eq("5 V output capacitors", parts_on(c, "U2", 7, "C"), [("100n", "GND"), ("10u", "GND"), ("22u", "GND"), ("22u", "GND")])
+    c.eq("input capacitors", parts_on(c, "U1", 6, "C"), [("10u", "GND"), ("10u", "GND"), ("10u", "GND"), ("47u", "GND")])
     c.eq("VAUX capacitor", parts_on(c, "U2", 3, "C"), [("100n", "GND")])
     c.eq("power save", parts_on(c, "U2", 1, "R"), [("100k", "VPACK")])
     c.eq("5 V enable: off by default", parts_on(c, "U2", 14, "R"), [("100k", "GND"), ("1k", "EN_5V")])

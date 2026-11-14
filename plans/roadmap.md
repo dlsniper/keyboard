@@ -195,6 +195,10 @@ ground-free band beside the antenna (`pod` routed again), one-piece wireless tra
 again), two sliding cell lids; "buried" via mark fixed on hub-conn, port-module, usb-port. Wireless numpad shell by
 `mech/case/pod_case.py` (`CASE_VARIANT=pod`), 0 clashes, fit pieces. Next: fit prints, `left` / `right` with the
 rail, left's width, hub core section with the carrier.
+Session 5 (2026-11-14): open review items decided (options UI): `pod-power` placed and routed again with a 0603 at
+the 5 V converter's VIN pins, its 0603 output capacitor at the VOUT pins, 100 nF at the TPS2553's input, a 1 mm
+pack path and an MF-MSMF150/16X fuse (DRC 0 errors, 0 unconnected, parity 0; fab outputs written again); `pod`'s
+D+ stub stays. An independent robustness review of all boards (crowding, ESD / noise, power, single faults): next.md.
 
 **Exit check:** ERC / DRC 0, review closed, both variants fit the same key board and tray.
 

@@ -514,30 +514,49 @@ def pod_power_copper(b):
     the first output capacitor's pad, FB (5) round the open pin 6 to the same pad, the L1 / L2 strips (11 / 9) out to
     the inductor's pads with the PGND strip (10) between them to a via between the inductor's pads.
     TPS629210 (U1, turned by 180 degrees): VIN (6) and GND (5) to the input capacitor standing beside them, SW (4)
-    to the inductor. Everything else is the autorouter's (Power class 0.5 mm for the supply nets)."""
+    to the inductor. Everything else is the autorouter's (Power class 0.5 mm for the supply nets).
+    Review 1 / 15 and the user's wider pack path (2026-11-14): see the comments below."""
     c = Cu(b)
     u2, u1 = c.find("U", "L5A"), c.find("U", "SW_3V3")
-    cin = c.nearest(c.pad(u2, "13"), "VPACK", "10u")
-    cout = c.nearest(c.pad(u2, "7"), "+5V_RAW", "22u")
+    cin = c.nearest(c.pad(u2, "13"), "VPACK", "10u")            # the 0603 at the pins (review 1)
+    cout = c.nearest(c.pad(u2, "5"), "+5V_RAW", "10u")          # the 0603 output capacitor under pins 5 / 7 / 8
+    bulk_in = c.nearest((cin[0] + 0.5, cin[1] - 1.9), "VPACK", "10u")
+    bulk_out = c.nearest(c.pad(u2, "8"), "+5V_RAW", "22u")
+    (x15, y15), (x14, y14), (x5, y5) = c.pad(u2, "15"), c.pad(u2, "14"), c.pad(u2, "5")
+    if not (abs(cin[0] - 0.775 - x14) < 0.05 and 1.0 < y14 - cin[1] < 1.6 and bulk_in[1] < cin[1] - 1.5 and bulk_in[0] > x14 + 1.0):
+        sys.exit("pod-power: the 5 V converter's 0603 input capacitor does not straddle pin 14, or the bulk one is not above it")
     for n in ("12", "13"):
         x, y = c.pad(u2, n)
-        if abs(x - cin[0]) > 0.5 or cin[1] > y:
-            sys.exit("pod-power: the 5 V converter's input capacitor is not above pins 12 / 13")
-        c.track("VPACK", [(x, y), (x, cin[1] + 0.5)], 0.25)
+        c.track("VPACK", [(x, y), (x, cin[1] + 0.2)], 0.25)
+    c.track("VPACK", [(cin[0] + 0.2, cin[1]), (cin[0] + 0.2, bulk_in[1] + 0.4)], 0.8)
+    gx = cin[0] - 1.55                                          # the 0603's GND pad: pin 15 straight into it, a via above it
+    c.track("GND", [(x15, y15), (x15, cin[1] + 0.2)], 0.25)
+    c.track("GND", [(gx, cin[1]), (gx, cin[1] - 0.92)], 0.4)
+    c.via("GND", gx, cin[1] - 0.92, 0.6, 0.3)
+    # EN (14) between the 0603's pads, over the via, west and down between the 0603 and the pull-down, to the pull-down's pad
+    rp = c.nearest((x14, y14), "EN_5V_F", "100k", reach=6.0)
+    ex, ey = gx - 0.7, cin[1] - 1.57
+    if not (rp[0] < ex - 1.5 and abs(rp[1] - (cin[1] - 0.37)) < 0.1):
+        sys.exit("pod-power: the 5 V enable's pull-down is not west of the 0603 input capacitor")
+    c.track("EN_5V_F", [(x14, y14), (x14, ey), (ex, ey), (ex, rp[1] + 0.95), (rp[0], rp[1] + 0.95), rp], 0.15)
+    if not (0.4 < cout[1] - y5 - 0.3 < 1.2 and abs(cout[0] - x5) < 0.3 and bulk_out[0] > cout[0] + 1.2):
+        sys.exit("pod-power: the 5 V converter's 0603 output capacitor is not under pin 5")
+    by = cout[1] - 0.13
+    c.track("+5V_RAW", [(x5, y5), (x5, by)], 0.2)
     for n in ("7", "8"):
         x, y = c.pad(u2, n)
-        if abs(x - cout[0]) > 0.5 or cout[1] < y:
-            sys.exit("pod-power: the 5 V converter's output capacitor is not below pins 7 / 8")
-        c.track("+5V_RAW", [(x, y), (x, cout[1] - 0.5)], 0.25)
-    fx, fy = c.pad(u2, "5")
-    c.track("+5V_RAW", [(fx, fy), (fx, fy + 0.75), (cout[0] - 0.4, cout[1] - 0.5)], 0.2)
+        c.track("+5V_RAW", [(x, y), (x, by)], 0.25)
+    c.track("+5V_RAW", [(cout[0], by), (bulk_out[0], by), (bulk_out[0], bulk_out[1] - 0.3)], 0.6)
+    ox = cout[0] - 1.55
+    c.track("GND", [(ox, cout[1]), (ox, cout[1] + 1.02)], 0.4)
+    c.via("GND", ox, cout[1] + 1.02, 0.6, 0.3)
     ind = c.find("L", "L5A")
     (ax, ay), (bx, by) = c.pad(ind, "1"), c.pad(ind, "2")
     (x11, y11), (x9, y9), (x10, y10) = c.pad(u2, "11"), c.pad(u2, "9"), c.pad(u2, "10")
     if not (ay < y11 < y10 < y9 < by and ax > x11 + 3):
         sys.exit("pod-power: the 5 V inductor's pads are not beside the strips they belong to")
     # review: inductor 1.15 mm from the strips' ends; 0.25 mm only while the three run side by side, then 0.6 mm;
-    # PGND to two vias between the inductor's pads, two more vias at each capacitor's GND pad (plane: inner 1)
+    # PGND to two vias between the inductor's pads, two more vias at each bulk capacitor's GND pad (plane: inner 1)
     c.track("L5A", [(x11, y11), (ax - 2.7, y11), (ax - 2.0, ay + 0.2)], 0.25)
     c.track("L5A", [(ax - 2.0, ay + 0.2), (ax - 1.0, ay + 0.2)], 0.6)
     c.track("L5B", [(x9, y9), (bx - 2.7, y9), (bx - 2.0, by - 0.2)], 0.25)
@@ -546,17 +565,37 @@ def pod_power_copper(b):
     c.track("GND", [(ax - 1.1, y10), (ax + 0.1, y10)], 0.5)
     for dx in (-1.1, 0.1):
         c.via("GND", ax + dx, y10, 0.6, 0.3)
-    for cap, sign in ((cin, -1), (cout, 1)):
+    for cap, out in ((bulk_in, 1.25), (bulk_out, 0.72)):         # 0.72: the LED rail cap's IN pad stands 1.4 mm east of the pad
         gx, gy = cap[0] + 2.95, cap[1]
-        c.track("GND", [(gx, gy - 0.5), (gx + 1.25, gy - 0.5)], 0.5)
-        c.track("GND", [(gx, gy + 0.5), (gx + 1.25, gy + 0.5)], 0.5)
+        c.track("GND", [(gx, gy - 0.5), (gx + out, gy - 0.5)], 0.5)
+        c.track("GND", [(gx, gy + 0.5), (gx + out, gy + 0.5)], 0.5)
         for dy in (-0.5, 0.5):
-            c.via("GND", gx + 1.25, gy + dy, 0.6, 0.3)
+            c.via("GND", gx + out, gy + dy, 0.6, 0.3)
+    # review 15: 100 nF at the TPS2553's IN pin (pin 1), GND end to a via
+    u3 = c.find("U", "ILIM")
+    ix, iy = c.pad(u3, "1")
+    ci = c.nearest((ix, iy), "+5V_RAW", "100n")
+    if not (ci[0] > ix + 1.0 and 1.0 < iy - ci[1] < 2.2):
+        sys.exit("pod-power: the LED rail cap's 100 nF is not above its IN pin")
+    c.track("+5V_RAW", [ci, (ix + 0.5, iy - 0.75), (ix, iy)], 0.4)
+    c.track("GND", [(ci[0], ci[1] - 1.55), (ci[0], ci[1] - 2.5)], 0.4)
+    c.via("GND", ci[0], ci[1] - 2.5, 0.6, 0.3)
     j1, f1 = c.find("J", "BAT+"), c.find("F", "BAT+")
     (px, py), (qx, qy) = c.pad(j1, "1"), c.pad(f1, "1")
     if not (qx < px and qy > py + 8):
         sys.exit("pod-power: the fuse is not in front of the pack plug")
     c.track("BAT+", [(px, py), (px + 2.15, py), (px + 2.15, qy - 3.9), (px + 0.65, qy - 2.6), (qx + 0.6, qy - 2.6), (qx, qy - 1.3)], 1.0)   # review: the pack current on top, 1 mm
+    # user, 2026-11-14: the pack path stays wide behind the fuse too: fuse to the FET's drain 0.8 mm, and VPACK 1 mm on
+    # top from the FET's source up to the 47 uF can and east, behind the enable resistors, into the 5 V converter's bulk capacitor
+    q1 = c.find("Q", "GATE")
+    (dx_, dy_), (sx_, sy_) = c.pad(q1, "3"), c.pad(q1, "2")
+    c.track("VFUSE", [c.pad(f1, "2"), (dx_ - 0.25, dy_)], 0.8)
+    can = c.nearest((sx_, sy_ - 8), "VPACK", "47u")
+    tx, ty = sx_ - 0.24, bulk_in[1] - 0.4
+    if not (abs(can[0] - tx) < 1.5 and can[1] < ty - 3 and ty < rp[1] - 1.4):
+        sys.exit("pod-power: the VPACK trunk has no lane between the 47 uF can and the enable resistors")
+    c.track("VPACK", [(tx, sy_), (tx, can[1])], 1.0)
+    c.track("VPACK", [(tx, ty), (bulk_in[0] + 0.1, ty)], 1.0)
     (vx, vy), (gx, gy), (sx, sy) = c.pad(u1, "6"), c.pad(u1, "5"), c.pad(u1, "4")
     cv = c.nearest((vx, vy), "VPACK", "10u")
     cg = c.nearest((gx, gy), "GND", "10u")

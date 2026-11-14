@@ -374,12 +374,17 @@ and are checked against their datasheets when the schematics are written.
     powered from the lead or the hub to be flashed.** Debug: 2x5 1.27 mm Cortex header (my choice over bare pads:
     any debugger's cable fits), reset button. Lead J2: 1 +5V, 2 GND, 3 EN_5V, 4 VBAT_SENSE, 5 GND, 6 +3V3.
   - **`pod-power`**: pack on a 2-pin JST XH (my choice: 3 A contacts; the GH's 1 A is too little for the pack
-    line), MF-MSMF110/16X fuse, AO3401A against a reversed pack (10 V Zener on its gate, 47 uF on the pack rail),
+    line), MF-MSMF150/16X fuse (user, 2026-11-14: 1.5 A at 23 C, 1.08 A at 50 C, trips at 3.0 A; was the 110), AO3401A against a reversed pack (10 V Zener on its gate, 47 uF on the pack rail),
     slide switch C&K OS102011MA1QN1. **TPS629210** (27.4 k on MODE/S-CONF: VSET mode, automatic power save, output
     discharge; FB/VSET open = 3.3 V; 2.2 uH, 22 uF). **TPS630701** (fixed 5.0 V, power save, 1.5 uH, 2 x 22 uF +
     10 uF), enabled only by EN_5V (1 k, 100 k pull-down), **behind a TPS2553 with 49.9 k: the LED rail is capped at
     475-565 mA in hardware** (added by me: the converter alone would give 2 A and the lead's contacts carry 1 A).
     Pack divider 2.2 M / 680 k behind the switch. Test pads for the pack rail, 3.3 V, 5 V, GND.
+    **M3b session 5 (user, options UI, 2026-11-14)**: a 10 uF / 25 V 0603 across the 5 V converter's VIN pins and
+    pin 15 (new part; EN leaves between its pads), the 10 uF 0603 output capacitor moved under pins 5 / 7 / 8
+    (it was 2.5 mm away: no second new part needed, the datasheet's C4 is this one), 100 nF at the TPS2553's IN
+    pin (new part), the pack path wide behind the fuse too (fuse to FET 0.8 mm, VPACK 1 mm on top from the FET to
+    the 47 uF can and into the converter's bulk capacitor). Outline, holes, connectors and switch did not move.
     **Pack cut-off (review finding, added)**: a divider on the 3.3 V converter's precise enable turns the module
     off at 0.9 V per cell and on again at 1.0 V per cell; without it the converter runs a NiMH pack down to
     2.75 V. **Its top resistor depends on the cell count: 1 M for 4, 1.33 M for 5, 1.65 M for 6 (drawn)**: the one
@@ -389,9 +394,9 @@ and are checked against their datasheets when the schematics are written.
     SP1-SP3 (no Pico pin today, for a later core board). **Hub firmware must not start I2C0 on GP0 / GP1 when the
     carrier is fitted** (`firmware/hub-pinmap.json` still lists them as I2C0; it is hub-core's file, not changed).
   - **Independent review (Opus, datasheets and netlists only)**: nothing wrong in pins, ratings or UART
-    direction; 3 should-fix and 9 notes, all taken into the generator except two left as limits: the fuse holds
+    direction; 3 should-fix and 9 notes, all taken into the generator except two left as limits: the fuse held
     only 0.85 A at 50 C, which is the pack current if the LED rail sits in its limit at a 4.0 V pack (firmware
-    budget: 450 mA); `hub-pinmap.json` as above. Not checkable from the files: USBLC6-2 pinning (no datasheet on
+    budget: 450 mA; **closed in session 5 by the MF-MSMF150/16X**); `hub-pinmap.json` as above. Not checkable from the files: USBLC6-2 pinning (no datasheet on
     disk), whether the slide switch is break-before-make (its third contact is left unused, so it cannot short
     the pack either way), capacitor derating (no part numbers yet).
 - **Boards (M3b session 3, 2026-11-14)**: `tools/pcb_pod.py` places `pod`, `pod-power` and `hub-radio`,

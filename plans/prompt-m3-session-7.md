@@ -55,15 +55,17 @@ Hub
 Not printed:
 ```
 
-# Prompt for the pod-power session (decided 2026-11-14, any time before the order)
+# Prompt for the review session (M2 session: robustness findings; any time before the order)
 
 ```
-Keyboard project, rev 9.1, branch rev9-go. Read next.md (last session block and the "User decisions on the open pod
-review items" lines), plans/keyboard.md §2b and plans/roadmap.md M3b, nothing else to start.
-M3b session 5: pod-power, as decided: 0603 capacitor across the 5 V converter's VIN and VOUT pins, 100 nF at the
-TPS2553's input, VPACK wider, next fuse value up (pick it from the series' curves at 50 C; show me the value before
-using it). pod-power is placed and routed again; no other board changes without asking. Then ERC / DRC / parity 0,
-fab outputs, and the wireless shells' bosses, posts and notches checked against the new board (0 clashes).
+Keyboard project, rev 9.1, branch rev9-go. Read next.md ("Independent robustness review of all boards" block),
+plans/keyboard.md §3a (converter, port power, chain) and §2b, plans/roadmap.md M2, nothing else to start.
+M2 review session: the nine findings of the robustness review. First check the "inferred" ones (1, 7, 8) against the
+datasheets in build/ds and tell me which hold. Then ask me through the options UI, with pros and cons and your
+critique first, which to take: hub-conn overvoltage protection on +5V (1), port-module series resistors (3), ESD
+arrays in the path (4), converter pin copper (5), power vias (6), AUX_5V on the chain (7), a clamp on the pod's
+3.3 V (8). Say which boards are placed and routed again before changing any; no other board changes.
+Then ERC / DRC / parity 0, fab outputs, and the shells checked against any board whose outline or holes moved.
 Budget: tokens are tight. PCB and CAD work stays with you; delegate only lookups.
 No leftover background processes. End by updating next.md, committing, and giving me the prompt for the next session.
 ```

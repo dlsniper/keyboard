@@ -223,26 +223,28 @@ POWER_PARTS = [
     ("R", "330k", (), 133.8, 108.0, 0),
     ("C", "100n", ("EN_3V3",), 133.8, 109.8, 0),
     ("R", "2.55M", (), 130.4, 106.2, 0),
-    ("JP", None, (), 127.0, 107.0, 0),
+    ("JP", None, (), 127.0, 106.25, 0),                            # 0.75 mm to the rear: the input capacitor moved up
     # 5 V converter: VIN capacitor above pins 12 / 13, output capacitors below pins 7 / 8, inductor on the strips' side
     ("U", "TPS630701", (), *U2_XY, 0),
-    ("C", "10u", ("VPACK",), 124.9, 109.9, 0),
+    ("C", "10u", ("VPACK",), 125.5, 108.85, 0),                     # bulk input capacitor, moved up and east for the 0603
+    ("C", "10u", ("VPACK",), 122.78, 110.77, 180),                  # review 1: 0603 across pins 12 / 13 (VIN) and 15 (GND), EN (14) leaves between its pads
     ("L", "1.5u", (), 127.3, 113.5, 270),                           # pad 1 (L1 side) to the rear, as the strips lie
-    ("C", "22u", ("+5V_RAW",), 124.9, 117.1, 0),
-    ("C", "22u", ("+5V_RAW",), 124.9, 119.65, 0),
-    ("C", "10u", ("+5V_RAW",), 120.5, 116.5, 0),
+    ("C", "22u", ("+5V_RAW",), 125.43, 117.1, 0),
+    ("C", "22u", ("+5V_RAW",), 125.43, 119.65, 0),
+    ("C", "10u", ("+5V_RAW",), 121.6, 116.23, 180),                   # review 1: the 0603 output capacitor under pins 5 / 7 / 8
     ("C", "100n", ("VAUX",), 119.4, 114.1, 180),
     ("R", "100k", ("PS",), 119.4, 112.3, 0),
-    ("R", "100k", ("EN_5V_F", "GND"), 120.0, 110.4, 0),
-    ("R", "1k", ("EN_5V",), 116.6, 110.4, 0),
+    ("R", "100k", ("EN_5V_F", "GND"), 119.7, 110.4, 0),
+    ("R", "1k", ("EN_5V",), 116.3, 110.4, 0),
     ("U", "TPS2553", (), 130.2, 118.3, 0),                          # LED rail cap, in front of the inductor
     ("R", "49.9k", (), 130.2, 121.0, 0),
+    ("C", "100n", ("+5V_RAW",), 130.4, 114.9, 90),                  # review 15: at the TPS2553's IN pin (pad 1 towards pin 1)
     ("C", "10u", ("+5V_LED",), 133.6, 113.3, 90),
     ("R", "2.2M", (), 147.0, 109.6, 90),
     ("R", "680k", (), 147.0, 112.8, 90),
     ("TP", None, ("VPACK",), 116.9, 116.8, 0),
     ("TP", None, ("GND",), 116.6, 119.4, 0),
-    ("TP", None, ("+3V3",), 110.6, 116.9, 0),
+    ("TP", None, ("+3V3",), 110.0, 116.9, 0),                           # review: 0.75 mm from the Zener's VPACK pad (was 0.15)
     ("TP", None, ("+5V_LED",), 110.6, 119.5, 0),
 ]
 POWER_HOLES = [(106.8, 119.3), (120.0, 120.2)]
