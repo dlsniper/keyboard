@@ -33,6 +33,7 @@ HW = schlib.ROOT / "hardware"
 FP_R = "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 FP_C = "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 FP_C1210 = "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
+FP_C0603 = "Capacitor_SMD:C_0603_1608Metric"
 FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"
 FP_SOD123 = "Diode_SMD:D_SOD-123"
 FP_USBC24 = "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A"
@@ -392,6 +393,7 @@ def build_conn():
     b.c("100n", "BOOT1", "L1")
     b.c("100n", "BOOT2", "L2")
     b.c("22u", "VCC5", fp=FP_C1210)  # more than 4.7 uF asked for, after DC bias
+    b.c("1u", "VCC5", fp=FP_C0603)  # right at pins 17 / 18 (user, 2026-11-14: the 1210 cannot sit nearer than 2.4 mm)
     b.r("100k", "+5V", "FB")  # 1.2 V x (1 + 100k / 31.6k) = 5.00 V
     b.r("31.6k", "FB", "GND")
     b.r("12k", "COMP", "COMP_C")  # crossover about 4 kHz with 300 uF on +5V (worst case 3.6 V in, 3.5 A)

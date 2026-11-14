@@ -355,6 +355,8 @@ def port(bd, p, px):
     for i, net in enumerate((f"SCKB_{p}", f"MOSIB_{p}", f"CSB_{p}", f"INT_{p}", f"LEDB_{p}")):
         bd.put(bd.sel("R", net), px - 4.6 + 2.3 * i, 127.0, 90)
     bd.put(bd.sel("U", f"SCKB_{p}"), px - 1.0, 120.3, 90)
+    bd.put(bd.vals(f"port{p}", "100n", "+3V3")[0], px - 6.75, 117.83, 270, pad="1")     # PCB review: the buffer's 100 n beside its pin 14
+    bd.put(bd.sel("D", f"VBUS_{p}", "GND"), px + 6.8, 138.3, 90)        # PCB review: TVS0500 at the VBUS vias beside the receptacle, VBUS pads north
     bd.put(bd.sel("U", f"REF_{p}"), px + 9.9, 131.5, 180)
     bd.taken += [(px + 5.8, 131.2, px + 7.6, 136.6), (px + 11.6, 130.3, px + 13.8, 132.7),      # VBUS and +5V copper and vias
                  (px + 10.1, 127.9, px + 12.0, 129.4)]
@@ -384,7 +386,18 @@ def hub_conn(force):
         bd.put(ref, ix + dx, iy - 3.4, 90, pad="1")
     bd.put(bd.sel("C", "BOOT1"), ix + 2.0, iy + 3.15, 180)
     bd.put(bd.sel("C", "BOOT2"), ix - 2.0, iy + 3.15, 0)
-    bd.put(bd.sel("C", "VCC5"), ix - 6.5, iy + 0.3, 180)
+    # PCB review: VCC capacitors and the small-signal parts at their pins, in the quiet corner west of the chip (away
+    # from the switch nodes; their GND vias east of x = 57.8, clear of the +5V trunk on inner 2). A 1 uF 0603 right at
+    # pins 17 / 18 (user, 2026-11-14: the 22 uF 1210 cannot sit nearer than 2.4 mm without shutting the FB / COMP /
+    # AGND pins in), the 22 uF upright below it; the 470 p on COMP 3.3 mm from pin 15; the 12 k + 15 n in a column
+    # below that; the FB divider beside the +5V vias.
+    bd.put(bd.vals("conv", "1u", "VCC5")[0], ix - 3.725, iy + 1.35, 180, pad="1")
+    bd.put(bd.vals("conv", "22u", "VCC5")[0], ix - 5.75, iy + 3.8, 270, pad="1")
+    bd.put(bd.sel("C", "COMP", "GND"), ix - 5.71, iy - 0.45, 180, pad="1")
+    bd.put(bd.sel("R", "COMP", "COMP_C"), ix - 8.45, iy + 2.05, 270, pad="1")
+    bd.put(bd.sel("C", "COMP_C", "GND"), ix - 8.45, iy + 6.1, 270, pad="1")
+    bd.put(bd.sel("R", "+5V", "FB"), ix - 12.5, iy + 0.5, 0, pad="1")       # clear of the +5V bar's round end
+    bd.put(bd.sel("R", "FB", "GND"), ix - 10.5, iy + 2.75, 180, pad="1")
     bd.put(bd.sel("R", "FSW"), ix + 5.95, iy - 1.2, 0)
     bd.put(bd.sel("R", "CONV_EN", "GND"), ix + 5.95, iy + 1.0, 0)
     bd.put(bd.sel("R", "CONV_EN", "SYS"), ix + 5.95, iy + 3.2, 180)
@@ -409,6 +422,8 @@ def hub_conn(force):
     rear = [(81.5, 62.4, 111.3, 79.4), (89.5, 79.4, 111.3, 85.7), (133.3, 62.4, 146.6, 76.6), (112.0, 62.4, 133.0, 66.3),
             (70.8, 62.4, 78.0, 68.8), (58.5, 108.0, 78.0, 113.3),
             (COL_X0 + 2 * COL_W + 0.3, 103.5, COL_X0 + 3 * COL_W - 0.2, COL_Y1), (COL_X0 + 4 * COL_W + 0.3, 103.5, 146.5, COL_Y1)]
+    bd.put(bd.sel("U", "LED_A", "LEDB_A"), 137.82, 68.46, 0)            # 74AHCT125 where the packing had put it, and
+    bd.put(bd.vals("misc", "100n", "+5V")[0], 142.8, 65.3, 270, pad="1")  # (PCB review) its 100 n beside pins 12-14
     for name in ("switch", "misc", "sense", "pack2", "pack3", "pack4", "pack5"):      # of the packs only the bleeders are left
         bd.pack_k(bd.group(name), rear, gap=0.85, gap_ic=1.6)            # room between the small parts for the autorouter
     print(f"hub-conn: chain target pads turned {turn} deg, on the underside")

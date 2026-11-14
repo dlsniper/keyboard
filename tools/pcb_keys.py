@@ -53,7 +53,9 @@ REAR = 25.0             # rear strip depth behind the F-row caps
 FILLET = 3.0
 LED_AT = (0.0, 4.7)     # as mech/testcell (window south of the switch)
 DIODE_AT = (6.9, 4.2)   # east of the LED, long axis north-south, anode north (towards socket pad 2)
-CAP_AT = (-6.9, 4.2)    # the LED's 100 n, west of it
+CAP_AT = (4.7, 3.7)     # the LED's 100 n: between LED and diode, +5V pad 1.5 mm from the LED's VDD pad (PCB review; was west, 9.5 mm of track)
+CHIP_T = 9.0            # expander centre line in the strip
+DECOUPLE_T = 3.2        # expander decoupling: mm in front of its front pin row
 TP_AT = (10.0, 4.6)     # LED_DOUT test pad, in the last LED's cell, east of its diode
 STAB_FP = ("Mounting_Keyboard_Stabilizer", "Stabilizer_Cherry_MX_2.00u")   # Cherry: same spacing for 2u-2.75u
 HOLE_FP = ("MountingHole", "MountingHole_2.2mm_M2")
@@ -381,11 +383,19 @@ def place_strip(bd, lines, origin, phi, inner_sign, keys):
     chips = sorted(r for r in bd.comps if r.startswith("U") and "MCP23S17" in bd.comps[r]["value"])
     first_chip = s
     for u in chips:
-        bd.place(u, *at(s, 9.0), A + 90, back=True)
+        bd.place(u, *at(s, CHIP_T), A + 90, back=True)
         n_reset = f"RESET_{u}"
         col = s - 13.5
-        for ref, t in ((bd.find("C", "+3V3", "GND")[0], 5.0), (bd.find("R", "+3V3", n_reset)[0], 8.0), (bd.find("C", "GND", n_reset)[0], 11.0)):
+        for ref, t in ((bd.find("R", "+3V3", n_reset)[0], 8.0), (bd.find("C", "GND", n_reset)[0], 11.0)):
             bd.place(ref, *at(col, t), A, back=True)
+        # decoupling 100 n in front of the chip's VDD / VSS pins (9, 10; front pin row), pad on pin, 1.5 mm of track
+        # (PCB review: it sat 13 mm away at s - 13.5); tools/route_keys.py decouple() draws the two links
+        cap = next(c for c in bd.find("C", "+3V3", "GND") if c not in bd.placed)
+        (x9, y9), (x10, y10) = bd.pad_xy(u, "9"), bd.pad_xy(u, "10")
+        dx, dy = rot(0, DECOUPLE_T, phi)
+        fp = bd.place(cap, (x9 + x10) / 2 + dx, (y9 + y10) / 2 + dy, A, back=True)
+        if math.dist(bd.pad_xy(cap, "1"), (x9, y9)) > math.dist(bd.pad_xy(cap, "2"), (x9, y9)):
+            fp.SetOrientationDegrees(A + 180)
         last_chip = s
         s -= 36.0
     # column (and dial) pull-ups in a row behind the first chip(s)

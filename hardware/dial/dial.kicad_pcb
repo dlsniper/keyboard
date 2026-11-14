@@ -601,7 +601,7 @@
 				)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "BAT43W"
 			(at 0 2.1 0)
 			(unlocked yes)
 			(layer "F.SilkS")
@@ -640,7 +640,7 @@
 				)
 			)
 		)
-		(property "MPN" "Diodes Inc 1N4148W-7-F"
+		(property "MPN" "Schottky, SOD-123: BAT43W (VF 0.33 V max at 2 mA)"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)

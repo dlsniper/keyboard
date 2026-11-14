@@ -4,7 +4,7 @@
 Spec: plans/keyboard.md sections 1 and 2 ("Wire plan", bay header table, "Key board circuit").
 Everything per key comes from layout/keys.json (matrix row/col, LED order); nothing is hard-coded.
 
-Key board: MX hotswap switch + 1N4148W per key (column -> switch -> anode, cathode -> row),
+Key board: MX hotswap switch + Schottky diode (BAT43W) per key (column -> switch -> anode, cathode -> row),
 MCP23S17 expander(s) (SOIC-28) wired to the spec table, 10 k column pull-ups, SK6812MINI-E chain
 behind a TPS22918 load switch (+5V -> +5V_LED), 2x6 bay header, spare-pin header; `right` also has
 J_DIAL to the dial board (same 5-pin pin-out as hardware/dial).

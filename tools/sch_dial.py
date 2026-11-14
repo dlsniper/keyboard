@@ -4,7 +4,7 @@
 Dial on `right` (spec §2a "Dial board", §2 "Selector", §8, parts shortlist "Encoder"):
 Bourns PEC11R 24 detents / 24 ppr with push switch -> 1k + 10 nF low-pass per
 quadrature channel (pull-ups stay on the core) -> J_DIAL to the key board. The
-push switch is a matrix key with its 1N4148W on this board; the mounting lugs go
+push switch is a matrix key with its Schottky diode (BAT43W) on this board; the mounting lugs go
 to GND; a TPD4E1U06 ESD footprint on the encoder pins is not fitted.
 Hand-solderable: 0805 passives, SOD-123, SOT-23-6, through-hole encoder.
 

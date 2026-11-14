@@ -10,11 +10,13 @@ Then: tools/pcb_check.sh left   (DRC with schematic parity)
    - switch pad 2 -> diode anode, straight north-south at x = 6.9;
    - ROW: diode cathode -> row trunk at y = ROW_Y, west-east through the row;
    - COL: switch pad 1 -> via at COL_VIA -> front side, down the column along the cell borders;
-   - LED data: DOUT (east) -> under the diode (between its pads) -> under the next key's 100 n -> DIN (west);
-     at the end of a row it returns west along RET_Y and enters the next row's first key;
-   - +5V_LED, 0.8 mm: 100 n -> south of the LED window -> LED -> under the diode -> next key's 100 n;
-     the rows are joined by a 1 mm bus along the outer board edge;
-   - GND: 100 n -> via -> LED; the ground itself is the pour on both sides.
+   - the LED's 100 n sits between the LED and the diode, its +5V pad 1.5 mm from the LED's VDD pad (since M2
+     session 9; it was west of the LED on 9.5 mm of track), its GND pad on its own via (CAP_VIA, north of it, added after the strip router);
+   - LED data: DOUT (east) -> between the 100 n's pads -> under the diode (between its pads) -> DIN (west) of the
+     next key; at the end of a row it returns west along RET_Y and enters the next row's first key;
+   - +5V_LED, 0.8 mm: entry point IN_5V west of the LED -> south of the LED window -> 100 n -> LED, and from the
+     100 n under the diode to the next key's entry point; the rows are joined by a 1 mm bus along the outer edge;
+   - GND: LED -> via (GND_VIA), 100 n -> via (CAP_VIA); the ground itself is the pour on both sides.
    Stabilised keys: row trunk and return line dip south of the stabiliser's wire holes.
    The rows always start at the west end (LED chain west to east), so the +5V bus runs along the west board edge
    (outer edge on `left` and `numpad`, split edge on `right`) and the bottom row's riser along the east edge.
@@ -53,7 +55,11 @@ COL_YS = (9.4, 10.9, 8.0, 12.0)      # where a column steps sideways between two
 STAB_HOLES = ((11.94, 8.22, 2.0), (11.94, -6.99, 1.53))   # x (both signs), y, radius in the key's frame
 GND_VIA = (-4.7, 3.16)
 DIODE_CH, DIODE_5V = 3.7, 4.7        # the two lanes between the diode's pads
-CAP_CH = 4.2                         # the lane between the 100 n's pads
+CAP_CH = 4.2                         # where LED data comes in from the west
+IN_5V = (-6.9, 5.24)                 # where +5V_LED enters a cell from the west (the 100 n's pad until session 9)
+CAP_VIA = (0.38, 1.06)               # GND via of the 100 n: east and north of its GND pad, in line with the switch's east peg
+                                     # hole. Put in after the strip router (stitch): drawn before it, the router left row
+                                     # links open on every run (it takes the rows down the front-side lanes beside that hole)
 BUS_X = 1.8                          # +5V bus: mm inside the outer board edge
 FEED_T = REAR - 2.5                  # +5V feed from the rail switch: along the rear edge of the strip (`left`: switch mid-strip)
 FEED_NEAR = 16.9                     # ... or just behind the bulk capacitor where the switch is at the bus end (`right`, `numpad`)
@@ -247,11 +253,13 @@ class Router:
             return
         (gx, gy), gnd = self.pad(k, "CL", "2")
         (lx, ly), _ = self.pad(k, "LED", "1")
-        self.track(gnd, [P(gx, gy), P(*GND_VIA), P(lx - 1.2, ly), P(lx, ly)], W_GND)
+        self.track(gnd, [P(*GND_VIA), P(lx - 1.2, ly), P(lx, ly)], W_GND)
         self.via(gnd, P(*GND_VIA))
         (vx, vy), v5 = self.pad(k, "CL", "1")
         (ex, ey), _ = self.pad(k, "LED", "3")
-        self.track(v5, [P(vx, vy), P(vx, WRAP_Y), P(ex + 1.7, WRAP_Y), P(ex + 1.7, ey), P(ex, ey)], W_5V)
+        # up at ex + 1.7, not further east: the strip router needs the gap to the diode for its via onto the row trunk
+        self.track(v5, [P(*IN_5V), P(IN_5V[0], WRAP_Y), P(ex + 1.7, WRAP_Y), P(ex + 1.7, vy), P(vx, vy)], W_5V)
+        self.track(v5, [P(ex, ey), P(ex + 1.7, ey)], W_5V)
 
     def row_trunks(self):
         for ks in self.rows("row").values():
@@ -330,7 +338,7 @@ class Router:
         for a, b in zip(leds, leds[1:]):
             (ox, oy), net = self.pad(a, "LED", "4")
             (ix, iy), _ = self.pad(b, "LED", "2")
-            out = [(ox, oy), (ox + 1.9, oy), (ox + 2.15, DIODE_CH)]
+            out = [(ox, oy), (ox + 0.85, oy), (ox + 1.1, DIODE_CH)]
             into = [(-5.6, CAP_CH), (ix - 1.6, iy), (ix, iy)]
             if a["prow"] == b["prow"] and self.step(a, b):
                 (ta, tb) = STEP["data"]
@@ -361,22 +369,23 @@ class Router:
             a = leds[-1]
             (ox, oy), net = self.pad(a, "LED", "4")
             tx, ty = self.local(a, tp.Pads()[0])
-            self.track(net, [self.P(a, *p) for p in [(ox, oy), (ox + 1.9, oy), (ox + 2.15, DIODE_CH), (8.3, DIODE_CH),
+            self.track(net, [self.P(a, *p) for p in [(ox, oy), (ox + 0.85, oy), (ox + 1.1, DIODE_CH), (8.3, DIODE_CH),
                                                      (tx, ty)]], W_SIG)
         # +5V_LED: along each row, then the bus along the west edge
         taps = []
         for ks in prow.values():
             ks = [k for k in ks if "LED" in self.fp[k["id"]]]
             for a, b in zip(ks, ks[1:]):
-                (ex, ey), net = self.pad(a, "LED", "3")
-                (vx, vy), _ = self.pad(b, "CL", "1")
+                (ex, ey), net = self.pad(a, "CL", "1")
+                vx, vy = IN_5V
                 if self.step(a, b):
                     (ta, tb) = STEP["v5"]
                     mid = [self.P(a, ta[0], DIODE_5V), self.P(a, *ta), self.P(b, *tb), self.P(b, tb[0], vy)]
                 else:
                     mid = [self.P(a, 7.7, DIODE_5V), self.P(b, vx - 1.5, vy)]
-                self.track(net, [self.P(a, ex + 1.7, ey), self.P(a, ex + 2.45, DIODE_5V)] + mid + [self.P(b, vx, vy)], W_5V)
-            (vx, vy), net = self.pad(ks[0], "CL", "1")
+                self.track(net, [self.P(a, ex, ey), self.P(a, ex + 0.5, DIODE_5V)] + mid + [self.P(b, vx, vy)], W_5V)
+            _, net = self.pad(ks[0], "CL", "1")
+            vx, vy = IN_5V
             taps.append((self.P(ks[0], vx, vy), net, ks[0]))
         wn, wd = self.lines["outer" if self.inner > 0 else "inner"]
         straight = abs(wn[1]) < 1e-9
@@ -489,6 +498,22 @@ class Router:
         for (sa, ta, net), (sb, tb, _) in zip(rail, rail[1:]):
             self.track(net, [self.at(sa, ta), self.at(sb, tb)], 0.3)
 
+    def decouple(self):
+        """Expander VDD and VSS pins straight to the 100 n in front of them (tools/pcb_keys.py place_strip)."""
+        xy = lambda p: (pcbnew.ToMM(p.GetPosition().x), pcbnew.ToMM(p.GetPosition().y))
+        caps = [p for f in self.b.GetFootprints() if f.GetValue() == "100n" and not f.GetReference().startswith("CL")
+                for p in f.Pads()]
+        for f in self.b.GetFootprints():
+            if "MCP23S17" not in f.GetValue():
+                continue
+            for num in ("9", "10"):
+                pin = f.FindPadByNumber(num)
+                near = min((c for c in caps if c.GetNetname() == pin.GetNetname()), key=lambda c: math.dist(xy(c), xy(pin)))
+                if math.dist(xy(near), xy(pin)) > 5.0:
+                    print(f"WARNING {f.GetReference()} pin {num}: no 100 n within 5 mm")
+                    continue
+                self.track(pin.GetNet(), [xy(pin), xy(near)], W_GND)
+
     def field(self):
         for k in self.keys:
             self.cell(k)
@@ -497,6 +522,7 @@ class Router:
         self.leds()
         self.row_risers()
         self.pullups()
+        self.decouple()
 
 
 def freeroute(b, name, passes):
@@ -549,7 +575,8 @@ def led_windows(b):
 
 
 def stitch(b):
-    """A GND via beside every GND pad of the strip's SMD parts, so the back pour's pieces there reach the front pour."""
+    """A GND via beside every GND pad of the strip's SMD parts, so the back pour's pieces there reach the front pour,
+    and beside every key LED's 100 n (at CAP_VIA where that spot is free, else the nearest free spot)."""
     gnd = b.FindNet("GND")
     segs = [(t.GetStart().x, t.GetStart().y, t.GetEnd().x, t.GetEnd().y, t.GetWidth() // 2, t.GetNetname())
             for t in b.GetTracks() if t.Type() != pcbnew.PCB_VIA_T]
@@ -577,7 +604,7 @@ def stitch(b):
     added = 0
     for f in b.GetFootprints():
         ref = f.GetReference()
-        if ref.rstrip("0123456789") in ("CL", "LED", "SW", "D", "ST", "H", "TP") or not f.IsFlipped():
+        if ref.rstrip("0123456789") in ("LED", "SW", "D", "ST", "H", "TP") or not f.IsFlipped():
             continue
         for p in f.Pads():
             if p.GetNetname() != "GND":
@@ -586,10 +613,17 @@ def stitch(b):
             own = (bb.GetLeft(), bb.GetTop(), bb.GetRight(), bb.GetBottom())
             c = p.GetPosition()
             done = False
-            for dist in (1.4, 1.7, 2.0, 2.4):
+            first = []
+            if ref.startswith("CL"):                            # the key's "north" is from the +5V pad to the GND pad
+                q = f.FindPadByNumber("1").GetPosition()
+                n = ((c.x - q.x) / math.hypot(c.x - q.x, c.y - q.y), (c.y - q.y) / math.hypot(c.x - q.x, c.y - q.y))
+                first = [(c.x + mm(CAP_VIA[1]) * n[0] - mm(CAP_VIA[0]) * n[1], c.y + mm(CAP_VIA[1]) * n[1] + mm(CAP_VIA[0]) * n[0])]
+            for dist in (0, 1.4, 1.7, 2.0, 2.4):
                 for ang in range(0, 360, 30):
-                    x = c.x + mm(dist * math.cos(math.radians(ang)))
-                    y = c.y + mm(dist * math.sin(math.radians(ang)))
+                    if dist == 0 and (ang or not first):
+                        continue
+                    x = c.x + mm(dist * math.cos(math.radians(ang))) if dist else first[0][0]
+                    y = c.y + mm(dist * math.sin(math.radians(ang))) if dist else first[0][1]
                     if free(x, y, mm(0.3), own) and all(free(c.x + (x - c.x) * q, c.y + (y - c.y) * q, mm(0.2), own) for q in (0.25, 0.5, 0.75)):
                         t = pcbnew.PCB_TRACK(b)
                         t.SetStart(c); t.SetEnd(pcbnew.VECTOR2I(int(x), int(y)))
@@ -656,16 +690,37 @@ def main():
     grave += [t for t in b.GetTracks() if not t.IsLocked() and re.search(r"/N_R\d+C\d+$", t.GetNetname())]
     for t in grave:
         b.Remove(t)
+    for t in b.GetTracks():                         # the strip router now and then leaves a short piece thinner than the
+        if t.Type() != pcbnew.PCB_VIA_T and not t.IsLocked() and t.GetWidth() < mm(0.15):      # 0.15 mm the board allows
+            t.SetWidth(mm(0.15))
     if "--no-pours" not in sys.argv:
         stitch(b)
         gnd_pours(b)
     moved, stuck = silk_keys.tidy(b, lines)
     print(f"{name}: silkscreen, {len(moved)} references moved" + (f"; NO ROOM for {' '.join(stuck)}" if stuck else ""))
+    fill = [CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"), str(pcb)]
     pcbnew.SaveBoard(str(pcb), b)
+    subprocess.run(fill, capture_output=True)
+    if "--strip" in sys.argv:
+        # What the strip router left open or drew too close (M2 session 9: with the 100 n in front of the expander it
+        # leaves one to five row links open on most runs): the hub boards' finishing pass, tools/route_hub.py finish()
+        import route_hub as rh
+        rh.T_CLR = 0.2                              # the key boards' clearance
+        for _ in range(5):
+            dropped = rh.drop_violators(b, pcb, name)
+            if dropped:
+                pcbnew.SaveBoard(str(pcb), b)
+                subprocess.run(fill, capture_output=True)
+                b = pcbnew.LoadBoard(str(pcb))      # a board that had tracks removed gives no track list any more
+            closed = rh.finish(b, pcb, name)
+            if closed:
+                pcbnew.SaveBoard(str(pcb), b)
+                subprocess.run(fill, capture_output=True)
+                b = pcbnew.LoadBoard(str(pcb))
+            if not dropped and not closed:
+                break
     print(f"{name}: {len(b.GetTracks())} segments and vias in all")
     sys.stdout.flush()
-    subprocess.run([CLI, "pcb", "drc", "--refill-zones", "--save-board", "-o", str(ROOT / "build" / "kicad-check" / f"{name}-fill.rpt"),
-                    str(pcb)], capture_output=True)
     os._exit(0)
 
 

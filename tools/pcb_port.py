@@ -171,7 +171,7 @@ USB_PARTS = [
     ("C", ("VBUS_LOCAL", "GND"), -45.0, 54.9, 90),
     ("D", ("VBUS_LOCAL", "GND"), -45.6, 58.9, 90),               # SMF6.0A
     ("D", ("VBUS_CONN", "GND"), -25.3, 51.6, 90),                # TVS2200, protected pins to the rear
-    ("C", ("VBUS_CONN", "GND"), -27.5, 51.8, 270),
+    ("C", ("VBUS_CONN", "GND"), -43.35, 56.02, 270),              # PCB review: beside the KTS1693's west ball column, 1.5 mm from IN ball E4, GND pad at the GND balls' via (was 14 mm away)
     ("D", ("CC2", "GND"), -22.6, 51.6, 90),
     ("U", ("USB_DP", "USB_DN"), -18.9, 49.3, 270),               # USBLC6-2: receptacle side to the rear; room for its GND via in front of the inner-2 bar
     ("D", ("CC1", "GND"), -15.6, 51.6, 90),

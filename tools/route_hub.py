@@ -75,6 +75,14 @@ class Cu:
         pts = [self.pad(ref, n) for n in nums]
         return sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts)
 
+    def nearest(self, xy, net, value="100n", reach=4.0):
+        """The pad on `net` of the nearest capacitor of this value: a decoupling capacitor placed at its pin."""
+        d, x, y = min((math.hypot(MM(p.GetPosition().x) - xy[0], MM(p.GetPosition().y) - xy[1]), MM(p.GetPosition().x), MM(p.GetPosition().y))
+                      for f in self.fps.values() if f.GetValue() == value for p in f.Pads() if p.GetNetname().lstrip("/") == net)
+        if d > reach:
+            sys.exit(f"no {value} on {net} within {reach} mm of {xy}")
+        return x, y
+
     def net(self, name):
         n = self.b.FindNet(name) or self.b.FindNet("/" + name)
         if n is None:
@@ -279,17 +287,47 @@ def converter(c):
             sys.exit("inductor is turned the wrong way")
         c.track(net, [(sx, iy + 1.4), (sx, iy + 2.8)], 0.25)
         c.track(net, [(cx, cy), (ix + s * 1.9, iy + 5.5), (ix + s * 2.3, iy + 6.4)], 0.9)
-    # VCC: pin 18 west to its capacitor
+    # VCC: pin 18 west into the 1 uF at the pins, on to the 22 uF below it (PCB review; user, 2026-11-14)
     vx, vy = c.pad(u, "18")
-    c.track("VCC5", [(vx, vy + 0.1), (c.pad(c.find("C", "VCC5"), "1")[0] + 0.4, vy + 0.1)], 0.25)
-    ax, ay = c.pad(u, "17")                       # GND pin beside it: its own via, north of the VCC track
-    c.track("GND", [(ax, ay), (ix - 3.4, ay)], 0.2)
-    c.via("GND", ix - 3.4, ay, 0.6, 0.3)
-    # VCC capacitor: its GND pad to the plane at once
-    cv = c.find("C", "VCC5")
+    cs_, cv = (next(r for r, f in c.fps.items() if f.GetValue() == v and "/VCC5" in [p.GetNetname() for p in f.Pads()]) for v in ("1u", "22u"))
+    (sx, sy), (bx, by) = c.pad(cs_, "1"), c.pad(cv, "1")
+    if not (vx - 2.2 < sx < vx - 1.2 and abs(sy - vy) < 0.4 and bx < sx - 1.5 and by > sy + 2):
+        sys.exit("converter: the VCC capacitors are not where the copper expects them")
+    c.track("VCC5", [(vx, vy + 0.2), (sx, vy + 0.2)], 0.3)
+    c.track("VCC5", [(sx - 0.375, vy + 0.2), (sx - 0.375, by - 0.6), (bx + 1.05, by)], 0.3)
+    gx, gy = c.pad(cs_, "2")
+    c.track("GND", [(gx, gy), (gx - 0.225, gy + 1.05)], 0.4)
+    c.via("GND", gx - 0.225, gy + 1.05, 0.6, 0.3)
+    ax, ay = c.pad(u, "17")                       # GND pin beside it: its own via, between the COMP track and the 1 uF
+    c.track("GND", [(ax, ay), (ax - 0.5, ay), (ax - 0.75, ay - 0.25), (sx - 0.875, ay - 0.25)], 0.2)
+    c.via("GND", sx - 0.875, ay - 0.25, 0.6, 0.3)
+    # 22 uF: its GND pad to the plane at once
     gx, gy = c.pad(cv, "2")
-    c.track("GND", [(gx, gy), (gx, gy + 2.2), (gx + 1.1, gy + 2.2)], 0.8)
-    c.via("GND", gx, gy + 2.2, 0.6, 0.3); c.via("GND", gx + 1.1, gy + 2.2, 0.6, 0.3)
+    c.track("GND", [(gx - 0.8, gy + 1.45), (gx - 0.8, gy), (gx + 0.8, gy), (gx + 0.8, gy + 1.45)], 0.8)
+    c.via("GND", gx - 0.8, gy + 1.45, 0.6, 0.3); c.via("GND", gx + 0.8, gy + 1.45, 0.6, 0.3)
+    # COMP and FB (PCB review; places in tools/pcb_hub.py): pin 15 straight west into the 470 p, on between that
+    # capacitor's own pads (under its body) and down to the 12 k and the 15 n below it; pin 14 north-west round the
+    # 470 p to the divider. Every ground end has its own via to the plane (user, 2026-11-14: quiet corner, no separate island).
+    c40, r89, c39 = c.find("C", "COMP", "GND"), c.find("R", "COMP", "COMP_C"), c.find("C", "COMP_C", "GND")
+    r87, r88 = c.find("R", "+5V", "FB"), c.find("R", "FB", "GND")
+    (x15, y15), (ax, ay), (rx, ry) = c.pad(u, "15"), c.pad(c40, "1"), c.pad(r89, "1")
+    if not (ax < x15 - 2 and abs(ay - y15) < 0.5 and rx < ax - 2 and ry > ay + 1.5 and c.pad(c39, "1")[1] > c.pad(r89, "2")[1]):
+        sys.exit("converter: the COMP parts are not where the copper expects them")
+    c.track("COMP", [(x15, y15), (ax, y15)], 0.2)
+    c.track("COMP", [(ax, ay), (ax - 0.85, ay + 0.3), (ax - 0.85, ry - 0.55), (rx + 1.15, ry), (rx, ry)], 0.2)
+    c.track("COMP_C", [c.pad(r89, "2"), c.pad(c39, "1")], 0.2)
+    gx, gy = c.pad(c40, "2")
+    c.track("GND", [(gx, gy), (gx + 0.285, gy + 1.4)], 0.4)
+    c.via("GND", gx + 0.285, gy + 1.4, 0.6, 0.3)
+    gx, gy = c.pad(c39, "2")
+    c.track("GND", [(gx, gy), (gx, gy + 1.4)], 0.4)
+    c.via("GND", gx, gy + 1.4, 0.6, 0.3)
+    (x14, y14), (fx, fy) = c.pad(u, "14"), c.pad(r87, "2")
+    c.track("FB", [(x14, y14), (x14 - 0.6, y14), (x14 - 1.45, y14 - 0.85), (fx + 2.0, y14 - 0.85), (fx + 1.0, fy - 0.9), (fx + 0.85, fy - 0.4),
+                   (fx + 0.6, fy), (fx, fy)], 0.2)
+    c.track("FB", [(fx, fy), c.pad(r88, "1")], 0.2)
+    px, py = c.pad(r87, "1")
+    c.track("+5V", [(px, py), (px, iy - 1.5)], 0.4)
 
 
 def rail_5v(c):
@@ -338,6 +376,9 @@ def rail_5v(c):
             tx, ty2 = c.pad(j, bb)
             c.track(vb, [(tx, by), (tx, ty2)], 0.5, I2)
             c.track(vb, [c.pad(j, a), (tx, ty2)], 0.3)
+        tvs = c.find("D", vb, "GND")                             # PCB review: at the vias, its VBUS pads in the top area (power_areas)
+        if not (abs(c.pad(tvs, "5")[0] - (px + 6.8)) < 0.01 and 136.9 < c.pad(tvs, "5")[1] < 137.7):
+            sys.exit(f"port {p}: the VBUS TVS is not at the VBUS vias")
         receptacle(c, j, p)
 
 
@@ -395,8 +436,20 @@ def fanout(c):
             c.track(net, [(x, y), end], min(0.2, w, h))
 
 
+def decoupling(c):
+    """PCB review: supply pins straight to the 100 n placed beside them (tools/pcb_hub.py)."""
+    u = c.find("U", "LED_A", "LEDB_A")                           # 74AHCT125, LED data
+    for pin, net in (("13", "+5V"), ("14", "+5V"), ("12", "GND")):
+        c.track(net, [c.pad(u, pin), c.nearest(c.pad(u, pin), net)], 0.4)
+    for f in list(c.fps.values()):                               # 74LVC125A, one per port
+        if f.GetValue() == "74LVC125A":
+            xy = c.pad(f.GetReference(), "14")
+            c.track("+3V3", [xy, c.nearest(xy, "+3V3")], 0.4)
+
+
 def hub_conn_copper(b):
     c = Cu(b)
+    decoupling(c)
     entry = chain(c)
     stages(c, entry)
     sys_node(c)
@@ -505,6 +558,12 @@ def usb_port_copper(b):
     c.track("GND", [L(0.6, 0.0), L(0.6, 0.4)], w)
     c.track("GND", [L(0.6, 0.2), L(1.45, 0.2)], 0.2)
     c.via("GND", *L(1.45, 0.2), d=0.6, drill=0.3)
+    cin = c.find("C", "VBUS_CONN", "GND")           # PCB review: input 100 n west of the chip, VBUS pad level with IN ball E4's
+    (ax, ay), (gx, gy) = c.pad(cin, "1"), c.pad(cin, "2")       # mesh line, GND pad at the via of the west GND balls
+    if not (L(1.6, 0)[0] - 1.2 < ax < L(1.6, 0)[0] and L(0, 2.0)[1] + 0.3 < ay < L(0, 0.8)[1] and gy > ay):
+        sys.exit("usb-port: the KTS1693's input capacitor is not beside the IN balls")
+    c.track("VBUS_CONN", [(ax, ay), (L(0.6, 0)[0], ay)], 0.3)
+    c.track("GND", [(gx, gy), L(1.45, 0.2)], 0.3)
     r_ov, r_div, r_is = c.find("R", "OVLO", "GND"), c.find("R", "VBUS_CONN", "OVLO"), c.find("R", "ISET", "GND")
     c.track("ACOK", [L(-0.6, 0.0), L(-1.3, 0.0)], 0.2)
     c.track("OVLO", [L(-0.6, 0.4), c.pad(r_ov, "1"), c.pad(r_div, "2")], 0.2)
@@ -823,7 +882,7 @@ def power_areas(c, name):
             ox, oy = c.mean(sw, "14", "15")
             by = c.pad(j, "A1")[1] + 5.02 - 5.6
             areas.append((f"VBUS_{p}", f"VBUS_{p}_top", F, [(px + 5.9, oy - 0.4), (ox + 0.3, oy - 0.4), (ox + 0.3, oy + 0.4), (px + 7.9, oy + 0.4),
-                                                           (px + 7.3, 136.4), (px + 5.9, 136.4)]))
+                                                           (px + 7.7, 136.4), (px + 7.7, 137.75), (px + 5.9, 137.75)]))     # down over the TVS0500's VBUS pads
             areas.append((f"VBUS_{p}", f"VBUS_{p}_in2", I2, [(px - 3.2, by - 2.8), (px + 7.4, by - 2.8), (px + 7.4, by + 3.1), (px - 3.2, by + 3.1)]))
             tx, ty = c.pad(sw, "21")
             box = c.fps[sw].FindPadByNumber("21").GetBoundingBox()
@@ -930,7 +989,7 @@ def finish(b, pcb, name, extra=()):
         q = min(gv, key=lambda q: math.hypot(q.x - p.x, q.y - p.y))
         todo.append({"items": [{"description": f"Pad {num} [GND] of {ref} on F.Cu", "pos": {"x": MM(p.x), "y": MM(p.y)}},
                                {"description": "Via [GND] drop", "pos": {"x": MM(q.x), "y": MM(q.y)}}]})
-    layers = (F, I2, B)
+    layers = (F, I2 if b.GetCopperLayerCount() > 2 else None, B)      # 2-layer boards (key boards): the middle one is shut
     lname = {"F.Cu": 0, "In2.Cu": 1, "B.Cu": 2}
     edge = b.GetBoardEdgesBoundingBox()
     ex0, ey0, ex1, ey1 = MM(edge.GetLeft()) + 0.45, MM(edge.GetTop()) + 0.45, MM(edge.GetRight()) - 0.45, MM(edge.GetBottom()) - 0.45
@@ -945,7 +1004,7 @@ def finish(b, pcb, name, extra=()):
         gx0, gy0 = max(ex0, min(ax, zx) - margin), max(ey0, min(ay, zy) - margin)
         gx1, gy1 = min(ex1, max(ax, zx) + margin), min(ey1, max(ay, zy) + margin)
         nx, ny = int((gx1 - gx0) / cs) + 1, int((gy1 - gy0) / cs) + 1
-        blocked = [bytearray(nx * ny) for _ in layers]
+        blocked = [bytearray(nx * ny) if l is not None else bytearray(b"\x01") * (nx * ny) for l in layers]
         own = [bytearray(nx * ny) for _ in layers]
         vblock = bytearray(nx * ny)
 
@@ -1015,6 +1074,10 @@ def finish(b, pcb, name, extra=()):
                         item("box", g, (0,) if p.IsOnLayer(F) else (2,), p.GetNetname())
                 else:
                     item("box", g, (0, 1, 2), p.GetNetname() if att == pcbnew.PAD_ATTRIB_PTH else "-", 0.2 if att == pcbnew.PAD_ATTRIB_NPTH else 0.0)
+        for zn in b.Zones():                                    # rule areas that take no tracks (LED windows, standoffs)
+            if zn.GetIsRuleArea() and zn.GetDoNotAllowTracks():
+                bb = zn.GetBoundingBox()
+                item("box", (MM(bb.GetLeft()), MM(bb.GetTop()), MM(bb.GetRight()), MM(bb.GetBottom())), (0, 1, 2), "-")
 
         def cell(x, y):
             return min(nx - 1, max(0, int(round((x - gx0) / cs)))), min(ny - 1, max(0, int(round((y - gy0) / cs))))
@@ -1142,7 +1205,8 @@ def finish(b, pcb, name, extra=()):
                     ripped += 1
         cu = Cu(b)
         for k, x1, y1, x2, y2 in segs:
-            cu.track(net, [(x1, y1), (x2, y2)], T_W, layers[k])
+            if layers[k] is not None:
+                cu.track(net, [(x1, y1), (x2, y2)], T_W, layers[k])
         for x, y in vias:
             cu.via(net, x, y, 0.6, 0.3)
         done += 1
@@ -1430,6 +1494,9 @@ def main():
         tidy(b)
         pcbnew.SaveBoard(str(pcb), b)
         subprocess.run(fill, capture_output=True)
+        if finish(b, pcb, name):                    # tidy takes a via that lands in the middle of a wide trunk for a loose one
+            pcbnew.SaveBoard(str(pcb), b)           # (M2 session 9: PACK3 at D18, three tries in five): draw such a link again
+            subprocess.run(fill, capture_output=True)
     print(f"{name}: {len(b.GetTracks())} segments and vias in all")
     sys.stdout.flush()
     os._exit(0)

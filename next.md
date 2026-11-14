@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14 (after M2 session 7), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14 (after M2 session 9), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -339,13 +339,7 @@ SW2 and two PGND vias; (2) port VBUS areas on top and inner 2 on hub-conn, +5V a
 TPS25810 exposed-pad vias where there was room (three each from the next routing: `rail_5v`); (7) battery pack-line vias
 1.5 / 0.9 mm. Zones made with `pcbnew.ZONE` on a loaded, routed board worked here (session 7's failure was with remaking
 existing zones). Copies of the boards before the change: `build/route/`.
-**Open from the review, next session (parts move, boards are routed again)**: (4) decoupling: hub-conn U1 74AHCT125
-45 mm from C1, U3 / U7 / U11 74LVC125A 27 mm, usb-port KTS1693 IN 14 mm from C501, MCP23S17 12.6-14.4 mm on the key boards
-(`pcb_keys.py` `place_strip`: the 100 n sits at s - 13.5); the SK6812's 100 n at 9.5 mm is the cell pattern and stays
-unless the user wants it changed; (5) TVS0500 D1 / D2 / D3 13-23 mm from J4 / J5 / J6, D2 on a 29 mm 0.4 mm track; (6)
-TPS552892 VCC capacitor C38 3 mm from pin 18 with its GND end on the far side, COMP parts R89 / C39 / C40 15 mm away,
-AGND not separate. Then `pcb_plate.py` again and all checks. **(8) copper weights and plate thickness are in no board
-file: write them into the fab data at step 5.**
+(The review's placement findings 4-6 and item 8 were closed in session 9, below.)
 **To check on real parts or drawings (review 9-14)**: Amphenol 12401548E4-2A: drawing now in
 `build/ds/amphenol_12401548e4-2a.pdf` (pin order A1..A12 with B12..B1 on the same ends, as the footprint; it does not
 mark the mouth side or the tail length, so **handedness and the 2.0 mm between the battery holder and hub-conn's
@@ -357,8 +351,60 @@ micro-USB shell pins before first power; BC4AAPC polarity (as before); TVS2200 p
 I/O2, 2 = GND, 5 = VBUS; fab questions: KTS1693 0.22 mm lands, CSD25483F4 0.15 mm lands, 0.49 mm via pairs, target discs
 on the underside (two-sided assembly). Firmware notes from the review: Pico VBUS pin is not wired (do not gate USB on
 its VBUS sense); never plug the Pico's own micro-USB while the hub's host port is in use; JST GH cable wired 1:1.
-**Next (M2 session 9)**: the review's placement findings (above), boards routed again, plates re-run; then fab outputs
-(step 5, with the copper weights and plate thickness in the fab notes; no sourcing lookups).
+**M2 session 9 done (2026-11-14): the review's placement findings closed, five boards placed and routed again, plates
+re-run, fab outputs written.** `tools/pcb_check.sh left right numpad hub-core hub-conn battery chain-cap port-module usb-port dial`:
+**0 errors, 0 parity, 0 unconnected on all ten**; plates DRC 0 errors, 0 warnings; `tools/kicad-check.sh` exit 0 (ERC 0, netlist
+and cross-board checks 0 failed). Warnings left, all in the fab notes: hub-conn 3 `hole_to_hole` (via pairs 0.47-0.48 mm, no
+room to push), port-module 1 `hole_to_hole`, usb-port 2 `silk_edge_clearance` (the receptacle's own outline).
+**User decisions (options UI, 2026-11-14)**: **move each key LED's 100 nF to the LED** (new cell pattern); **AGND as a quiet
+corner on the plane**, no separate island; **add a 1 uF 0603 at the TPS552892's VCC pin, now** (the 22 uF 1210 cannot come
+nearer than 2.4 mm). Measured results (pin to capacitor pad, centre to centre) are in spec §2 and §3a.
+**Key boards** (`tools/pcb_keys.py`, `tools/route_keys.py`): `CAP_AT = (4.7, 3.7)`: the 100 nF stands between LED and diode,
+LED data passes between its pads; +5V_LED still enters each cell at `IN_5V` (where the capacitor's pad used to be) and wraps
+south of the window; the capacitor's GND via (`CAP_VIA`, in line with the switch's east peg hole) is **added after the strip
+router by `stitch()`** (36 / 52 / 22 at the wanted spot, except `left` CL32: no room, grounded by the pours only). The
+expander's 100 nF is placed from pins 9 / 10 (`DECOUPLE_T`), `decouple()` draws the two links. **The strip router is followed
+by the hub boards' finishing pass** (`route_hub.py` `finish()` / `drop_violators()`, made to work on 2 layers, rule areas such as
+the LED windows are obstacles, clearance 0.2 mm): `left` and `right` were clean on try 1, `numpad` on try 2 (before the pass was
+added). `tools/route_board.sh <name> [tries]` as before.
+**What cost time, so it is not found again**: (1) a GND via and track drawn at the LED capacitor BEFORE the strip router made it
+leave 2-5 row links open on every run: Freerouting counts fixed GND copper on a pad that `freeroute()` strips from the GND net
+as a violation (111 against 23 per board) and gives up on connections nearby; the old cell had the same on two pads per key and
+got away with it. Anything that grounds a field pad goes in after the router. (2) The rows come down from the expander on the
+front side through the lanes beside the switches' peg holes and land on a via between the LED and the diode: keep (5.4-5.9,
+5.9-7.5) of the cell free on the back and no via in those lanes. (3) Measured in scratch copies: the session 8 design routed
+clean on try 1, the new cell with the old expander capacitor on try 2, with the capacitor in front of the expander 1 try in 4:
+hence the finishing pass, not more tries. (4) Moving the expander 1.3 mm rearwards did not help. (5) pcbnew: a board loaded
+from a file that then has tracks removed gives no track list any more (`GetTracks()` fails): `route_keys.py` saves and loads
+the board again after each finishing step. (6) The strip router leaves short pieces thinner than 0.15 mm: set to 0.15 mm, not
+wider (wider makes clearance errors).
+**hub-conn** (`tools/pcb_hub.py` `hub_conn()` / `port()`, `tools/route_hub.py` `converter()`, `decoupling()`, `rail_5v()`,
+`power_areas()`): converter corner west of the chip (1 uF at pin 18, 22 uF below it, 470 pF, 12 k + 15 nF column, FB divider;
+all GND vias east of x = 57.8, clear of the +5V trunk on inner 2); 74AHCT125 placed by name with its 100 nF at pins 12-14;
+each buffer's 100 nF beside pin 14; each TVS0500 at the port's VBUS vias (top VBUS area drawn down over its pads). New helper
+`Cu.nearest()` (pin to the capacitor placed beside it). `sch_hub.py`: the 1 uF (`FP_C0603`), so capacitor numbers above C38
+moved up by one (C39 = the 1 uF, C40 = 15 nF, C41 = 470 pF). **Tidy bug found and worked round**: `tidy()` removes a via that
+lands in the middle of a wide trunk as "loose" (PACK3 at D18: three tries of five ended with that one link open); `main` now
+runs `finish()` once more after the tidy pass; hub-conn was then clean on try 1. On an already routed board:
+`route_hub.py hub-conn --finish`, never `--tidy` alone.
+**usb-port**: the KTS1693's 100 nF beside its west ball column (`pcb_port.py` `USB_PARTS`, `usb_port_copper`), clean on try 1.
+**dial**: its routed board still carried the 1N4148W value and part number on D901; fields set to the schematic's BAT43W
+(parity 0). **`tools/kicad-check.sh` now fails on DRC errors only** (kicad-cli counts warnings as violations: with the known
+warnings it had exit 1 on the committed boards too, the "exit 0" noted after session 8 was wrong).
+**Fab outputs = `python3 tools/fab.py [board ...]`** (new): for all thirteen boards `build/fab/<board>/` with
+`<board>-gerbers.zip` (Gerber X2, Excellon with plated and non-plated holes apart, drill maps), `<board>-cpl.csv` (placement,
+JLCPCB column names), `<board>-bom.csv` (from the schematic, grouped, part numbers as drawn, **no distributor numbers**),
+`fab-notes.txt`; `build/fab/README.md` sums them up. `build/` is not committed: the script and its `BOARDS` table are the
+source (**inner copper 1 oz on hub-conn, port-module, usb-port; plates 1.6 mm FR4 without copper; boards per keyboard; the
+questions for the board house**). A board with a DRC error, an open connection or a parity error is not exported. Not in the
+outputs: surface finish, mask colour, quantities (the order, D7); rotation offsets for JLCPCB's placer are not applied (check
+in their viewer).
+**Open after session 9**: BOM with European sources and the costed quote (roadmap M2 step 5; sourcing is parked by the user,
+so the M2 exit check "the user approves the quote" is open); FB on hub-conn is about 8 mm long (not a review finding); nobody
+has looked at the five re-routed boards in KiCad (the finishing pass's tracks are 0.2 mm and take odd paths; they pass DRC).
+**No mechanical change this session** (no outline, hole or part-height change), so nothing was shown in FreeCAD.
+**Next**: M3 (case and hub tower), session 1; or, when the user opens sourcing, the BOM sources and quote to close M2. The
+order itself (D7) waits for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

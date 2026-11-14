@@ -6,7 +6,7 @@ PY=/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/C
 m="$1"
 for try in $(seq 1 "${2:-5}"); do
   "$PY" "$ROOT/tools/pcb_keys.py" "$m" --force 2>&1 | grep ERROR
-  "$PY" "$ROOT/tools/route_keys.py" "$m" --strip --passes "${PASSES:-30}" 2>&1 | grep -E "WARNING|NO ROOM|^$m:"
+  "$PY" "$ROOT/tools/route_keys.py" "$m" --strip --passes "${PASSES:-30}" 2>&1 | grep -E "WARNING|NO ROOM|finish|^$m:"
   out="$(OPEN=10 "$ROOT/tools/pcb_check.sh" "$m")"
   echo "try $try: $out" | cut -c1-900
   if echo "$out" | head -1 | grep -q ": 0 errors, 0 parity, 0 unconnected"; then exit 0; fi

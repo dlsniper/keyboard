@@ -111,11 +111,15 @@ met 2026-11-13; signed off by the user 2026-11-13.
 3. DRC with schematic parity; a second independent review, including every Pico pin
    against the RP2350 and Pico 2 W datasheets. Review done 2026-11-14 (Opus, 14 findings; all 40 Pico pins, board-to-board
    mating and the cable wire plan found correct). Closed: converter and port power copper, pack vias (spec §3a).
-   **Open: the placement findings** (decoupling, port TVS, converter small-signal parts: hub-conn, usb-port and the three
-   key boards placed and routed again), copper weights into the fab data (step 5), checks on real parts (next.md).
+   **Placement findings closed 2026-11-14** (decoupling at the pins, port TVS at the receptacles, converter VCC and COMP
+   parts at their pins with a 1 uF added at the VCC pin (user), key LED capacitor beside the LED (user): `hub-conn`, `usb-port` and the three key boards placed and
+   routed again, plates re-run; spec §2, §3a). Left: checks on real parts (next.md).
 4. Plates (1.6 mm FR4; user, 2026-11-14) from the same file. Done 2026-11-14: `tools/pcb_plate.py`,
    `hardware/plate-{left,right,numpad}`, DRC 0, checked against the three key boards.
-5. Fab outputs, BOM with European sources, a costed quote.
+5. Fab outputs, BOM with European sources, a costed quote. **Fab outputs done 2026-11-14: `python3 tools/fab.py`** writes
+   Gerbers, drill files, placement file, BOM (parts as drawn, no distributor numbers) and fab notes for all thirteen boards
+   into `build/fab/` (copper weights, plate thickness and the questions for the board house are in the notes; a board that
+   is not DRC-clean is not exported). Left: sources and the costed quote (sourcing is the user's call, parked).
 
 **Decisions:** **D6** board house and who assembles. **D7** the order itself, placed
 only after M4 step 2 has proven SPI over the real cable (spec O2).
