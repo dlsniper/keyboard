@@ -403,8 +403,39 @@ in their viewer).
 so the M2 exit check "the user approves the quote" is open); FB on hub-conn is about 8 mm long (not a review finding); nobody
 has looked at the five re-routed boards in KiCad (the finishing pass's tracks are 0.2 mm and take odd paths; they pass DRC).
 **No mechanical change this session** (no outline, hole or part-height change), so nothing was shown in FreeCAD.
-**Next**: M3 (case and hub tower), session 1; or, when the user opens sourcing, the BOM sources and quote to close M2. The
-order itself (D7) waits for M4 step 2 (SPI over the real cable).
+**M3 session 1 done (2026-11-14): numpad shell as a FreeCAD script, D8 and fastening decided, hub boards stay 94 mm.**
+**No hole or outline moved: no board has to be placed or routed again.** The six M2 holes of `numpad` are final as routed
+(each has room for a 6.4 mm boss: nearest pad 3.95 mm from a hole centre).
+**User decisions (options UI, model shown in FreeCAD first)**: **top screws into inserts**; **negative tilt = screwed-on
+front feet, swappable 4 / 7 degrees, flat bottom** (the user's own wording); **tenting = separate tent base** per alpha half;
+**palm rest separate, attachable**; **hub-core and battery stay 94 mm** (final). Spec §2a.
+**New requirement (user, 2026-11-14, said during the session): the modules must also talk to the base wirelessly, and the
+wired and wireless parts must both be in the final hardware design before the user tests anything; software stack open
+until the hardware exists.** Recorded as roadmap **M3b** and spec §1 / O10; **nothing of it is designed**, and it was not
+asked where it goes in the order of sessions. It can change the bay cover and the tray (pod + cells), so **no full tray
+print before M3b's shell step**; the fit pieces below stay valid (seats, bosses, bay heights with the wired port board).
+**Scripts**: `tools/case_dump.py [names]` (KiCad's Python, command in its header) writes `build/case/<name>.json` from the
+routed key board, `pcb_keys.py` and `pcb_plate.py` (re-run after a key board is placed again; checks the bay screws sit on
+board holes); **`mech/case/build_case.py`** (`CASE_MODULE=numpad /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd
+mech/case/build_case.py 2>&1 | grep -a "numpad:\|CLASH\|clash\|valid\|xception"`: the STEP writer floods the terminal otherwise)
+writes `build/case/numpad/`: `report.txt`, `numpad-case.FCStd` / `.step`, STL of `tray`, `cover`, `spacers`, `sleeves`,
+`tilt4`, `tilt7` and the fit pieces `fit-bay` (rear inner corner of the tray with both bay bosses) and `fit-front` (front
+outer corner: boss, wall, foot recess). In the GUI: `os.chdir(repo); exec(open("mech/case/build_case.py").read(),
+{"__name__": "case"})` fills document `case_numpad`. Parameters at the top; 14 clash pairs checked, 0 clashes.
+**Numbers**: tray 88.6 x 154.4 x 14.0 mm; board 6.4-8.0, plate 11.4-13.0, port board 19.04-20.64, cover top 27.62 (cap tops
+about 30.5); 36 support posts; plate screws M2 x 10, bay screws M2 x 22 (3.0 mm in the insert), tilt bars M2 x 6 into two
+inserts set from below (found by a grid search for free spots near the front edge); tilt bars 9.3 / 16.4 mm high at the screws.
+**Fit print first (not printed yet)**: `numpad-fit-bay.stl`, `numpad-fit-front.stl`, `numpad-cover.stl` (upside down, the
+cable opening bridges 13.5 mm), `numpad-spacers.stl`, `numpad-sleeves.stl`. To check on them: insert holes 3.2 mm, 0.3 mm
+board / plate clearance, the cover's 0.8 mm front skirt (0.45 mm behind the F-row caps, 0.25 mm from the port board: the
+tightest spot; widening it means moving the port board's front edge = port-module placed and routed again, not done).
+**Assumed, to check on parts**: 11.04 mm key board to port board (8.5 mm socket + 2.54 mm header body); receptacle 3.26 mm
+high on the port board with its mouth at the board edge (Amphenol drawing does not show it); Bumpon SJ5302; Ruthex M2 x 4.
+**Not done in session 1**: `left` and `right` shells (the script is general but only run for numpad; `right` needs the dial
+board's mounting, `left` / `right` the tent base and palm rest joints); the tent angle (measure the K860); tilt bar with
+tenting combined; hub tower shell and the seam test print (roadmap M3 step 2).
+**Next**: M3b decisions (wireless module hardware) or M3 session 2 (`left` / `right` shells, tent base, palm rest): the
+user's call, see the session-end prompt. The order (D7) waits for M3b and for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

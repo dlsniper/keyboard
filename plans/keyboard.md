@@ -113,6 +113,10 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   cable goes and becomes the SPI master of that module's expander. Key boards stay
   the same in both cases: the pod replaces the port board on the 2x6 bay header and
   feeds 5 V and 3.3 V through it (O10).
+  **User, 2026-11-14 (M3 session 1): the cable-free (wireless) variant of the modules must be part of the final
+  hardware design before anything is built and tested**, beside the wired one: pod electronics, its board and its
+  place in the shell are designed before the order (D7). The software stack is left open until the hardware
+  exists. Nothing of the pod is designed yet (roadmap M3b).
 - The hub has a rear **expansion port**; each key board keeps a few spare expander
   pins on a header.
 
@@ -210,6 +214,28 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   `tinygo.org/x/drivers/ws2812` (PIO on RP2350). Source: not found at Mouser so far
   (Adafruit 4960 packs, or OPSCO parts from another distributor); to settle in the
   M1 parts list.
+
+## 2a. Key-module shell (M3 session 1, 2026-11-14)
+
+`mech/case/build_case.py` (FreeCAD), fed by `tools/case_dump.py` (reads the routed key board and the plate). Done for
+`numpad`; `left` and `right` use the same script (the bay parts are built in the bay frame).
+
+- **Held by screws from the top into inserts (user, 2026-11-14)**: a flat-bottomed ASA tray (floor 2.4 mm, 4.0 mm
+  cavity under the board, wall 2.4 mm with 0.3 mm to board and plate, wall top 1 mm above the plate); the key board
+  lies on bosses with Ruthex M2 inserts under **its existing M2 holes, which are now final** (no board changed) and
+  on 4 mm support posts at the key cell corners; a 3.4 mm printed spacer and an M2 x 10 at each plate hole.
+- **Port bay**: the port board stands 11.04 mm above the key board (header body + 8.5 mm socket) on two printed
+  sleeves; a cover over the bay (skirts between the F-row caps and the port board, and over the plate's notch edge)
+  with the cable opening (13.5 x 7.5 mm, takes the plug's overmould) in its rear wall; one M2 x 22 at each bay hole
+  holds cover, port board, sleeve and key board in the tray's insert. Cover top 14.6 mm above the plate, about 3 mm
+  under the cap tops. The cover is the wired variant; the pod variant (§1) replaces it.
+- **D8 (user, 2026-11-14)**: **negative tilt by screwed-on front foot bars, swappable, 4 and 7 degrees**, the tray
+  bottom stays flat (flat = no bar; two inserts set from below in the tray); **tenting by a separate printed base
+  per alpha half** (the numpad stays untented; angle to be taken from the user's K860, about 7 degrees from memory);
+  **palm rest separate and attachable**, one per alpha half, none on the numpad.
+- Feet: four 3M Bumpon recesses (8.4 mm); the tilt bars carry their own.
+- **Hub: `hub-core` and `battery` stay 94 mm (user, 2026-11-14, final)**; the room to the 114 mm shell is for walls,
+  seam magnets and grips.
 
 ## 3. Power
 
@@ -617,7 +643,7 @@ See [`roadmap.md`](roadmap.md). Hardware first (user, 2026-11-13).
 - O8 closed 2026-11-13: 2x8 chain, five pack inputs, lowest-first priority (§3a). Priority hand-over simulated and the re-arm level tuned at the M1 review (§3a).
   Open under it: pogo parts for 2x8.
 - **O9** n-key USB report in TinyGo (M4).
-- **O10** cable-free pods: they take the port board's place in the bay (2x6 header,
+- **O10** cable-free pods (**hardware now required before the order, user, 2026-11-14; roadmap M3b**): they take the port board's place in the bay (2x6 header,
   two M2 screws; D3); bay size and header position frozen at M1; the pods themselves (controller, radio link to the hub, latency
   over radio) come after M6.
 - O4, O5 closed 2026-11-13 (archive move; Pico 2 W, test image compiles for `pico2-w`;

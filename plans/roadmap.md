@@ -136,11 +136,29 @@ only after M4 step 2 has proven SPI over the real cable (spec O2).
    magnet pull).
 3. Fit prints of corners and seams before any full print; feet; cable openings.
 
-**Decisions:** **D8** tenting, negative tilt and palm rest: how close to the K860.
+**Decisions:** **D8** tenting, negative tilt and palm rest: decided 2026-11-14 (spec §2a): screwed-on tilt bars
+4 / 7 degrees, separate tent base per alpha half, separate attachable palm rest. Fastening: top screws into inserts.
+Hub boards stay 94 mm.
+
+**Progress:** session 1 (2026-11-14): `mech/case/build_case.py` + `tools/case_dump.py`, numpad tray, bay cover,
+spacers, sleeves, tilt bars, two fit-print pieces; the key boards' M2 holes are final as routed.
 
 **Exit check:** everything assembles with no rework; the user has typed on it for a day.
 
 Starts after D2; outlines must be frozen before M2 step 1 finishes.
+
+## M3b, wireless modules: hardware (user, 2026-11-14)
+
+**Goal:** the cable-free variant of the key modules is designed as hardware, beside the wired one, **before the
+order (D7) and before the user tests anything**. Software stack open until the hardware exists.
+
+1. Decisions (options UI): radio and controller of the pod, what the hub listens with (Pico 2 W radio or a radio on
+   a core / expansion board), pod power (AA pack and converter in the module, LEDs on battery), where the pod and
+   its cells sit in the shell.
+2. Pod schematic and board on the frozen 2x6 bay header (spec §1, O10); hub side if it needs hardware.
+3. Shell: pod variant of the bay cover / tray; re-check the numpad shell of M3 session 1 against it.
+
+**Exit check:** ERC / DRC 0, review closed, both variants fit the same key board and tray.
 
 ## M4, firmware bring-up
 
@@ -209,6 +227,6 @@ whoever delegates verifies what comes back.
 | D5 | Retired rev 8 folders: decided, moved to `archive/rev8/` | done |
 | D6 | Board house and assembly: decided 2026-11-13, JLCPCB makes and assembles | done |
 | D7 | Place the order (already settled for it: inner copper 1 oz on `hub-conn` and `port-module` and `usb-port`, user, 2026-11-14; plates 1.6 mm; to ask JLCPCB: KTS1693 lands, receptacle hole rules) | M2 end |
-| D8 | Tenting, tilt, palm rest | M3 |
+| D8 | Tenting, tilt, palm rest: decided 2026-11-14 (spec §2a) | done |
 | D9 | Keymap and layers | M5 |
 | D10 | Key LED type: decided 2026-11-13, SK6812MINI-E chain | done |
