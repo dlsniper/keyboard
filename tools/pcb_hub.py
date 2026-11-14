@@ -51,6 +51,11 @@ CLASSES = {
 }
 CLASSES["port-module"] = CLASSES["hub-conn"]        # 4 layers too (tools/pcb_port.py)
 CLASSES["usb-port"] = CLASSES["hub-conn"]
+CLASSES["pod"] = CLASSES["hub-conn"]             # wireless boards (tools/pcb_pod.py), 4 layers
+CLASSES["pod-power"] = [dict(pk.DEFAULT_CLASS, clearance=0.15, track_width=0.2),
+                        dict(pk.POWER_CLASS, clearance=0.15, track_width=0.5), dict(pk.GND_CLASS, clearance=0.15)]
+for _n in ("VPACK", "BAT+", "VFUSE", "+5V_RAW", "+5V_LED", "SW_3V3", "L5A", "L5B"):
+    CLASS_OF["/" + _n] = "Power"
 CLASS_OF["/+3V3"] = "Power"
 CLASS_OF["/AUX_5V"] = "Power"
 CLASS_OF["/LINE*"] = "Power"

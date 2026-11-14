@@ -168,6 +168,13 @@ enables, printed cell pockets with bought contacts, JST GH lead, 32.768 kHz crys
 by `tools/sch_pod.py` for `pod`, `pod-power`, `hub-radio` (ERC 0, netlist checks in `kicad-check.sh`), pin map
 `firmware/pod-pinmap.json`, independent review (Opus). Next: footprints (TPS630701 RNM, two inductors), boards,
 the rail in the shell. Open: rail joint, pod outline (how it grows), left's width.
+Session 3 (2026-11-14): decided (options UI, shell and rail in FreeCAD): pod straight to the rear over the rail
+(30 x 50.7 mm), rear leg of the rail 27 mm deep with a 48 x 22 mm power board, cell count by a solder jumper, all
+added parts kept. Footprints drawn (TPS630701 RNM, XGL3530, XFL4020), `tools/pcb_pod.py` + `tools/route_hub.sh`:
+`pod`, `pod-power`, `hub-radio` placed and routed (DRC 0 errors, 0 unconnected, parity 0; antenna keep-out free on
+all four layers; socket checked against the three key boards, carrier against hub-core), fab outputs, independent
+PCB review. No key board, hub-core or hub-conn changed. Next: step 3, the shell (rail, lids, cover over the pod),
+with `left` / `right` (M3 session 2).
 
 **Exit check:** ERC / DRC 0, review closed, both variants fit the same key board and tray.
 

@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14 (after M2 session 9), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-14 (after M3b session 3), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -491,9 +491,74 @@ hardware/lib/keyboard.pretty`) and sets the `USB_C_Receptacle_24P` symbol's defa
 which makes ERC warn on hub-conn and port-module (their embedded copies say JAE): that one line of
 `keyboard.kicad_sym` was put back by hand. Settle it when those two schematics are next regenerated.
 `tools/kicad-check.sh` skips DRC for boards without footprints (the three new ones) and runs `sch_pod.py --verify`.
-**Next**: M3b session 3: footprints, then `pod`, `pod-power`, `hub-radio` placed and routed, the pod's outline
-and the rail shown in FreeCAD first. Or M3 session 2 (`left` / `right` shells, tent base, palm rest), which the
-rail and left's width also need. The order (D7) waits for M3b and for M4 step 2 (SPI over the real cable).
+**M3b session 3 done (2026-11-14): `pod`, `pod-power`, `hub-radio` placed and routed. `tools/pcb_check.sh pod pod-power
+hub-radio`: 0 errors, 0 parity, 0 unconnected on each; `tools/kicad-check.sh` exit 0 (ERC 0 on all, netlist checks
+123 / 59 / 43, 0 failed). No key board, hub-core or hub-conn file changed; nothing else is placed or routed again.**
+Details and numbers: spec §2b ("Boards").
+**User decisions (options UI; numpad shell and rail in FreeCAD, document `numpad_case`)**: pod **straight to the rear
+over the rail, 30 x 50.7 mm**; **rear leg of the rail 27 mm deep, power board 48 x 22 mm** (numpad 107.6 x 181.4 mm);
+**cell count by a solder jumper** (JP1 bridged = 4 cells; I drew a 2-pad jumper, the option text said 3-pad); **all
+four added groups stay** (LED rail cap, can + Zener, debug header, XH pack plug). Both size questions were forced:
+measured, the pod's parts need 735 mm2 against 705 mm2 of the port-board outline, the power board's 627 mm2 against
+672 mm2 of the 48 x 14 guess.
+**Chosen by me, not asked (say so if they come up)**: `pod` and `pod-power` have 4 copper layers (inner copper
+0.5 oz, not asked), `hub-radio` 2; the power board's lead connector is the vertical JST BM06B-GHS-TBT (the pod's
+stays horizontal); the power board's **front-east corner is cut away** (15.5 x 6.6 mm: the numpad's side cells and
+their contact end there; found in FreeCAD after the decision, the lead connector moved to the rear-east corner);
+in the hub the pod points to the front of the tower, above the Pico.
+**Scripts**: `tools/pcb_pod.py [--force] [board]` (placement; KiCad's Python, header has the command; `--check` =
+antenna keep-out on the routed pod: 0 tracks / vias, 0 zone fills, 0 foreign pads on 4 layers), `tools/route_hub.sh
+pod | pod-power | hub-radio` (place, route, silkscreen, check; each clean on try 1, about 30 s; the pod needed a fix
+first: `gnd_vias()` put two GND vias into the antenna area, it now respects footprint and board rule areas),
+`route_hub.py` `pod_power_copper` (converter pins, locked), `EDGE_notch` rule area on pod-power (stays on the board:
+the router, the via pass and the finishing pass know the outline only as a rectangle). `pcb_hub.py`: classes for
+`pod` / `pod-power`, supply nets of the power board in the Power class (0.5 mm). `gen_kicad.py`: three footprints
+(only those three files were written; a full run still rewrites the library, see the library note above).
+`sch_pod.py`: jumper, footprints assigned, `footprints()` now fails on any part without one. `tools/fab.py`: the
+three boards added (`build/fab/{pod,pod-power,hub-radio}`). `mech/case/pod_preview.py` redrawn to the decided
+geometry (numpad document: `RAIL_*`, `POD_*`; hub section document: `RADIO_*`).
+**Found, open (spec §2b "Open")**: Raytac's footprint package could not be downloaded: KiCad's MDBT50Q footprint
+agrees with the spec in outline, pad count, antenna end and keep-out; the review then matched every pad coordinate against the spec's drawing, so the package is only a second source now
+(Raytac's "Footprint & Design Guide" package for the MDBT50Q is on the Download page of https://www.raytac.com ; I found no direct link: `index.php?index_id=43` there is only the spec we already have. Put it into `build/ds/raytac/`); the XGL3530
+drawing is a distributor's copy from 2020 (`build/ds/xgl3530.pdf`); **the tower's core section must be at least 9 mm
+taller with the radio fitted** (pod module top 27.3 mm above the core board, the section's tube ends at 19.5 mm);
+pod antenna and Pico antenna are about 18 mm apart; the pod's underside is 0.04 mm above the rail top (lid lowered
+under the pod at the shell step); the power board's east end rests on posts (both screws are in the west half);
+warnings left: pod-power 1 `hole_to_hole` (a via pair under 0.5 mm) and silkscreen at the edge connectors.
+USBLC6-2 datasheet is now on disk (`build/ds/usblc6-2.pdf`, a distributor's copy): pins 1 / 6 = I/O1, 3 / 4 = I/O2,
+2 = GND, 5 = VBUS, as drawn on `pod` and `usb-port`.
+**Independent PCB review (Opus, files and datasheets only; 16 items: 1 must-fix, 9 should-fix, 6 notes).** Found
+correct: the three new footprints pad by pad, every TPS630701 pin against its pin table, KiCad's MDBT50Q footprint
+against the spec's drawings (61 pads, each coordinate, 0.6 x 0.4 mm pads: **this settles the pad pitch**), the antenna
+area empty on all four layers, the bay mating on all three key boards (0.005 mm) and on the carrier, the carrier on
+hub-core, the lead pin for pin, UART direction, USBLC6-2, the debug header.
+**Fixed, pod-power and pod placed and routed again (clean on try 1)**: (1, must-fix) the 5 V converter's PGND pin had
+one via on a 3.4 mm neck: inductor moved to 1.15 mm from the strips, two PGND vias between its pads, two vias at
+each capacitor's GND pad, switch tracks 0.25 mm only where the three run side by side, then 0.6 mm; (3) the 3.3 V
+converter's output capacitor now sits at the GND / SW end of the chip; (4) pack current on top at 1.0 mm from plug
+to fuse; (6) crystal moved under its two pins, no crossing; (7) the level shifter's 100 nF at its supply pin; (11)
+the USB regulator's 2.2 R moved to the port's side; (12) vias were written as "buried" (F to B): set to through on
+`pod` and `pod-power`; (13) module 0.3 mm inside the rear edge (its length tolerance is +0.2 mm).
+**Review items left open**:
+- (5) GND copper stands beside the antenna area on the rear edge, and the USB-C shell is 5.5 mm from it on the same
+  edge; Raytac asks for the no-ground band "as wide as possible". Clearing it means moving the USB-C port off the
+  rear edge: **a user decision, not taken**.
+- (12) **`hub-conn` (262), `port-module` (12) and `usb-port` (8) carry the same "buried" via mark.** Their drill
+  files are right (through holes); an ODB / IPC output could read them wrongly. Fixing it is a one-line pass that
+  rewrites those three board files without placing or routing anything; not done (those boards were not to change).
+- (1) an 0603 capacitor directly across the 5 V converter's VIN and VOUT pins (two new parts); (10) D+ reaches the
+  ESD array on a 3.6 mm stub while D- passes through it; (15) no 100 nF at the TPS2553's input, 85 % split paste on
+  the converter's long lands, start-lead mark on the inductors; VPACK is 0.5 mm (0.85 A worst case, on top);
+  the 3.3 V line to the lead and the pack-sense line were closed by the finishing pass at 0.2 mm.
+- (8, 9) hub: the carrier hangs on the expansion header alone with the pod as a 30 mm lever (give it a post or a
+  screw at the hub shell); the pod's USB-C faces the tower's inside there; (14) the fuse holds 0.85 A at 50 C,
+  which is the worst-case pack current (known from session 2).
+**The user had KiCad open during the session** (lock files in the three project folders): the boards on disk are
+newer than anything open there; reload, do not save an old view over them.
+**Next**: M3b step 3 with M3 session 2: the shells. Rail (27 mm rear leg, 19 mm side leg), cell pockets and contact
+part, lids, the bay cover over the longer pod, posts and inserts for the power board, the switch slot and the USB-C
+opening in the rear wall; `left` / `right` shells with left's width (sixth cell), tent base, palm rest; the hub
+tower's core section with the carrier. Then the order (D7) still waits for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

@@ -36,6 +36,7 @@ FP_C = "Capacitor_SMD:C_0603_1608Metric"
 FP_C0805 = "Capacitor_SMD:C_0805_2012Metric"
 FP_C1206 = "Capacitor_SMD:C_1206_3216Metric"
 FP_GH6 = "Connector_JST:JST_GH_SM06B-GHS-TB_1x06-1MP_P1.25mm_Horizontal"
+FP_GH6V = "Connector_JST:JST_GH_BM06B-GHS-TBT_1x06-1MP_P1.25mm_Vertical"      # power board: plugged from above
 FP_SOT23_6 = "keyboard:TI_SOT-23-6_DBV0006A"
 FP_TP = "TestPoint:TestPoint_Pad_D1.5mm"
 
@@ -85,10 +86,14 @@ TPS630701 = {1: "PS/SYNC", 2: "PG", 3: "VAUX", 4: "GND", 5: "FB", 6: "FB2", 7: "
 TPS2553 = {1: "IN", 2: "GND", 3: "EN", 4: "FAULT", 5: "ILIM", 6: "OUT"}
 DIVIDER = ("2.2M", "680k")          # VSW -> VBAT_SENSE -> GND
 # Pack cut-off on the 3.3 V converter's precise enable (rising 1.0 V, falling 0.9 V): VSW -> RTOP -> EN -> 330 k -> GND.
-# One value per cell count: on at 1.0 V per cell, off at 0.9 V per cell. Drawn: 6 cells.
+# On at 1.0 V per cell, off at 0.9 V per cell. One board for every module (user, 2026-11-14): 1.65 M is always in
+# (6 cells, as delivered); solder jumper JP1 puts 2.55 M in parallel (1.0 M) for 4 cells.
 UVLO_BOTTOM = "330k"
-UVLO_TOP = {4: "1M", 5: "1.33M", 6: "1.65M"}
-CELLS_DRAWN = 6
+UVLO_TOP = "1.65M"
+UVLO_PAR = "2.55M"
+FP_L33 = "keyboard:L_Coilcraft_XGL3530"
+FP_L5 = "keyboard:L_Coilcraft_XFL4020"
+FP_RNM = "keyboard:TI_VQFN-HR-15_2.5x3mm_RNM0015A"
 EXPANSION = {1: "+3V3", 2: "+5V", 3: "SDA", 4: "SCL", 5: "SP1", 6: "SP2", 7: "SP3", 8: "SP4", 9: "GND", 10: "GND"}
 # carrier: bay pin -> expansion pin (SDA = GP0 = UART0 TX of the Pico, SCL = GP1 = UART0 RX)
 CARRIER = {1: 2, 2: 2, 3: 9, 5: 1, 6: 9, 7: 7, 8: 5, 9: 3, 10: 4, 11: 10, 12: 6}
@@ -186,16 +191,16 @@ def build_power():
     s.part("U1", "keyboard:TPS629210DRL", "TPS629210", "Package_TO_SOT_SMD:SOT-583-8", (92, 22),
            {"6": "VPACK", "7": "EN_3V3", "8": "SCONF", "4": "SW_3V3", "3": "+3V3", "1": None, "2": None, "5": "GND"},
            {"MPN": "TI TPS629210DRLR"})
-    s.part("L1", "Device:L", "2.2u", "", (120, 20), {"1": "SW_3V3", "2": "+3V3"}, {"MPN": "Coilcraft XGL3530-222ME"})
-    s.part("U2", "keyboard:TPS630701RNM", "TPS630701", "", (92, 54),
+    s.part("L1", "Device:L", "2.2u", FP_L33, (120, 20), {"1": "SW_3V3", "2": "+3V3"}, {"MPN": "Coilcraft XGL3530-222ME"})
+    s.part("U2", "keyboard:TPS630701RNM", "TPS630701", FP_RNM, (92, 54),
            {"12": "VPACK", "13": "VPACK", "14": "EN_5V_F", "1": "PS", "15": "GND", "11": "L5A", "9": "L5B",
             "7": "+5V_RAW", "8": "+5V_RAW", "5": "+5V_RAW", "6": None, "2": None, "3": "VAUX", "4": "GND", "10": "GND"},
            {"MPN": "TI TPS630701RNMR"})
-    s.part("L2", "Device:L", "1.5u", "", (66, 56), {"1": "L5A", "2": "L5B"}, {"MPN": "Coilcraft XFL4020-152ME"})
+    s.part("L2", "Device:L", "1.5u", FP_L5, (66, 56), {"1": "L5A", "2": "L5B"}, {"MPN": "Coilcraft XFL4020-152ME"})
     s.part("U3", "keyboard:TPS2553DBV", "TPS2553", FP_SOT23_6, (136, 54),
            {"1": "+5V_RAW", "3": "EN_5V_F", "5": "ILIM", "6": "+5V_LED", "4": None, "2": "GND"}, {"MPN": "TI TPS2553DBVR"})
-    s.part("J2", "Connector_Generic:Conn_01x06", "LEAD", FP_GH6, (170, 30),
-           {str(p): n[1] for p, n in LEAD.items()}, {"MPN": "JST SM06B-GHS-TB"})
+    s.part("J2", "Connector_Generic:Conn_01x06", "LEAD", FP_GH6V, (170, 30),
+           {str(p): n[1] for p, n in LEAD.items()}, {"MPN": "JST BM06B-GHS-TBT (vertical: the lead is plugged from above)"})
     for i, (net, x) in enumerate((("VPACK", 150), ("+3V3", 158), ("+5V_LED", 166), ("GND", 174)), 1):
         s.part(f"TP{i}", "Connector:TestPoint", net, FP_TP, (x, 60), {"1": net}, {})
     s.part("D1", "Device:D_Zener", "10V", "Diode_SMD:D_SOD-123", (40, 36), {"1": "VPACK", "2": "GATE"}, {"MPN": "BZT52C10 class"})
@@ -203,7 +208,7 @@ def build_power():
            {"Voltage": "25V", "MPN": "polymer or electrolytic, 6.3 mm can"})
     st = Strip(8, 84, 176)
     s.r("100k", "GATE", "GND", st.next())
-    s.r(UVLO_TOP[CELLS_DRAWN], "VSW", "EN_3V3", st.next())
+    s.r(UVLO_TOP, "VSW", "EN_3V3", st.next())
     s.r(UVLO_BOTTOM, "EN_3V3", "GND", st.next())
     s.c("100n", "EN_3V3", "GND", st.next())
     s.r(DIVIDER[0], "VSW", "VBAT_SENSE", st.next())
@@ -221,6 +226,9 @@ def build_power():
     s.c("10u", "+5V_RAW", "GND", st.next(), v="16V")
     s.r("49.9k", "ILIM", "GND", st.next())
     s.c("10u", "+5V_LED", "GND", st.next(), fp=FP_C0805, v="16V")
+    s.r(UVLO_PAR, "VSW", "UVLO_4", st.next())
+    s.part("JP1", "Jumper:SolderJumper_2_Open", "4 AA", "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm", (150, 76),
+           {"1": "UVLO_4", "2": "EN_3V3"}, {})
     s.flags = [("#FLG01", "BAT+", (10, 36)), ("#FLG02", "GND", (18, 36)), ("#FLG03", "VPACK", (26, 36)),
                ("#FLG04", "+3V3", (34, 36)), ("#FLG05", "+5V_RAW", (42, 36))]
     s.notes = [((8, 102),
@@ -228,14 +236,14 @@ def build_power():
         "F1 1.1 A hold (worst case about 0.75 A: 2.5 W of LEDs at a 4.0 V pack). Q1 blocks a reversed pack (gate to GND through 100 k; |VGS| = pack voltage, 12 V absolute maximum).\n"
         "D1 clamps its gate (10 V Zener, conducts only above a fresh alkaline pack); C20 damps the ringing when the pack is plugged in.\n"
         "SW1 is the on / off switch: it carries no load current (third contact unused). On: VSW = VPACK feeds the cut-off divider on the 3.3 V converter's enable and the pack divider.\n"
-        "Cut-off (review): R2 / 330 k on the precise enable (1.0 V rising, 0.9 V falling) = on at 1.0 V per cell, off at 0.9 V per cell. R2 per cell count: 4 cells 1 M, 5 cells 1.33 M,\n"
-        "6 cells 1.65 M (drawn). Off: VSW pulled to GND by the dividers, both converters in shutdown (the pod is dead, so EN_5V is low); 3 to 13 uA left (shutdown currents, 85 C worst case).\n"
+        "Cut-off (review): R2 / 330 k on the precise enable (1.0 V rising, 0.9 V falling) = on at 1.0 V per cell, off at 0.9 V per cell. R2 = 1.65 M: 6 cells, as delivered.\n"
+        "4 cells (numpad): bridge JP1, which puts 2.55 M in parallel (1.0 M). One board for every module (user). Off: VSW pulled to GND by the dividers, both converters in shutdown (the pod is dead, so EN_5V is low); 3 to 13 uA left (shutdown currents, 85 C worst case).\n"
         "U1 TPS629210: MODE/S-CONF 27.4 k = VSET mode, auto PFM/PWM with AEE, up to 2.5 MHz, output discharge on; FB/VSET open = 3.3 V; 2.2 uH, 22 uF; 4 uA quiescent.\n"
         "U2 TPS630701 (fixed 5.0 V): FB on VOUT, VSEL low, PS/SYNC high through 100 k = power save, 1.5 uH, 2 x 22 uF, VAUX 100 nF. Enabled only by EN_5V from the pod\n"
         "(1 k in series, 100 k pull-down: off by default). U3 TPS2553 caps the LED rail: RILIM 49.9 k = 475-565 mA, constant current (not latching); FAULT is not wired.\n"
         "Pack divider 2.2 M / 680 k: 10 V -> 2.36 V at the pod's ADC pin (100 nF there); the two dividers draw 2.5 + 3.6 uA at 7.2 V while the switch is on.\n"
         "Lead J2 (JST GH, 1 A per contact, 1:1 to the pod): 1 +5V_LED, 2 GND, 3 EN_5V, 4 VBAT_SENSE, 5 GND, 6 +3V3.\n"
-        "Footprints still to draw at the board session: U2 (RNM), L1, L2.")]
+        "Board: tools/pcb_pod.py, 48 x 22 mm in the rear leg of the battery rail (27 mm deep; user).")]
     return s, 195, 132
 
 
@@ -291,7 +299,7 @@ def parts_on(c, ref, pin, prefix):
 
 
 def footprints(c, name):
-    """Every assigned footprint exists (stock library, project library); the unassigned ones are the known three."""
+    """Every part has a footprint and it exists (stock library, project library)."""
     text = (HW / name / f"{name}.kicad_sch").read_text()
     missing, empty = [], []
     for m in re.finditer(r'\(property "Reference" "([A-Z]+\d+)".*?\(property "Footprint" "([^"]*)"', text, re.S):
@@ -304,7 +312,7 @@ def footprints(c, name):
         if not (base / f"{fname}.kicad_mod").exists():
             missing.append(fp)
     c.eq("footprints exist", missing, [])
-    c.eq("parts without a footprint", sorted(set(empty)), ["L1", "L2", "U2"] if name == "pod-power" else [])
+    c.eq("parts without a footprint", sorted(set(empty)), [])
 
 
 def verify_pod():
@@ -384,11 +392,14 @@ def verify_power():
          ["BAT+", "GND", ["BAT+", "VFUSE"], ["GATE", "VPACK", "VFUSE"]])   # AO3401A: 1 G, 2 S (load side), 3 D (pack side)
     c.eq("gate resistor", parts_on(c, "Q1", 1, "R"), [("100k", "GND")])
     c.eq("switch", [c.net("SW1", 1), c.net("SW1", 2), (c.net("SW1", 3) or "").startswith("unconnected-")], ["VPACK", "VSW", True])
-    c.eq("switch carries no load", sorted(r for r, _ in c.nodes["VSW"]), ["R2", "R4", "SW1"])
+    c.eq("switch carries no load", sorted(r for r, _ in c.nodes["VSW"]), ["R11", "R2", "R4", "SW1"])
     c.eq("3.3 V enable = pack cut-off divider", (parts_on(c, "U1", 7, "R"), parts_on(c, "U1", 7, "C")),
-         (sorted([(UVLO_TOP[CELLS_DRAWN], "VSW"), (UVLO_BOTTOM, "GND")]), [("100n", "GND")]))
-    for cells, top in UVLO_TOP.items():
-        k = (ohms(top) + ohms(UVLO_BOTTOM)) / ohms(UVLO_BOTTOM)
+         (sorted([(UVLO_TOP, "VSW"), (UVLO_BOTTOM, "GND")]), [("100n", "GND")]))
+    c.eq("cell-count jumper: 2.55 M from VSW in parallel when bridged", (sorted([c.net("JP1", 1), c.net("JP1", 2)]), parts_on(c, "JP1", 1, "R")),
+         (["EN_3V3", "UVLO_4"], [(UVLO_PAR, "VSW")]))
+    par = ohms(UVLO_TOP) * ohms(UVLO_PAR) / (ohms(UVLO_TOP) + ohms(UVLO_PAR))
+    for cells, top in ((6, ohms(UVLO_TOP)), (4, par)):
+        k = (top + ohms(UVLO_BOTTOM)) / ohms(UVLO_BOTTOM)
         c.eq(f"{cells} cells: on at 0.97-1.05 V, off at 0.87-0.95 V per cell", (0.97 < 1.0 * k / cells < 1.05, 0.87 < 0.9 * k / cells < 0.95), (True, True))
     c.eq("gate clamp", (c.net("D1", 1), c.net("D1", 2), c.comps["D1"]), ("VPACK", "GATE", "10V"))
     c.eq("S-CONF resistor (VSET mode, auto, discharge)", parts_on(c, "U1", 8, "R"), [("27.4k", "GND")])

@@ -1,0 +1,109 @@
+(footprint "L_Coilcraft_XGL3530"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Coilcraft XGL3530, 3.2 x 3.5 x 3.0 mm: lands 0.81 x 3.2 mm, 1.8 mm centre to centre (Document 1607-1)")
+	(tags "inductor Coilcraft XGL3530")
+	(property "Reference" "REF**"
+		(at 0 -2.75 0)
+		(layer "F.SilkS")
+		(uuid "a054a4c3-c7ff-4e1f-8090-61efed4a87cc")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "L_Coilcraft_XGL3530"
+		(at 0 2.75 0)
+		(layer "F.Fab")
+		(uuid "8699a639-d8e6-4a6e-81df-f0afb0021427")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "115c5ed1-bec7-4b57-9ce0-eea67a605439")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ebdb8cd3-efd7-4f09-b8ce-c70251b9de87")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -1.6 -1.9)
+		(end 1.6 -1.9)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "41b56023-d5e3-418a-856a-b7bd758dd9d6")
+	)
+	(fp_line
+		(start -1.6 1.9)
+		(end 1.6 1.9)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "2fe507a5-3cf1-484a-b169-35288f2b4409")
+	)
+	(fp_rect
+		(start -1.9 -2.05)
+		(end 1.9 2.05)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "9f4b6295-916e-4699-a760-4ced11b6c81d")
+	)
+	(fp_rect
+		(start -1.6 -1.75)
+		(end 1.6 1.75)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "40b0b960-d0d8-40f0-8dbe-4a0d1c6880f1")
+	)
+	(pad "1" smd rect
+		(at -0.9 0)
+		(size 0.81 3.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "9732203e-d2dc-44a5-af01-17e38ea81417")
+	)
+	(pad "2" smd rect
+		(at 0.9 0)
+		(size 0.81 3.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "be768128-ed66-4bd0-b521-2e2d300c916c")
+	)
+	(embedded_fonts no)
+)

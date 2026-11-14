@@ -330,7 +330,7 @@ and are checked against their datasheets when the schematics are written.
     **Pack cut-off (review finding, added)**: a divider on the 3.3 V converter's precise enable turns the module
     off at 0.9 V per cell and on again at 1.0 V per cell; without it the converter runs a NiMH pack down to
     2.75 V. **Its top resistor depends on the cell count: 1 M for 4, 1.33 M for 5, 1.65 M for 6 (drawn)**: the one
-    part that differs between modules. Idle cost: the two dividers draw about 6 uA at 7.2 V. Off: 3 to 13 uA.
+    part that differs between modules (**session 3: replaced by a solder jumper, below**). Idle cost: the two dividers draw about 6 uA at 7.2 V. Off: 3 to 13 uA.
   - **`hub-radio`**: 2x5 socket onto hub-core's expansion header, a bay header, 10 uF. GP0 (UART0 TX) to bay pin 9
     (the pod's MISO pin), GP1 (UART0 RX) from bay pin 10 (its MOSI pin); bay pin 6 to GND; CS, SCK, INT to
     SP1-SP3 (no Pico pin today, for a later core board). **Hub firmware must not start I2C0 on GP0 / GP1 when the
@@ -341,9 +341,66 @@ and are checked against their datasheets when the schematics are written.
     budget: 450 mA); `hub-pinmap.json` as above. Not checkable from the files: USBLC6-2 pinning (no datasheet on
     disk), whether the slide switch is break-before-make (its third contact is left unused, so it cannot short
     the pack either way), capacitor derating (no part numbers yet).
-- **Open**: footprints for the TPS630701 (RNM) and the two inductors (XGL3530, XFL4020); the pod's outline; the
-  contact part for the printed pockets; how the rail is fixed to the tray (two inserts in the rear wall are
-  assumed) and how it goes with the tilt bars and the tent base; left's width.
+- **Boards (M3b session 3, 2026-11-14)**: `tools/pcb_pod.py` places `pod`, `pod-power` and `hub-radio`,
+  `tools/route_hub.sh <board>` places, routes and checks each; DRC 0 errors, 0 unconnected, parity 0 on all three;
+  fab outputs by `tools/fab.py`. **Decided by the user (options UI, numpad shell and rail shown in FreeCAD)**:
+  - **Pod grows straight to the rear, over the rail: 30 x 50.7 mm** (bay frame a -15 .. 15, t 1.5 .. 52.2). Measured
+    first: its parts need 735 mm2, the port board's 30 x 23.5 mm is 705 mm2, so one-sided at that size was never
+    possible. Sideways was ruled out (the bay is at opposite ends on `left` and `right`). 4 copper layers (my
+    choice, not asked: inner 1 is a GND plane under the module). Module with its **antenna end on the rear edge** (body 0.3 mm inside it),
+    2.7 mm from the east edge; the footprint's own rule area (12.4 x 3.75 mm, all copper layers) is free of tracks,
+    vias, pours and foreign pads on all four layers (`pcb_pod.py --check`). USB-C at the rear edge, its shell ends
+    flush with the rail's rear face (board edge 2.51 mm inside it); lead connector on the west side over the rail,
+    mouth to the west; debug header, reset button, status LED and level shifter over the bay. Socket and holes
+    checked against the bays of the three routed key boards (worst offset 0.005 mm). **Cost, accepted with the
+    choice**: the antenna sits about 3 mm above the rail with the power board 14 mm under it and steel cells
+    beside it: range to be measured at bring-up; the fallback is the MDBT50Q-U variant with an antenna socket
+    (same footprint).
+  - **Rear leg of the rail 27 mm deep (side leg stays 19), power board 48 x 22 mm**, one side, 4 copper layers (my
+    choice). Measured first: its parts need 627 mm2, the 48 x 14 mm guess was 672 mm2. `numpad` becomes
+    107.6 x 181.4 mm. West end: pack plug (mouth to the west, into a wiring channel beside the rear cell: the
+    cell lies in the front lane of the rear leg), fuse, reverse FET, 47 uF can; slide switch on the rear edge
+    (actuator through the rail's rear wall, about 1.6 mm proud of a 2 mm wall); converters in the middle; **lead
+    connector vertical (JST BM06B-GHS-TBT, plugged from above) in the rear-east corner. The front-east corner
+    (15.5 x 6.6 mm) is cut away**: found in FreeCAD after the choice, the numpad's three side cells with a contact
+    end about 6 mm inside the board's rectangle. Two M2 holes on the front edge, both in the west half: the east
+    end needs printed posts under it (the lead is pushed in there).
+  - **Cell count by a solder jumper**: 1.65 M is always fitted (6 cells, as delivered); bridging `JP1` puts
+    2.55 M in parallel (1.0 M, 4 cells: `numpad`). One assembled board for every module. (I offered a 3-pad
+    jumper; a 2-pad one that is only ever bridged does the same without a cut.) 5 cells are no longer provided for.
+  - **Kept (user)**: TPS2553 LED rail cap, 47 uF can and gate Zener, 2x5 debug header, pack on a JST XH plug;
+    also kept: status LED, four test pads, the carrier's SP1-SP3 wires.
+  - **Footprints** (`tools/gen_kicad.py`, from the datasheets): `TI_VQFN-HR-15_2.5x3mm_RNM0015A` (land pattern
+    4222000/B; the VIN and VOUT leads are U-shaped, drawn as two legs and a bar), `L_Coilcraft_XGL3530` (lands
+    0.81 x 3.2 mm, 1.8 mm apart; drawing from a distributor's copy of Document 1607, 2020: compare with Coilcraft's
+    current sheet), `L_Coilcraft_XFL4020` (0.98 x 3.4 mm, 2.37 mm apart, Document 745-3). **KiCad's
+    `RF_Module:Raytac_MDBT50Q` against Raytac's spec: outline 10.6 x 15.6 mm, 61 pads (55 numbered round the edge
+    plus 6 inner), antenna end, the 10.5 x 3.8 mm no-ground area and the 1.6 x 1.2 mm top-layer patch 2.95 mm from
+    the edge all agree; Raytac's separate footprint package could not be downloaded, the review checked every pad
+    against the spec's drawing instead.**
+  - **Scripted copper** (`route_hub.py` `pod_power_copper`): the two converters' supply and switch pins to their
+    capacitors and inductors, 0.25 mm, each under 5 mm; the rest by the autorouter (supply nets 0.5 mm) and the
+    finishing pass. The GND via pass and the finishing pass now respect footprint rule areas and the power
+    board's notch.
+  - **Hub**: the carrier (`hub-radio`, 27.5 x 20 mm, 2 layers, stepped round the stack connector) sits on the
+    expansion header at the rear left; the bay is turned by 180 degrees, so **the pod points to the front of the
+    tower, above the Pico** (the other way its rear end would pass the rear wall). Socket checked pad by pad
+    against the routed `hub-core`. Found: the pod's module top is 27.3 mm above the core board, the plain shell
+    tube of the section ends 19.5 mm above it: **the tower's core section must be at least 9 mm taller with the
+    radio fitted** (M3 hub shell). The two antennas (Pico at x -35, pod at x -47, 13 mm higher) are close: the
+    host link and the module link may disturb each other, to measure at M6.
+  - **Independent PCB review (Opus)**: footprints, module pads (every coordinate against the spec's drawing, which
+    settles the pad pitch), mating and the lead found correct. Fixed: PGND of the 5 V converter (inductor at
+    1.15 mm, two PGND vias between its pads, two vias at each capacitor), the 3.3 V output capacitor at the chip's
+    GND end, pack current on top at 1.0 mm, crystal under its pins, level shifter capacitor at its pin, through
+    vias, module 0.3 mm inside the edge. Left open: GND copper and the USB-C shell beside the antenna area on the
+    rear edge (moving the port is a user decision), an 0603 at the converter's VIN / VOUT pins, D+ on a stub at the
+    ESD array, a support for the carrier in the hub, the "buried" via mark on `hub-conn`, `port-module`, `usb-port`.
+- **Open**: the contact part for the printed pockets; how the rail is
+  fixed to the tray and how it goes with the tilt bars and the tent base; the bay cover over the longer pod and
+  the lowered rail lid under it (the pod's underside is 0.04 mm above the rail top); posts under the power
+  board's east end; left's width; the tower's core section height; USB4085 shell overhang (2.51 mm, from KiCad's
+  footprint) against the GCT drawing.
 
 ## 3. Power
 

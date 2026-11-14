@@ -625,6 +625,48 @@ def vqfn_hr21_ryq():
                      "VQFN-HR RYQ TI TPS552892", "smd", body, -2.7, 2.7)
 
 
+def vqfn_hr15_rnm():
+    """TI RNM0015A VQFN-HR 15-pin 2.5 x 3 mm (TPS63070 SLVSC58, land pattern example 4222000/B).
+
+    Top view, origin on the package centre (PKG and SYMM lines), 3 mm axis along Y. Pins 1-4 down the left side
+    (x -1.15, y -0.75 .. 0.75), 5-8 along the bottom from the left (x -0.725, -0.225, 0.275, 0.775, y 1.4), 9-11 up
+    the right side as strips (y 0.5, 0, -0.5; 9 and 11 are 1.35 mm long centred on x 0.775, 10 is 1.7 mm long
+    centred on x 0.6), 12-15 along the top from the right. 7 / 8 (VOUT) and 12 / 13 (VIN) are one U-shaped lead
+    each: two 0.25 x 0.6 mm legs joined on the inner side by a 0.25 mm bar, drawn as two pads plus a bar pad.
+    """
+    def pad(name, x, y, sx, sy):
+        return (f'\t(pad {q(str(name))} smd roundrect (at {n(x)} {n(y)}) (size {n(sx)} {n(sy)})'
+                f' (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.2))\n')
+    body = ""
+    for i in range(4):
+        body += pad(1 + i, -1.15, -0.75 + 0.5 * i, 0.6, 0.25)
+    for num, x in ((5, -0.725), (6, -0.225), (7, 0.275), (8, 0.775)):
+        body += pad(num, x, 1.4, 0.25, 0.6)
+    for num, x in ((15, -0.725), (14, -0.225), (13, 0.275), (12, 0.775)):
+        body += pad(num, x, -1.4, 0.25, 0.6)
+    body += pad(8, 0.525, 1.225, 0.75, 0.25) + pad(12, 0.525, -1.225, 0.75, 0.25)
+    body += pad(9, 0.775, 0.5, 1.35, 0.25) + pad(10, 0.6, 0, 1.7, 0.25) + pad(11, 0.775, -0.5, 1.35, 0.25)
+    body += rect("F.Fab", -1.25, -1.5, 1.25, 1.5, 0.1)
+    body += rect("F.CrtYd", -1.7, -1.95, 1.7, 1.95, 0.05)
+    body += circle("F.SilkS", -1.75, -0.75, 0.08, 0.1, fill=True)
+    return footprint("TI_VQFN-HR-15_2.5x3mm_RNM0015A",
+                     "TI RNM0015A VQFN-HR 15-pin 2.5 x 3 mm, flip-chip leads, no thermal pad (TPS63070 land pattern 4222000/B)",
+                     "VQFN-HR RNM TI TPS63070 TPS630701", "smd", body, -2.6, 2.6)
+
+
+def coilcraft_2pad(name, descr, body_x, body_y, pad_x, pad_y, pitch):
+    """Coilcraft XGL / XFL moulded inductor: two strip lands, recommended land pattern from the datasheet."""
+    body = ""
+    for num, x in (("1", -pitch / 2), ("2", pitch / 2)):
+        body += f'\t(pad {q(num)} smd rect (at {n(x)} 0) (size {n(pad_x)} {n(pad_y)}) (layers "F.Cu" "F.Paste" "F.Mask"))\n'
+    hx, hy = body_x / 2, body_y / 2
+    body += rect("F.Fab", -hx, -hy, hx, hy, 0.1)
+    for y in (-hy - 0.15, hy + 0.15):
+        body += f'\t(fp_line (start {n(-hx)} {n(y)}) (end {n(hx)} {n(y)}) (stroke (width 0.12) (type solid)) (layer "F.SilkS"))\n'
+    body += rect("F.CrtYd", -hx - 0.3, -hy - 0.3, hx + 0.3, hy + 0.3, 0.05)
+    return footprint(name, descr, "inductor Coilcraft " + name.split("_")[-1], "smd", body, -hy - 1.0, hy + 1.0)
+
+
 def picostar_yjc3():
     """TI YJC0003A PicoStar / FemtoFET F4, 1.0 x 0.6 mm, 3 lands (CSD25483F4 SLPS449F section 7.2).
 
@@ -971,6 +1013,13 @@ FOOTPRINTS = {
     "BatteryHolder_MPD_BC4AAPC_4xAA": bc4aapc(),
     "TI_VQFN-HR-21_5x3mm_RYQ0021A": vqfn_hr21_ryq(),
     "TI_PicoStar-3_1.0x0.6mm_YJC0003A": picostar_yjc3(),
+    "TI_VQFN-HR-15_2.5x3mm_RNM0015A": vqfn_hr15_rnm(),
+    "L_Coilcraft_XGL3530": coilcraft_2pad(
+        "L_Coilcraft_XGL3530", "Coilcraft XGL3530, 3.2 x 3.5 x 3.0 mm: lands 0.81 x 3.2 mm, 1.8 mm centre to centre (Document 1607-1)",
+        body_x=3.2, body_y=3.5, pad_x=0.81, pad_y=3.2, pitch=1.8),
+    "L_Coilcraft_XFL4020": coilcraft_2pad(
+        "L_Coilcraft_XFL4020", "Coilcraft XFL4020, 4.0 x 4.0 x 2.1 mm: lands 0.98 x 3.4 mm, 2.37 mm centre to centre (Document 745-3)",
+        body_x=4.0, body_y=4.0, pad_x=0.98, pad_y=3.4, pitch=2.37),
     "RotaryEncoder_Bourns_PEC11R-4xxxF-Sxxxx_Vertical": pec11r_switch(),
     "Kinetic_WLCSP-20_1.935x2.16mm_Layout4x5_P0.4mm": csp(
         "Kinetic_WLCSP-20_1.935x2.16mm_Layout4x5_P0.4mm",

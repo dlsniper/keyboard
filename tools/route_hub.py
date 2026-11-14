@@ -506,6 +506,77 @@ def port_module_copper(b):
     return c.count
 
 
+# ---- pod-power: the converters' pins (tools/pcb_pod.py; M3b session 3) -------------------------------------------
+def pod_power_copper(b):
+    """Power board of a cable-free module (4 layers). Locked before the autorouter, 0.25 mm, each under 3 mm long:
+    TPS630701 (U2): VIN pins 12 / 13 straight up into the input capacitor's pad, VOUT pins 7 / 8 straight down into
+    the first output capacitor's pad, FB (5) round the open pin 6 to the same pad, the L1 / L2 strips (11 / 9) out to
+    the inductor's pads with the PGND strip (10) between them to a via between the inductor's pads.
+    TPS629210 (U1, turned by 180 degrees): VIN (6) and GND (5) to the input capacitor standing beside them, SW (4)
+    to the inductor. Everything else is the autorouter's (Power class 0.5 mm for the supply nets)."""
+    c = Cu(b)
+    u2, u1 = c.find("U", "L5A"), c.find("U", "SW_3V3")
+    cin = c.nearest(c.pad(u2, "13"), "VPACK", "10u")
+    cout = c.nearest(c.pad(u2, "7"), "+5V_RAW", "22u")
+    for n in ("12", "13"):
+        x, y = c.pad(u2, n)
+        if abs(x - cin[0]) > 0.5 or cin[1] > y:
+            sys.exit("pod-power: the 5 V converter's input capacitor is not above pins 12 / 13")
+        c.track("VPACK", [(x, y), (x, cin[1] + 0.5)], 0.25)
+    for n in ("7", "8"):
+        x, y = c.pad(u2, n)
+        if abs(x - cout[0]) > 0.5 or cout[1] < y:
+            sys.exit("pod-power: the 5 V converter's output capacitor is not below pins 7 / 8")
+        c.track("+5V_RAW", [(x, y), (x, cout[1] - 0.5)], 0.25)
+    fx, fy = c.pad(u2, "5")
+    c.track("+5V_RAW", [(fx, fy), (fx, fy + 0.75), (cout[0] - 0.4, cout[1] - 0.5)], 0.2)
+    ind = c.find("L", "L5A")
+    (ax, ay), (bx, by) = c.pad(ind, "1"), c.pad(ind, "2")
+    (x11, y11), (x9, y9), (x10, y10) = c.pad(u2, "11"), c.pad(u2, "9"), c.pad(u2, "10")
+    if not (ay < y11 < y10 < y9 < by and ax > x11 + 3):
+        sys.exit("pod-power: the 5 V inductor's pads are not beside the strips they belong to")
+    # review: inductor 1.15 mm from the strips' ends; 0.25 mm only while the three run side by side, then 0.6 mm;
+    # PGND to two vias between the inductor's pads, two more vias at each capacitor's GND pad (plane: inner 1)
+    c.track("L5A", [(x11, y11), (ax - 2.7, y11), (ax - 2.0, ay + 0.2)], 0.25)
+    c.track("L5A", [(ax - 2.0, ay + 0.2), (ax - 1.0, ay + 0.2)], 0.6)
+    c.track("L5B", [(x9, y9), (bx - 2.7, y9), (bx - 2.0, by - 0.2)], 0.25)
+    c.track("L5B", [(bx - 2.0, by - 0.2), (bx - 1.0, by - 0.2)], 0.6)
+    c.track("GND", [(x10, y10), (ax - 1.9, y10)], 0.25)
+    c.track("GND", [(ax - 1.1, y10), (ax + 0.1, y10)], 0.5)
+    for dx in (-1.1, 0.1):
+        c.via("GND", ax + dx, y10, 0.6, 0.3)
+    for cap, sign in ((cin, -1), (cout, 1)):
+        gx, gy = cap[0] + 2.95, cap[1]
+        c.track("GND", [(gx, gy - 0.5), (gx + 1.25, gy - 0.5)], 0.5)
+        c.track("GND", [(gx, gy + 0.5), (gx + 1.25, gy + 0.5)], 0.5)
+        for dy in (-0.5, 0.5):
+            c.via("GND", gx + 1.25, gy + dy, 0.6, 0.3)
+    j1, f1 = c.find("J", "BAT+"), c.find("F", "BAT+")
+    (px, py), (qx, qy) = c.pad(j1, "1"), c.pad(f1, "1")
+    if not (qx < px and qy > py + 8):
+        sys.exit("pod-power: the fuse is not in front of the pack plug")
+    c.track("BAT+", [(px, py), (px + 2.15, py), (px + 2.15, qy - 3.9), (px + 0.65, qy - 2.6), (qx + 0.6, qy - 2.6), (qx, qy - 1.3)], 1.0)   # review: the pack current on top, 1 mm
+    (vx, vy), (gx, gy), (sx, sy) = c.pad(u1, "6"), c.pad(u1, "5"), c.pad(u1, "4")
+    cv = c.nearest((vx, vy), "VPACK", "10u")
+    cg = c.nearest((gx, gy), "GND", "10u")
+    if not (cv[0] < vx - 1 and cv[1] > vy and cg[1] < gy):
+        sys.exit("pod-power: the 3.3 V converter's input capacitor does not stand beside pins 5 / 6")
+    c.track("VPACK", [(vx, vy), (vx - 0.66, vy), (cv[0] + 0.7, cv[1] - 0.5)], 0.25)
+    c.track("GND", [(gx, gy), (gx - 0.66, gy), (cg[0] + 0.7, cg[1] + 0.5)], 0.25)
+    l1 = c.find("L", "SW_3V3")
+    lx, ly = c.pad(l1, "1")
+    if not (lx > sx + 1.5 and abs(ly - sy) < 1.5):
+        sys.exit("pod-power: the 3.3 V inductor is not beside the SW pin")
+    c.track("SW_3V3", [(sx, sy), (lx - 0.2, sy)], 0.25)
+    return c.count
+
+
+def pod_copper(b):
+    """Radio pod (4 layers): nothing is scripted; the module's own rule area keeps the antenna end free and
+    tools/pcb_pod.py --check proves it on the routed board."""
+    return 0
+
+
 # ---- usb-port: KTS1693 ball field, both VBUS paths, receptacle pairs ---------------------------------------------
 def usb_port_copper(b):
     """Host port board (tools/pcb_port.py usb_port; 4 layers: F parts and signals, In1 GND plane, In2 the two VBUS
@@ -731,6 +802,8 @@ def gnd_vias(b):
     gnd = b.FindNet("GND")
     edge = b.GetBoardEdgesBoundingBox()
     segs, dots, boxes = [], [], []
+    no_via = [(k.GetLeft(), k.GetTop(), k.GetRight(), k.GetBottom()) for z in [z for f in b.GetFootprints() for z in f.Zones()] + list(b.Zones())
+              if z.GetIsRuleArea() and z.GetDoNotAllowVias() for k in [z.GetBoundingBox()]]
     for t in b.GetTracks():
         if t.Type() == pcbnew.PCB_VIA_T:
             dots.append((t.GetPosition().x, t.GetPosition().y, t.GetWidth(F) // 2, t.GetNetname()))
@@ -756,6 +829,8 @@ def gnd_vias(b):
     def via_ok(x, y, r, own, near):
         if not (edge.GetLeft() + mm(0.6) < x < edge.GetRight() - mm(0.6) and edge.GetTop() + mm(0.6) < y < edge.GetBottom() - mm(0.6)):
             return False
+        if any(k[0] - r - mm(0.2) < x < k[2] + r + mm(0.2) and k[1] - r - mm(0.2) < y < k[3] + r + mm(0.2) for k in no_via):
+            return False                                        # a footprint's own rule area (the pod's antenna end)
         ns, nd, nb = near
         if any(s[5] != "GND" and seg_d(x, y, s) < r + s[4] + mm(0.2) for s in ns):
             return False
@@ -1444,15 +1519,19 @@ def main():
     b = pcbnew.LoadBoard(str(pcb))
     if len(b.GetTracks()):
         sys.exit(f"{pcb.name} already has tracks; re-run tools/pcb_hub.py (port boards: pcb_port.py) --force {name} first")
-    four = name in ("hub-conn", "port-module", "usb-port")
+    four = name in ("hub-conn", "port-module", "usb-port", "pod", "pod-power")
     if name == "chain-cap":
         print(f"{name}: {cap_copper(b)} scripted segments")
         pcbnew.SaveBoard(str(pcb), b)
         sys.stdout.flush()
         os._exit(0)
     if four:
-        copper = {"hub-conn": hub_conn_copper, "port-module": port_module_copper, "usb-port": usb_port_copper}[name]
+        copper = {"hub-conn": hub_conn_copper, "port-module": port_module_copper, "usb-port": usb_port_copper,
+                  "pod": pod_copper, "pod-power": pod_power_copper}[name]
         print(f"{name}: {copper(b)} scripted segments and vias")
+        if name == "pod-power":                     # the cut-away front-east corner (pcb_pod.NOTCH): the router, the via
+            e = b.GetBoardEdgesBoundingBox()        # pass and the finishing pass know the outline only as a rectangle
+            keep_out(b, mm(132.5 - 0.35), mm(115.4 - 0.35), e.GetRight() + mm(1), e.GetBottom() + mm(1), "EDGE_notch")
         gnd_vias(b)                                 # before the router, so that it leaves them their room
         router_fences(b)
     if "--no-route" not in sys.argv:
@@ -1465,6 +1544,10 @@ def main():
     for v in b.GetTracks():                         # imported vias take the net class drill: 0.4 mm in a 0.6 mm via
         if v.Type() == pcbnew.PCB_VIA_T and not v.IsLocked() and v.GetWidth(F) < mm(0.7):
             v.SetDrill(mm(0.3))
+    if name in ("pod", "pod-power"):                # review: with inner 1 taken out of the router's input its vias come back
+        for v in b.GetTracks():                     # marked as buried (F to B); the older 4-layer boards still carry that mark
+            if v.Type() == pcbnew.PCB_VIA_T:
+                v.SetViaType(pcbnew.VIATYPE_THROUGH)
     thin = [t for t in b.GetTracks() if t.Type() != pcbnew.PCB_VIA_T and t.GetWidth() < mm(0.15)]
     for t in thin:                                  # the router necks a few stubs down below the board's minimum
         t.SetWidth(mm(0.15))

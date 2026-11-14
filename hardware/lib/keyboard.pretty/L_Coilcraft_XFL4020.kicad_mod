@@ -1,0 +1,109 @@
+(footprint "L_Coilcraft_XFL4020"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Coilcraft XFL4020, 4.0 x 4.0 x 2.1 mm: lands 0.98 x 3.4 mm, 2.37 mm centre to centre (Document 745-3)")
+	(tags "inductor Coilcraft XFL4020")
+	(property "Reference" "REF**"
+		(at 0 -3 0)
+		(layer "F.SilkS")
+		(uuid "1d134a95-5ca7-4513-9f1b-c731a3a5bea0")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Value" "L_Coilcraft_XFL4020"
+		(at 0 3 0)
+		(layer "F.Fab")
+		(uuid "7a8e02d3-9c48-4778-b040-845975fe6720")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "d06dc961-a837-4132-9956-c07d21106cee")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "35c8093a-8bbd-4077-a49e-ec099e9f378f")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -2 -2.15)
+		(end 2 -2.15)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "bfba61cb-b18e-4b50-b7b0-5d70fe92179c")
+	)
+	(fp_line
+		(start -2 2.15)
+		(end 2 2.15)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "565c8523-8741-4e0b-950b-6b648f188c7b")
+	)
+	(fp_rect
+		(start -2.3 -2.3)
+		(end 2.3 2.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "af1e55f8-a9de-432e-a502-2b858087bd0d")
+	)
+	(fp_rect
+		(start -2 -2)
+		(end 2 2)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "28b2798c-2fdb-41cb-93a1-4ee05e30b9d3")
+	)
+	(pad "1" smd rect
+		(at -1.185 0)
+		(size 0.98 3.4)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "43b3c0c5-85f8-4154-b336-7ff448ac6046")
+	)
+	(pad "2" smd rect
+		(at 1.185 0)
+		(size 0.98 3.4)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "ced7b1c5-d279-4a1f-b97c-72b765b4bcc7")
+	)
+	(embedded_fonts no)
+)
