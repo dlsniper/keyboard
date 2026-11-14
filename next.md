@@ -589,9 +589,50 @@ left's width for the sixth cell, the hub's core section with the carrier (9 mm t
 base, palm rest.
 **The user had KiCad open during the session**: reload `pod`, `pod-power`, `hub-conn`, `port-module`, `usb-port`
 there; do not save an old view over them.
-**Next**: fit prints of the pieces above; then `left` / `right` shells with the rail and left's width (FreeCAD
-first), the hub's core section with the carrier, tent base and palm rest. The order (D7) still waits for M4 step 2
-(SPI over the real cable).
+**M3 session 3 done (2026-11-14): `left` and `right` shells, wired and wireless, 0 clashes; `plate-right` re-run
+(two dial holes). No key board, pod, power board or hub board changed; nothing is placed or routed again.**
+Details and numbers: spec §2a (dial, tent base, palm rest), §2b "left and right".
+**User decisions (options UI; FreeCAD documents `case_left` with groups `Q1A` / `Q1B` / `Q1C` / `POSE_*`,
+`case_right` with `DIAL_*`, `case_left_pod`, `case_right_pod`; all left open, unsaved)**:
+- **`left`: 4 cells, not widened** (3 side + 1 rear as the numpad, `JP1` bridged). The user's wider-shell idea was
+  measured first: the rear lane beside the power board is 91 mm, two cells need 109 mm, so `left` never held 5;
+  +18 mm gives 5, +68 mm gives 6. `right` keeps 6 (3 side + 3 rear).
+- **Dial board on top of the plate, two M2 holes in `plate-right`** (key board untouched), nuts in a printed frame
+  under the plate, printed hood, wires down a notch in the rear wall to J3.
+- **Tent base: screwed, four M2 from below; its underside repeats the tray's inserts and feet** (same tilt bars
+  fit under it). Two more inserts near the rear edge are in the `left` / `right` trays.
+- **Palm rest: screwed tongue under the tray's front (the tilt-bar inserts); with it fitted the tilt bar goes under
+  the palm rest's front edge and the tent base is the long form.**
+- **Split-side end of the rail square to the rear edge** (asked when found: the pod's rear corner meets the leaning
+  split line); two wireless halves pushed together stay about 7 mm apart.
+- **Fit prints: none yet.** The user asked whether I meant 3D or inkjet prints: **3D prints (FDM, ASA) of the STL
+  fit pieces**; say so explicitly next time.
+**Scripts**: `mech/case/build_case.py` (`CASE_MODULE=left|right|numpad`, `CASE_VARIANT=pod` for the wireless one;
+grep pattern as above plus `dial:\|power board:`) writes `build/case/<name>/` and `build/case/<name>-pod/`:
+`tray`, `cover`, `spacers`, `sleeves`, `tilt4`, `tilt7`, on `right` also `dial-hood` and `dial-frame`, in the pod
+variant `lid-side` and `lid-rear`. New in it: `offs()` (outline with the rail as a quad of moved edges), tent-base
+inserts (`rear_boss`), the dial block, the bay cover's side by `inner_sign`. `mech/case/pod_case.py` rewritten on a
+rear frame and a side frame (header explains the three layouts); the numpad's parts come out with the same volumes
+as before. `tools/pcb_plate.py`: `DIAL` (opening 17.0 x 16.75 mm), `DIAL_HOLES`, `dial_holes` in the dump (the case
+gives them no spacer). `tools/case_dump.py right` was re-run; `build/case/left.json` and `right.json` exist now.
+**Sizes**: wired `left` 154.4 x 169.6, `right` 246.0 x 175.6; wireless `left` 173.4 x 198.2, `right` 265.0 x 203.9
+(**H2S only: wider than the CORE One's bed**), 19 mm rail. Tilt bars at the screws: 4 / 7 degrees.
+**Found and fixed on the way**: the bay cover of `right` ran along the whole rear strip (mirrored now); a tilt-bar
+insert could land in a foot recess (kept clear now; the numpad's bar moved, its tray volume is the same).
+**Not done (budget), in this order for the next session**: tent base, palm rest and the long tilt bars as parts
+(only the joints are decided and the tray inserts exist); the hub's core section with the carrier (at least 9 mm
+taller, a support for the carrier: `mech/hub/` was not opened this session); a support under the pod's rear end
+(looked at: `left`'s power board has its front-east notch free under the pod, 10 to 17 mm behind the screws; a
+ledge on the rear wall meets the lead connector's envelope on `left`; nothing drawn).
+**To check on parts**: lead plug on `right` (5.8 mm between the pod connector's mouth and the cover); GH plug of
+the dial board beside the hood's screw pillar (0.3 mm); M2 nuts in the frame's pockets (4.1 mm across flats); the
+7.0 x 1.4 mm wire notch with five wires; the rear lid of `right` is 223 mm long (stiffness, groove play).
+**Fit print first (3D, ASA; nothing printed yet)**: the numpad pieces listed above stay the ones to print; they
+cover every feature of `left` and `right` except the dial parts (`build/case/right/right-dial-hood.stl`,
+`right-dial-frame.stl`).
+**The user had KiCad open during the session**: reload `plate-right` there; do not save an old view over it.
+**Next**: fit prints (3D); tent base, palm rest, long tilt bars; the hub's core section with the carrier; the pod's
+rear support. The order (D7) still waits for M4 step 2 (SPI over the real cable).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

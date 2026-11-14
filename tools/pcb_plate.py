@@ -11,7 +11,8 @@ A plate is FR4 with no copper: an outline, cut-outs and holes, all generated (a 
   board stands on the key board there and is taller than the plate);
 - per key a square switch cut-out (CUTOUT, Cherry MX: 14.0 mm; the M0 test cell's 14.1 mm was an FDM figure) at the
   position and angle from layout/keys.json; per stabilised key two Cherry cut-outs with the wire notch;
-- a slot over the spare-pin header, an opening at the dial (provisional until the dial board's mounting, M3);
+- a slot over the spare-pin header; at the dial an opening for the encoder's pins and two M2 holes for the dial
+  board, which lies on the plate (user, 2026-11-14);
 - M2 holes on the key board's holes (read from the key board: the case may move them at M3, then re-run).
 Checked against the routed key board, and the script stops on a failure: every switch footprint under its cut-out
 (position and angle), every stabiliser's holes under its cut-outs with the wire notch on the large-hole side, the
@@ -39,7 +40,11 @@ BAY_CLEAR = 1.5          # plate edge to the port board, sideways
 BAY_T0 = 0.5             # the notch's front edge, behind the F-row cap line (the port board starts at 1.5)
 PORT = (-15.0, 15.0, 1.5, 25.0)      # the port board in the bay frame (tools/pcb_port.py)
 FIELD_T = 0.5            # --field-only: rear edge this far behind the cap line
-DIAL = 17.0              # square opening at the dial (provisional)
+# Dial (user, 2026-11-14): the dial board (hardware/dial, 20 x 34 mm) lies ON the plate, long end to the rear, held by
+# two M2 screws into nuts under the plate. Opening for the encoder's pins and lugs, in the key's frame (x, y to the
+# front): pads A/B/C at y = -7.5, S1/S2 at y = +7, lugs at x = +-6.6. Holes = the dial board's H901 / H902.
+DIAL = (-8.5, 8.5, -8.7, 8.05)
+DIAL_HOLES = ((0.0, 10.4), (7.0, -18.3))
 SLOT_W = 3.6             # slot over the spare-pin header
 WEB_MIN = 1.2            # least FR4 between two cut-outs
 EDGE_MIN = 1.5           # least FR4 between a cut-out and the outline
@@ -159,7 +164,7 @@ def build(name, field_only):
     h = CUTOUT / 2
     for k in keys:
         if k["kind"] == "encoder":
-            cuts.append(("dial", k["id"], framed(k, ((-DIAL / 2, -DIAL / 2), (DIAL / 2, -DIAL / 2), (DIAL / 2, DIAL / 2), (-DIAL / 2, DIAL / 2)))))
+            cuts.append(("dial", k["id"], framed(k, ((DIAL[0], DIAL[2]), (DIAL[1], DIAL[2]), (DIAL[1], DIAL[3]), (DIAL[0], DIAL[3])))))
             continue
         cuts.append(("switch", k["id"], framed(k, ((-h, -h), (h, -h), (h, h), (-h, h)))))
         if k["stab"]:
@@ -181,6 +186,9 @@ def build(name, field_only):
 
     # holes: the key board's, where the plate has material round them
     holes = [p for p in kb_holes if within(edge, p) and min(seg_dist(p, edge[i - 1], edge[i]) for i in range(len(edge))) >= 2.0]
+
+    dial_holes = [framed(k, (h,))[0][0] for k in keys if k["kind"] == "encoder" for h in DIAL_HOLES]
+    kb_only, holes = holes, holes + dial_holes
 
     # ---- checks against the key board
     cut_of = {kid: pts for kind, kid, pts in cuts if kind == "switch"}
@@ -245,9 +253,9 @@ def build(name, field_only):
     if margin[0] < EDGE_MIN:
         errors.append(f"only {margin[0]:.2f} mm between {margin[1]} and the outline")
     info = (f"{sum(1 for c in cuts if c[0] == 'switch')} switch cut-outs, {len(stab_polys)} stabiliser cut-outs, "
-            f"{sum(1 for c in cuts if c[0] in ('slot', 'dial'))} other openings, {len(holes)} of {len(kb_holes)} holes; "
+            f"{sum(1 for c in cuts if c[0] in ('slot', 'dial'))} other openings, {len(kb_only)} of {len(kb_holes)} holes, {len(dial_holes)} for the dial board; "
             f"least web {web[0]:.2f} mm ({web[1]}), least edge margin {margin[0]:.2f} mm ({margin[1]})")
-    geom = {"outline": edge, "cuts": [q for _, _, q in polys], "holes": holes, "hole_d": HOLE_D, "port": port,
+    geom = {"outline": edge, "cuts": [q for _, _, q in polys], "holes": kb_only, "dial_holes": dial_holes, "hole_d": HOLE_D, "port": port,
             "board": [list(c) for c in corners], "thickness": THICKNESS, "plate_z": PLATE_Z}
     return outline, shapes, holes, errors, info, geom, at
 

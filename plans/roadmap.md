@@ -142,7 +142,11 @@ Hub boards stay 94 mm.
 
 **Progress:** session 1 (2026-11-14): `mech/case/build_case.py` + `tools/case_dump.py`, numpad tray, bay cover,
 spacers, sleeves, tilt bars, two fit-print pieces; the key boards' M2 holes are final as routed. Session 2
-(2026-11-14): the wireless numpad shell (see M3b session 4); `left`, `right` and the hub tower still to do.
+(2026-11-14): the wireless numpad shell (see M3b session 4). Session 3 (2026-11-14): `left` and `right` shells in
+both variants (0 clashes); decided (options UI, FreeCAD): `left` 4 cells and not widened, dial board on the plate
+on two new holes in `plate-right`, tent base screwed with four M2 and repeating the tray's underside, palm rest on
+a screwed tongue with the pose parts under both, square split-side rail end. Still to do: tent base, palm rest and
+long tilt bars as parts, the hub tower (core section with the carrier first), the pod's rear support, fit prints.
 
 **Exit check:** everything assembles with no rework; the user has typed on it for a day.
 

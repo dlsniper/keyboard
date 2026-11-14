@@ -104,6 +104,24 @@ def log(s):
     App.Console.PrintMessage(s + "\n")
 
 
+def offs(P, dist):
+    """Quad P (front x outer, outer x rear, rear x inner, inner x front) with its edges (outer, rear, inner, front) moved out by dist."""
+    cen = (P[0] + P[1] + P[2] + P[3]) * 0.25
+    lines = []
+    for i in range(4):
+        a, b = P[i], P[(i + 1) % 4]
+        u = b - a; u.normalize()
+        n = V(u.y, -u.x, 0)
+        if n.dot(a - cen) < 0:
+            n = n * -1
+        lines.append((a + n * dist[i], u))
+    Q = []
+    for i in range(4):
+        (p, u), (q, w) = lines[i - 1], lines[i]
+        Q.append(p + u * (((q.x - p.x) * w.y - (q.y - p.y) * w.x) / (u.x * w.y - u.y * w.x)))
+    return Q
+
+
 def build(name):
     d = json.load(open(os.path.join(ROOT, "build", "case", name + ".json")))
     xs = [c[0] for c in d["corners"]]; ys = [c[1] for c in d["corners"]]
@@ -136,6 +154,9 @@ def build(name):
     for s in bay_screws:
         assert min((s - h).Length for h in holes) < 0.02, "bay screw is not on a key board hole"
     FAR = 400.0
+    P = [c(p) for p in d["corners"]]              # front x outer, outer x rear, rear x inner, inner x front
+    side = 2 if name == "numpad" else 0           # the rail's side leg: on the numpad's bay side (its right), on left / right the outer side
+    Tq = offs(P, [CLEAR + WALL] * 4)
 
     # ---- board, plate, port board, caps (reference solids)
     board = prism(board_f, Z_BOARD, Z_BTOP)
@@ -143,7 +164,7 @@ def build(name):
         board = board.cut(cyl(h, 2.2, Z_BOARD - 1, Z_BTOP + 1))
     plate = prism(poly([c(p) for p in d["plate"]["outline"]]), Z_PLATE, Z_PTOP)
     cuts = [prism(poly([c(p) for p in q]), Z_PLATE - 1, Z_PTOP + 1) for q in d["plate"]["cuts"]]
-    cuts += [cyl(h, d["plate"]["hole_d"], Z_PLATE - 1, Z_PTOP + 1) for h in plate_holes]
+    cuts += [cyl(h, d["plate"]["hole_d"], Z_PLATE - 1, Z_PTOP + 1) for h in plate_holes + [c(h) for h in d["plate"].get("dial_holes", [])]]
     plate = plate.cut(Part.makeCompound(cuts))
     pa0, pa1, pt0, pt1 = bay["port"]
     port = prism(poly([B(pa0, pt0), B(pa1, pt0), B(pa1, pt1), B(pa0, pt1)]), Z_PORT, Z_PORT_TOP)
@@ -194,27 +215,49 @@ def build(name):
     t_front = min(tt(c(p)) for p in d["corners"])
     bbx = board_f.BoundBox
     grid = [V(bbx.XMin + i, bbx.YMin + j, 0) for i in range(int(bbx.XLength) + 1) for j in range(int(bbx.YLength) + 1)]
-    wide = [p for p in grid if tt(p) < t_front + 16.0 and free(p, BOSS_D / 2 + 0.5)]
-    foot_boss = [min(wide, key=lambda p: (round(aa(p)), tt(p))), max(wide, key=lambda p: (round(aa(p)), -tt(p)))]
-    assert aa(foot_boss[1]) - aa(foot_boss[0]) > 30.0, "no two places for the tilt bar inserts"
-    posts = [p for p in posts if all((p - q).Length > POST_D / 2 + BOSS_D / 2 for q in foot_boss)]
-    for p in posts:
-        tray = tray.fuse(cyl(p, POST_D, FLOOR - 0.1, Z_BOARD - POST_GAP))
-    for p in foot_boss:
-        tray = tray.fuse(cyl(p, BOSS_D, FLOOR - 0.1, Z_BOARD - POST_GAP)).cut(cyl(p, INSERT_D, -1, FOOT_INSERT))
-    for h in holes:
-        tray = tray.cut(cyl(h, INSERT_D, Z_BOARD - INSERT_DEPTH, Z_BOARD + 1))
     cen = V(0, 0, 0)
     feet = []
     for p in d["corners"]:
         q = c(p); n = cen - q; n.normalize()
         feet.append(q + n * (FOOT_INSET * math.sqrt(2)))
+    off_feet = lambda p: all((p - q).Length > (FOOT_D + BOSS_D) / 2 + 0.5 for q in feet)
+    wide = [p for p in grid if tt(p) < t_front + 16.0 and free(p, BOSS_D / 2 + 0.5) and off_feet(p)]
+    foot_boss = [min(wide, key=lambda p: (round(aa(p)), tt(p))), max(wide, key=lambda p: (round(aa(p)), -tt(p)))]
+    assert aa(foot_boss[1]) - aa(foot_boss[0]) > 30.0, "no two places for the tilt bar inserts"
+    rear_boss = []
+    if name != "numpad":                          # tent base (user, 2026-11-14): four screws from below, so two more inserts near the rear edge
+        t_back = max(tt(p) for p in P)
+        back = [p for p in grid if tt(p) > t_back - 16.0 and free(p, BOSS_D / 2 + 0.5) and off_feet(p)]
+        rear_boss = [min(back, key=lambda p: (round(aa(p)), -tt(p))), max(back, key=lambda p: (round(aa(p)), -tt(p)))]
+        assert aa(rear_boss[1]) - aa(rear_boss[0]) > 30.0, "no two places for the tent base's rear inserts"
+    under = foot_boss + rear_boss
+    posts = [p for p in posts if all((p - q).Length > POST_D / 2 + BOSS_D / 2 for q in under)]
+    for p in posts:
+        tray = tray.fuse(cyl(p, POST_D, FLOOR - 0.1, Z_BOARD - POST_GAP))
+    for p in under:
+        tray = tray.fuse(cyl(p, BOSS_D, FLOOR - 0.1, Z_BOARD - POST_GAP)).cut(cyl(p, INSERT_D, -1, FOOT_INSERT))
+    for h in holes:
+        tray = tray.cut(cyl(h, INSERT_D, Z_BOARD - INSERT_DEPTH, Z_BOARD + 1))
+    dial = next((k for k in d["keys"] if k["kind"] == "encoder"), None)
+    if dial:                                      # the dial's five wires: from the plate down to J3 under the key board, in the rear wall's inner face
+        a_d = aa(c((dial["x"], dial["y"])))
+        tray = tray.cut(prism(poly([B(a_d - 8.5, d["rear"]), B(a_d - 1.5, d["rear"]), B(a_d - 1.5, d["rear"] + CLEAR + 1.4),
+                                    B(a_d - 8.5, d["rear"] + CLEAR + 1.4)]), FLOOR, Z_WALL + 1))
     tray0 = tray
     if VARIANT == "pod":
-        ob = outer_f.BoundBox
-        rx1, ry1 = ob.XMax + RAIL_SIDE, ob.YMax + RAIL_REAR
-        feet = [V(ob.XMin + FOOT_INSET, ob.YMin + FOOT_INSET, 0), V(rx1 - FOOT_INSET, ob.YMin + FOOT_INSET, 0),
-                V(ob.XMin + FOOT_INSET, ry1 - FOOT_INSET, 0), V(rx1 - FOOT_INSET, ry1 - FOOT_INSET, 0)]
+        dist = [CLEAR + WALL] * 4
+        dist[1] += RAIL_REAR; dist[side] += RAIL_SIDE
+        Rq = offs(P, dist)                        # the module's outline with the rail
+        Rpts = list(Rq)
+        if side != 2:                             # left / right (user, 2026-11-14): behind the tray the rail ends square to the rear edge, not
+            Rq[2] = Tq[2] + ut * RAIL_REAR        # along the leaning split line (the pod's rear corner would meet that line); two wireless
+            Rpts = [Rq[0], Rq[1], Rq[2], Tq[2], Rq[3]]    # halves pushed together stay about 7 mm apart
+        R = poly(Rpts).makeOffset2D(-5.7, join=2).makeOffset2D(5.7)
+        feet = []
+        for i in range(4):
+            u0 = Rq[i - 1] - Rq[i]; u0.normalize()
+            u1 = Rq[(i + 1) % 4] - Rq[i]; u1.normalize()
+            feet.append(Rq[i] + (u0 + u1) * FOOT_INSET)
     for q in feet:
         tray = tray.cut(cyl(q, FOOT_D, -1, FOOT_DEPTH))
     tray = tray.removeSplitter()
@@ -222,11 +265,14 @@ def build(name):
     # ---- tilt bars: tray on its rear Bumpons, the bar under the front; the bar's underside is parallel to the desk
     t_rear = max(tt(q) for q in feet)
     a0, a1 = aa(foot_boss[0]) - 9.0, aa(foot_boss[1]) + 9.0
-    if VARIANT == "pod":
-        a1 = aa(V(rx1, 0, 0))                    # the bar runs on under the side leg of the rail
+    if VARIANT == "pod":                          # the bar runs on under the side leg of the rail
+        if aa(Rq[side]) + aa(Rq[(side + 1) % 4]) > 2 * aa(cen):
+            a1 = max(aa(q) for q in Rq)
+        else:
+            a0 = min(aa(q) for q in Rq)
     t0, t1 = min(tt(p) for p in foot_boss) - BAR_DEPTH / 2, max(tt(p) for p in foot_boss) + BAR_DEPTH / 2
     bar_f = poly([B(a0, t0), B(a1, t0), B(a1, t1), B(a0, t1)]).common(
-        outer_f if VARIANT != "pod" else poly([V(ob.XMin, ob.YMin, 0), V(rx1, ob.YMin, 0), V(rx1, ry1, 0), V(ob.XMin, ry1, 0)]).makeOffset2D(-5.7, join=2).makeOffset2D(5.7))
+        outer_f if VARIANT != "pod" else R)
     bars = {}
     for ang in TILT:
         k_ = math.tan(math.radians(ang))
@@ -237,12 +283,15 @@ def build(name):
         bar = prism(bar_f, -80, 0).common(keep)
         for p in foot_boss:
             bar = bar.cut(cyl(p, SCREW_D, -90, 1)).cut(cyl(p, HEAD_D, -90, -BAR_UNDER))
+        for p in rear_boss:                       # (a deep bar may reach a rear insert: keep it open)
+            bar = bar.cut(cyl(p, INSERT_D, -90, 1))
         for q in feet:
             bar = bar.cut(cyl(q, FOOT_D + 1.2, -(BUMP_H + 0.5), 1))
         bars[f"tilt{ang:.0f}"] = (bar.removeSplitter(), -zz(min(tt(p) for p in foot_boss)))
 
     # ---- bay cover
-    half = lambda a0, t0: poly([B(a0, t0), B(FAR, t0), B(FAR, FAR), B(a0, FAR)])
+    sg = d.get("inner_sign", 1)                   # the bay is at the inner end: its open side (skirt) faces the outer end
+    half = lambda a0, t0: poly([B(sg * a0, t0), B(sg * FAR, t0), B(sg * FAR, FAR), B(sg * a0, FAR)])
     region = outer_f.common(half(SKIRT_A[0], SKIRT_T[0]))
     void = cavity_f.common(half(SKIRT_A[1], SKIRT_T[1]))
     ring = region.cut(cavity_f)
@@ -259,6 +308,36 @@ def build(name):
     win.rotate(V(0, 0, 0), V(0, 0, 1), ang); win.translate(b0)
     cover = cover.cut(win).removeSplitter()
 
+    # ---- dial (right; user, 2026-11-14): the dial board (hardware/dial, 20 x 34 mm) lies on the plate, long end to the
+    # rear; two M2 screws (front M2 x 5, rear M2 x 10 through the hood) into nuts held by a printed frame between key
+    # board and plate; a hood over its rear end, its plug and the wires. Dial frame: x east, y rear, from the encoder.
+    dparts, dref = {}, None
+    if dial:
+        assert abs(dial["rot"]) < 0.01, "the dial parts are drawn for an unrotated dial cell"
+        D = c((dial["x"], dial["y"]))
+        dbx = lambda x0, x1, y0, y1, z0, z1: Part.makeBox(x1 - x0, y1 - y0, z1 - z0, D + V(x0, y0, z0))
+        dh = [c(h) for h in d["plate"]["dial_holes"]]          # front (H901), rear (H902)
+        zt = Z_PTOP + 1.6
+        dboard = dbx(-10, 10, -12.7, 21.3, Z_PTOP, zt)
+        for h in dh:
+            dboard = dboard.cut(cyl(h, 2.2, Z_PTOP - 1, zt + 1))
+        pins = [dbx(-3.4, 3.4, 6.6, 8.4, Z_PTOP - 2.0, Z_PTOP), dbx(-3.4, 3.4, -7.9, -6.1, Z_PTOP - 2.0, Z_PTOP),
+                dbx(-8.0, -5.2, -1.8, 1.8, Z_PTOP - 2.0, Z_PTOP), dbx(5.2, 8.0, -1.8, 1.8, Z_PTOP - 2.0, Z_PTOP)]
+        dref = Part.makeCompound([dboard, dbx(-6.25, 6.25, -6.7, 6.7, zt, zt + 6.5), cyl(D, 6.0, zt + 6.5, zt + 15.0),
+                                  dbx(-5.9, 4.9, 16.0, 21.0, zt, zt + 4.25)] + pins)      # encoder, 15 mm shaft, plug J901
+        zf0, zf1 = Z_BTOP, Z_PLATE - 0.2
+        frame = dbx(-11.3, 11.3, -13.4, 21.4, zf0, zf1).cut(dbx(-8.7, 8.7, -8.2, 8.9, zf0 - 1, zf1 + 1))
+        for h in dh:                              # nut pockets from the plate side (M2 nut: 4.0 across flats, 1.6 high)
+            hexp = Part.Face(Part.makePolygon([h + V(2.37 * math.cos(math.radians(60 * i)), 2.37 * math.sin(math.radians(60 * i)), zf1 - 1.8)
+                                               for i in range(7)])).extrude(V(0, 0, 3))
+            frame = frame.cut(cyl(h, SCREW_D, zf0 - 1, zf1 + 1)).cut(hexp)
+        zh = Z_PTOP + 9.0
+        hood = dbx(-11.6, 11.6, 10.0, 80.0, Z_PTOP + 0.1, zh).common(prism(outer_f, 0, 99))
+        hood = hood.cut(dbx(-10.4, 10.4, 9.0, 80.0, 0, zh - 1.2).common(prism(cavity_f, -1, 99))).cut(prism(outer_f.cut(cavity_f), 0, Z_WALL + 0.2))
+        hood = hood.fuse(cyl(dh[1], 3.6, zt + 0.1, zh - 1.2)).fuse(cyl(dh[1], 6.8, zt + 4.4, zh))
+        hood = hood.cut(cyl(dh[1], SCREW_D, 0, 99)).cut(cyl(dh[1], HEAD_D, zh - HEAD_H, 99)).removeSplitter()
+        dparts = {"dial-hood": hood, "dial-frame": frame.removeSplitter()}
+
     # ---- small printed parts
     tube = lambda p, dia, z0, z1: cyl(p, dia, z0, z1).cut(cyl(p, SCREW_D, z0 - 1, z1 + 1))
     spacers = Part.makeCompound([tube(h, SPACER_D, Z_BTOP, Z_PLATE) for h in plate_holes])
@@ -266,7 +345,7 @@ def build(name):
 
     # ---- fit-print pieces (cut from the tray)
     bb = tray.BoundBox
-    fit_bay = tray.common(prism(poly([B(-24, -8), B(FAR, -8), B(FAR, FAR), B(-24, FAR)]), -1, 60))
+    fit_bay = tray.common(prism(half(-24, -8), -1, 60))
     q = c(d["corners"][0])
     n = cen - q; n.normalize()                    # front outer corner: a 38 mm square reaching 4 mm outside the board corner
     p0, p1 = q - n * (4 * math.sqrt(2)), q + n * (34 * math.sqrt(2))
@@ -274,7 +353,10 @@ def build(name):
 
     parts = {"tray": tray, "cover": cover, "spacers": spacers, "sleeves": sleeves}
     parts.update({k_: v[0] for k_, v in bars.items()})
+    parts.update(dparts)
     refs = {"board": board, "plate": plate, "port": port, "caps": caps}
+    if dref:
+        refs["dial"] = dref
     fits = {"fit-bay": fit_bay, "fit-front": fit_front}
     extra = []
     if VARIANT == "pod":
@@ -290,8 +372,11 @@ def build(name):
                f"plate top {Z_PTOP:.2f}, cap tops about {Z_PTOP + CAP_Z[1]:.1f}")
     rep.append(f"levels: board {Z_BOARD:.2f}-{Z_BTOP:.2f}, plate {Z_PLATE:.2f}-{Z_PTOP:.2f}, wall top {Z_WALL:.2f}, "
                f"port board {Z_PORT:.2f}-{Z_PORT_TOP:.2f}, receptacle axis {zc:.2f}")
-    rep.append(f"{len(holes)} bosses with inserts from the top ({len(plate_holes)} through the plate, 2 in the bay), 2 with inserts from below "
-               f"for the tilt bar, {len(posts)} support posts, 4 feet")
+    rep.append(f"{len(holes)} bosses with inserts from the top ({len(plate_holes)} through the plate, 2 in the bay), {len(under)} with inserts from below "
+               f"(2 at the front for the tilt bar{', 2 at the rear for the tent base' if rear_boss else ''}), {len(posts)} support posts, 4 feet")
+    if dref:
+        rep.append(f"dial: board on the plate {Z_PTOP:.2f}-{zt:.2f}, shaft top {zt + 15.0:.1f} (15 mm shaft), hood top {zh:.1f}; screws M2 x 5 (front) and "
+                   f"M2 x 10 (rear, through the hood) into nuts in the frame ({zf0:.2f}-{zf1:.2f}); wire notch 7.0 x 1.4 mm in the rear wall")
     rep.append(f"screws: plate M2 x {PLATE_T + (Z_PLATE - Z_BTOP) + PCB_T + 4:.1f} for a full insert (M2 x 10); "
                f"bay M2 x {(Z_COVER - HEAD_H - Z_PORT_TOP) + PORT_T + PORT_GAP + PCB_T + 4:.1f} for a full insert (M2 x 22)")
     rep.append("tilt bars (M2 x 6 into 2 inserts set from below): " + ", ".join(f"{k_} {v[1]:.1f} mm at the screws" for k_, v in bars.items()))
@@ -302,6 +387,12 @@ def build(name):
              ("cover", cover, "tray", tray), ("cover", cover, "board", board), ("cover", cover, "sleeves", sleeves),
              ("spacers", spacers, "plate", plate), ("spacers", spacers, "board", board), ("tray", tray, "caps", caps)]
     pairs += [(k_, v[0], "tray", parts["tray"]) for k_, v in bars.items()]
+    if dref:
+        hood, frame = dparts["dial-hood"], dparts["dial-frame"]
+        pairs += [("dial-hood", hood, "caps", caps), ("dial-hood", hood, "plate", plate), ("dial-hood", hood, "dial", dref),
+                  ("dial-hood", hood, "tray", tray), ("dial-hood", hood, "cover", cover), ("dial-frame", frame, "board", board),
+                  ("dial-frame", frame, "plate", plate), ("dial-frame", frame, "dial", dref), ("dial-frame", frame, "spacers", spacers),
+                  ("dial", dref, "caps", caps), ("dial", dref, "plate", plate), ("dial", dref, "tray", tray)]
     if VARIANT == "pod":
         pairs = [(na, parts.get(na, a), nb, parts.get(nb, refs.get(nb, b))) for na, a, nb, b in pairs] + extra[0]
         rep += extra[1]
@@ -317,7 +408,7 @@ def build(name):
 
 
 COLOURS = {"tray": (0.25, 0.27, 0.30), "cover": (0.85, 0.45, 0.10), "spacers": (0.9, 0.8, 0.1), "sleeves": (0.9, 0.8, 0.1),
-           "board": (0.05, 0.35, 0.15), "plate": (0.75, 0.70, 0.50), "port": (0.10, 0.45, 0.25), "caps": (0.85, 0.85, 0.88), "tilt4": (0.85, 0.45, 0.10), "tilt7": (0.6, 0.3, 0.1)}
+           "board": (0.05, 0.35, 0.15), "plate": (0.75, 0.70, 0.50), "port": (0.10, 0.45, 0.25), "caps": (0.85, 0.85, 0.88), "dial-hood": (0.85, 0.45, 0.10), "dial-frame": (0.9, 0.8, 0.1), "dial": (0.10, 0.45, 0.25), "tilt4": (0.85, 0.45, 0.10), "tilt7": (0.6, 0.3, 0.1)}
 
 
 def main():

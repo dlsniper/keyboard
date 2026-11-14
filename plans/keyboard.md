@@ -235,6 +235,27 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   per alpha half** (the numpad stays untented; angle to be taken from the user's K860, about 7 degrees from memory);
   **palm rest separate and attachable**, one per alpha half, none on the numpad.
 - Feet: four 3M Bumpon recesses (8.4 mm); the tilt bars carry their own.
+- **`left` and `right` (M3 session 3, 2026-11-14)**: the same script; wired trays 154.4 x 169.6 mm (`left`) and
+  246.0 x 175.6 mm (`right`), 14 clash pairs / 26 with the dial, 0 clashes. The bay cover is mirrored on `right`
+  (its open side faces the outer end; found: it was built along the whole rear strip). The tilt-bar inserts now keep
+  clear of the foot recesses.
+- **Dial on `right` (user, 2026-11-14)**: the key board runs on under the dial and only 3.4 mm lie between key board
+  and plate, so **the dial board lies on top of the plate, long end to the rear**, held by **two M2 screws through
+  two new holes in `plate-right`** (the dial board's H901 / H902; front M2 x 5, rear M2 x 10 through the hood) into
+  nuts held by a printed frame between key board and plate (`dial-frame`). The plate's dial opening became
+  17.0 x 16.75 mm (encoder pins and lugs; least web 1.25 mm to the front hole); `plate-right` re-run by
+  `tools/pcb_plate.py` (DRC 0, fab output again); **the key board is not changed**. A printed hood (`dial-hood`,
+  top 22.0, cap tops about 30.5) covers the board's rear end, its plug and the wires; the five wires go to the rear
+  wall, down a 7.0 x 1.4 mm notch in its inner face and forward under the key board to J3 (on its underside,
+  17 mm from the edge). Shaft top 29.6 with the 15 mm shaft. Serviced from the top. To check on parts: the GH
+  plug beside the hood's screw pillar (0.3 mm in the model), the encoder's tails in the opening.
+- **Tent base joint (user, 2026-11-14)**: **screwed, four M2 from below** into tray inserts: the two tilt-bar
+  inserts and two new ones near the rear edge (in the `left` and `right` trays, both variants; the numpad has
+  none). **The base's underside repeats the tray's insert pattern and feet**, so the same tilt bars screw under it.
+- **Palm rest joint (user, 2026-11-14)**: **a 3 mm tongue of the palm rest under the tray's front, two screws into
+  the tilt-bar inserts; with the palm rest fitted the pose parts go under both**: the tilt bar sits under the palm
+  rest's front edge (a taller bar from the same script), the tent base is printed in a long form. Reason: a palm
+  rest hung on the tray's front is a 72 mm lever under the hand. **Neither part is drawn yet** (preview only).
 - **Hub: `hub-core` and `battery` stay 94 mm (user, 2026-11-14, final)**; the room to the 114 mm shell is for walls,
   seam magnets and grips.
 
@@ -432,11 +453,36 @@ and are checked against their datasheets when the schematics are written.
     wire passes under the board to the pack plug.
   - Clash checks 31 pairs, 0 clashes (wired: 14, 0). Fit pieces: `fit-rail-front`, `fit-rail-rear`, `fit-power`,
     `fit-lid-side`, `fit-lid-rear`.
-- **Open**: the pod's rear end overhangs its two screws by 32 mm with nothing under it (a support has no free spot
-  on the rear wall: pack plug, can, switch and antenna); lid snap, groove play, plate slots and spring heights on
-  the fit print; slide switch actuator against its slot (C&K drawing); `left` and `right` (rail turned with the
-  rear strip, their cell plan, left's width for the sixth cell); the tower's core section height and a support for
-  the carrier; USB4085 shell overhang (2.51 mm, from KiCad's footprint) against the GCT drawing; on `pod-power` the
+- **`left` and `right` (M3 session 3, 2026-11-14)**: `pod_case.py` now works in two frames (rear frame = the bay
+  frame, side frame along the outer edge), so the rail turns with the rear strip (4.4 / 3.7 degrees). Decided by
+  the user (options UI, FreeCAD):
+  - **`left` has 4 cells, not 6, and is not widened**: 3 side + 1 rear, as the numpad (`JP1` bridged). Measured:
+    with the 48 mm power board in the rear leg the rear lane is 91 mm and two cells need 109 mm, so `left` never
+    held 5; single file needs +18 mm for 5 (a count the jumper does not provide) and +68 mm for 6. `left` has 36
+    LEDs against 52, so 4 cells there last about as long with LEDs lit as 6 on `right` (estimate). Offered and
+    not taken: a doubled side column (6 cells, +16.2 mm), single file at +68 mm.
+  - **`right` has 6 cells**: 3 side + 3 in the rear lane east of the power board (a 5201 at both ends, as the
+    column), 12.8 mm spare to the side leg.
+  - **The rail's split-side end is square to the rear edge** on `left` and `right`: the split edge leans 7 to 8
+    degrees and the pod's rear corner would lie 0.35 mm (`left`) / 1.1 mm (`right`) inside that line. The rail
+    corners stand 3.7 / 3.3 mm past the split line: **two wireless halves pushed together stay about 7 mm apart**
+    (wired trays close fully). Offered and not taken: chamfered pod corners (pod routed again), a thinned wall.
+  - Layouts: `left` 173.4 x 198.2 mm, side leg on the outer (west) side, power board against the split-side wall
+    under the pod (a = -31.7 .. 16.3 from the bay's centre line), the rear cell west of it with its spring wall in
+    the board's notch, the rest of the lane a wire bay. `right` 265.0 x 203.9 mm (**too wide for the CORE One's
+    250 mm bed: H2S only**), power board at the split-side wall with 12 mm in front of its pack plug
+    (a = -4.8 .. 43.2), cells east of it. On both the corner belongs to the rear lid (126.7 mm on `left`, 223 mm on
+    `right`, sliding out over the side leg's rear end); the side lid ends in front of it. Power board bay starts
+    at the cell lane (no strip in front of the board; a wire to the pack plug passes under it).
+  - Clash checks: `left` 32 pairs, `right` 47, `numpad` 32 (volumes unchanged), 0 clashes. No fit pieces for
+    `left` / `right` (the numpad's cover the same features).
+  - **Tight, to check on the lead**: on `right` the pod's lead connector faces the split-side wall with 5.8 mm
+    from its mouth to the cover's inside (9.6 mm on `left` and the numpad).
+- **Open**: the pod's rear end overhangs its two screws by 32 mm with nothing under it (looked at again: on `left`
+  the power board's free front-east notch lies under the pod, 10 to 17 mm behind the screws; a ledge on the rear
+  wall meets the lead connector's envelope on `left`; nothing drawn); lid snap, groove play, plate slots and
+  spring heights on the fit print; slide switch actuator against its slot (C&K drawing); the tower's core section
+  height and a support for the carrier; USB4085 shell overhang (2.51 mm, from KiCad's footprint) against the GCT drawing; on `pod-power` the
   finishing pass closed one +5V_RAW link and the +3V3 line at 0.2 mm (review before the order).
 
 ## 3. Power
