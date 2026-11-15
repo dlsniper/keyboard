@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-15 (after the M2 robustness review session), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-15 (after M3b session 6), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -812,8 +812,33 @@ new routing run will not reproduce this exact board**. `Cu.find` strips the `~J`
 rewrites the UUIDs in `hardware/lib/keyboard.pretty` (reverted; only `keyboard.kicad_sym` changed).
 **KiCad was open on both boards during the session: reload `hardware/hub-conn/hub-conn.kicad_pcb` and
 `hardware/port-module/port-module.kicad_pcb` (File, Revert) and do not save the old view.**
-**Next**: the pod's fast crowbar (`plans/prompt-m3b-session-6.md`); fit prints when printed
-(`plans/prompt-m3-session-7.md`); both independent.
+**M3b session 6 done (2026-11-15): pod +3V3 overvoltage protection designed and simulated, NOT built (user, options
+UI). No board, schematic or shell changed.** Finding 8 stays open as an accepted risk.
+- Simulation `tools/sim_crowbar.py` (ngspice, first 300 us; decks in `build/sim/cb_*`): high side shorted, 10 V pack:
+  unprotected the pod's rail passes 3.9 V after 2.5-3.8 us and ends at pack voltage (coil 11-22 A, far over its 5.4 A).
+- **A, SCR directly on +3V3** (comparator + DPAK SCR, S6008DS2 class, turn-on 2-4 us typ): holds 3.9 V only with
+  under 1.5 us in total; at 3 us the rail reaches 4.4-5.1 V for 2-3 us; then a 75-100 A capacitor dump (model: ideal
+  switch), 20-43 A in the coil and 8-17 A from the pack until F1 trips (MF-MSMF150/16X: 0.5 s max at 8 A, typ about
+  0.15 s at 8 A, 0.8 s at 5 A). Not chosen.
+- **B, chosen as the design, then stopped at placement**: 4.7 ohm (1206, pulse-proof: 4-14 W until the PTC trips, to
+  check) + PTC MF-FSMF010X (0603, 0.9-6 ohm, hold 0.1 A, 15 V) between the converter and the lead, 22 uF behind them,
+  TLV4041R1 (push-pull, 1.2 V reference 1 %, 2-5 uA, 0.36 us at 100 mV overdrive, 6 V absolute) fed from the
+  converter side through 1 k / 100 nF / 5.1 V Zener, divider 1 M / 1 M with 1 M from OUT to the input (trip 3.6 V;
+  latches only while the converter side is over 3.6 V, so a false trip heals itself) and 10 pF across the top
+  resistor, SOT-23 FET (AO3400A class) to GND. Sim: peak 3.64-3.68 V at 1.5 us delay, about 3 us allowed at 4.7 ohm,
+  6 us at 10 ohm; fault current 1-2 A, F1 and the coil unstressed. Cost: 0.1-0.2 V drop at 20 mA, +5-10 uA idle
+  (Zener leakage unmeasured), an undetected dead comparator is a latent fault.
+- **Why not built**: 13 parts, about 80 mm2; the top of `pod-power` has about 70 mm2 free in scraps and one gap for a
+  SOT-23. Offered: underside block under the 3.3 V converter (x 34-45, y 6-15, clear of `PB_POSTS`), existing
+  passives to the underside, board 4 mm deeper (rail and trays change). User: do not build.
+- **+5V_RAW: TPS2553 stays** (user). Looked at: TPS25200 (20 V input, 5.25-5.55 V clamp, off above 7.6 V in 0.6 us,
+  WSON-6); the TPS630701 has two switches in series and its own output overvoltage stop (1 us deglitch).
+- Ruled out on the way: TPS259472 (clamp 3.65-4.1 V, 428 uA), a TPS709 post-regulator (line step response unknown,
+  no model), MAX9040 (47-67 uA), TLV3011/3012 (2-12 us), TPS3700 (18-29 us).
+- Datasheets added (`build/ds`): tlv4021 / 4041 / 4051 (one sheet), tlv3011 / 3012, max9040 (third-party copy),
+  bt148, bt148w, s6008ds2 (2004 Teccor catalog section). ST (TS820, TN815, X04) and Littelfuse sites refused the
+  download. If this is taken up again: the pod (30 x 50.7 mm) may be the better place, at the lead's entry.
+**Next**: fit prints when printed (`plans/prompt-m3-session-7.md`).
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

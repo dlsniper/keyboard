@@ -527,6 +527,10 @@ and are checked against their datasheets when the schematics are written.
 - **Open**: lid snap, groove play, plate slots and
   spring heights on the fit print; slide switch actuator against its slot (C&K drawing); USB4085 shell overhang (2.51 mm, from KiCad's footprint) against the GCT drawing; on `pod-power` the
   finishing pass closed one +5V_RAW link and the +3V3 line at 0.2 mm (review before the order).
+- **+3V3 overvoltage (robustness review 8, M3b session 6, 2026-11-15)**: a shorted TPS629210 high side puts the pack
+  on the pod's 3.3 V rail within 3-4 us. A series 4.7 ohm + PTC with a comparator-latched FET behind it was designed
+  and simulated (`tools/sim_crowbar.py`, peak 3.7 V) but **not built (user)**: 13 parts do not fit the top of the
+  48 x 22 mm board. Accepted risk; design notes in `next.md`.
 
 ## 3. Power
 
