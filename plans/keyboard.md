@@ -969,6 +969,56 @@ agents and spot-checked). "Graph" = read from a datasheet plot.
   battery the cap follows the pack voltage (about 8 W in per pack; the fuse's 4.2 A
   is the hardware ceiling).
 
+## 3c. Cost review (2026-11-15)
+
+Three priced reviews (key modules, hub tower, pods; prices from JLCPCB's parts API, ti.com and samtec.com fetched that
+day, the rest from search results or memory; fabrication prices are estimates until a real quote). **Finding: on a
+one-off the board house's fixed fees weigh as much as the parts** (hub: about EUR 165 of parts, about EUR 190 of
+fees; USD 3.07 per extended part type and order, about USD 10 per assembled design, X-ray per leadless part).
+Estimate for a wired keyboard with one battery module, without switches, keycaps, cells, shipping and VAT:
+**about EUR 880 before, about EUR 600 after** (+/- 25 %); a pod set about EUR 52 before, about 32 after.
+
+**Decided by the user (2026-11-15, "all of them" plus the options UI). Applied in `tools/fab.py`:**
+- `hub-core`, `battery`, `chain-cap`, `dial`, `hub-radio` are ordered **bare** and soldered by hand (`BARE`).
+- **MCP23S17 and TPS22918 on the key boards are fitted by hand** (`HAND`: left out of the placement file and BOM;
+  bought in Europe; spare assembled boards carry none). JLC had 6 MCP23S17 in stock against 8 needed.
+- **Pod debug header J4 unfitted** (`HAND`), footprint kept; soldered on, or pogo pins held on, for a first flash or
+  a recovery. Replaces the "fitted" decision of M3b session 3.
+- Assembly of 2, not 5, wherever the board house allows.
+
+**Decided, not applied yet (own sessions, prompts in `plans/prompt-cost-sessions.md`):**
+- **Pack inputs: plain Schottky diodes in place of LM74610-Q1 + SQ4184EY** (user, options UI; about EUR 20). Known
+  price: about 0.4 V of pack voltage and up to about 1 W per conducting diode. Gain: no charge-pump wake-up, so O12
+  (hub restart at unplug on a nearly empty pack) should go away. To settle at the session: a part with low enough
+  reverse leakage for the 22 k empty-slot bleeders (a hot Schottky leaks far more than the LM74610), the
+  lowest-first priority with the 0.7 V body-diode handicap, both simulations again, five stages placed and routed again.
+- **Chain seam: generic 2x8 spring-pin strip in place of the Mill-Max 827** (user: "generic strip, maybe double it,
+  if current/temps are a concern"). Pack lines are already doubled; one AA pack delivers 8-10 W (section 3b), about
+  2.5 A at 4.0 V, so **1.25 A per pin**: a generic pin rated 2 A or more needs no further doubling on the frozen
+  2x8, a 1 A pin does (then the seam grows to 26 pins or more on battery, chain-cap, hub-conn and the shells). Pick
+  the part by its datasheet rating; stroke and height change the cap board and the compression check.
+- **Chain targets: bare ENIG pads** in place of the Mill-Max 1578 discs (hub-conn, battery); compression check again.
+- **Hub buttons: generic 16 mm latching button and plain momentary buttons** in place of the NKK UB16 / UB15; leads
+  and JST XH plugs stay, shell cut-outs change.
+- **hub-conn: odd resistor values and small parts moved to JLC basic parts** where the simulations allow.
+- **Plates: printed ASA first; the FR4 plate designs stay in the repo** and are ordered only if the printed ones
+  flex or warp (replaces "FR4" of 2026-11-14 as the first build; saves the plate fabrication and JLC's
+  keyboard-design surcharge of USD 16.41 + 49.25 per m2 and design).
+- **Matrix diodes BAT43W -> B5819W** (JLC basic, same SOD-123) after a datasheet check of capacitance, forward
+  voltage at 0.3 mA and reverse leakage against the 10 k pull-ups.
+- **Pods**: MDBT50Q-1MV2 -> **MDBT50Q-P1MV2** (PCB antenna; keep-out to check), Coilcraft inductors -> Sunlord
+  (saturation current to check), basic resistor values (ADC constant in firmware), genuine JST GH under the cheaper
+  listing, SMD USB-C receptacle in place of the USB4085.
+- Buying: passive USB 3.2 full-featured cables of 0.5-1 m (not USB4 / Thunderbolt: over 0.8 m those are active and
+  will not work as wiring), SBU buzzed out on each; one tent / tilt / palm variant printed per half at first; ask
+  Samtec for samples of the ESQ and DW parts.
+- The SQ4184EY -> cheaper FET idea is void (the FETs go with the LM74610).
+
+**Supply problems seen** (to solve at the order): Kailh CPG151101S11 out of stock and flagged discontinued at JLC (a
+clone C49352235 is in stock: drawing to check against the footprint); Amphenol 12401548E4-2A, both MDBT50Q variants
+and XGL3530-222 out of stock at JLC. **User lookups owed**: a JLC instant quote for `right`, a plate and `hub-conn`
+(is the keyboard surcharge charged on key boards too: about EUR 60 more), prices of the chosen generic buttons.
+
 ## 4. Firmware
 
 - Go, built with TinyGo, one program, on the hub's Pico 2 W. Based on
