@@ -76,7 +76,7 @@ BAY = {1: "+5V", 2: "+5V", 3: "GND", 4: "LED_DIN", 5: "+3V3", 6: "SPARE", 7: "IN
 DIAL_NETS = {"1": "ROW{r}", "2": "DIAL_A", "3": "GND", "4": "DIAL_B", "5": "COL{c}"}
 # module receptacle (wire plan, module column), both lanes of each pair tied
 RECEPTACLE = {"SCK": ["B11", "A11"], "GND": ["B10", "A10", "A1", "B1", "A12", "B12", "SH"], "MOSI": ["A2", "B2"],
-              "MISO_CONN": ["A3", "B3"], "CS_CONN": ["A6", "B6"], "INT": ["A7", "B7"], "LED_DIN": ["A8", "B8"],
+              "MISO_CONN": ["A3", "B3"], "CS_CONN": ["A6", "B6"], "INT_CONN": ["A7", "B7"], "LED_DIN": ["A8", "B8"],
               "+5V": ["A4", "A9", "B4", "B9"], "CC1": ["A5"], "CC2": ["B5"]}
 
 
@@ -280,18 +280,19 @@ def build_port_board():
     s.c("100p", "CS", "GND", st.next(), v="50V")
     s.r("100k", "+3V3", "CS", st.next())
     s.r("10k", "+3V3", "INT", st.next())
-    s.r("33", "MISO", "MISO_CONN", st.next())
-    for ref, x, quad in (("U2", 150, ("SCK", "MOSI", "MISO_CONN", "CS_CONN")), ("U3", 185, ("INT", "LED_DIN", "CC1", "CC2"))):
+    s.r("150", "MISO", "MISO_CONN", st.next())     # was 33: a bridge to +5V now puts 9 mA into the MCP23S17, not 40
+    for ref, x, quad in (("U2", 150, ("SCK", "MOSI", "MISO_CONN", "CS_CONN")), ("U3", 185, ("INT_CONN", "LED_DIN", "CC1", "CC2"))):
         s.part(ref, "keyboard:TPD4E1U06DBV", "TPD4E1U06", FP_TPS, (x, 14),
                {"1": quad[0], "3": quad[1], "6": quad[2], "4": quad[3], "5": None, "2": "GND"}, {"MPN": "TI TPD4E1U06DBVR"})
     s.part("D1", "Power_Protection:TVS0500DRV", "TVS0500", "Package_SON:WSON-6-1EP_2x2mm_P0.65mm_EP1x1.6mm", (165, 40),
            {"1": "GND", "2": "GND", "3": "GND", "7": "GND", "4": "+5V", "5": "+5V", "6": "+5V"}, {"MPN": "TI TVS0500DRVR"})
     s.r("5.1k", "CC1", "GND", st.next())
     s.r("5.1k", "CC2", "GND", st.next())
+    s.r("1k", "INT_CONN", "INT", st.next())        # robustness review 3 (user, 2026-11-14): J1's INT pins lie 0.15 mm from +5V
     s.flags = [("#FLG01", "+5V", (20, 62)), ("#FLG02", "GND", (28, 62))]
     s.notes = [((8, 76), "Port board, module side (spec section 1 wire plan, module column): SCK on RX+, its return on RX-, MOSI on TX+, MISO on TX-,\n"
-                         "CS on D+ (1k + 100 pF and 100k pull-up at the module: CS stays high while the hub does not drive it), INT on D- (10k pull-up here, none at the hub),\n"
-                         "MISO through 33 R at its source, LED data on SBU, +5V on VBUS, CC1/CC2 5.1k Rd each, shell direct to GND.\n"
+                         "CS on D+ (1k + 100 pF and 100k pull-up at the module: CS stays high while the hub does not drive it), INT on D- (1k in series, 10k pull-up here, none at the hub),\n"
+                         "MISO through 150 R at its source (33 until the robustness review; M4 step 2 measures the edge), LED data on SBU, +5V on VBUS, CC1/CC2 5.1k Rd each, shell direct to GND.\n"
                          "3.3 V from VBUS via AP2112K-3.3 to bay pin 5. TPD4E1U06 on the six signals and CC, TVS0500 on VBUS.\n"
                          "J2 pin numbers equal the key board bay header J1; place the socket on the layer that mates pin 1 to pin 1.")]
     return s, 215, 100
@@ -483,6 +484,9 @@ def verify_port(sch_path):
     c.eq("LDO in cap", [(v, o) for _, v, o in c.partner("U1", 1, "C")], [("1u", "GND")])
     c.eq("LDO out cap", [(v, o) for _, v, o in c.partner("U1", 5, "C")], [("1u", "GND")])
     c.eq("CS series R", sorted((v, o) for _, v, o in c.partner("J1", "A6", "R")), [("1k", "CS")])
+    c.eq("INT series R", sorted((v, o) for _, v, o in c.partner("J1", "A7", "R")), [("1k", "INT")])
+    c.eq("MISO series R", sorted((v, o) for _, v, o in c.partner("J1", "A3", "R")), [("150", "MISO")])
+    c.eq("INT pull-up behind the series R", sorted((v, o) for _, v, o in c.partner("J2", 7, "R")), [("10k", "+3V3"), ("1k", "INT_CONN")])
     c.eq("CS filter C", sorted((v, o) for _, v, o in c.partner("J2", 8, "C")), [("100p", "GND")])
     for cc in ("CC1", "CC2"):
         c.eq(f"{cc} Rd", sorted((v, o) for _, v, o in c.partner("J1", "A5" if cc == "CC1" else "B5", "R")), [("5.1k", "GND")])

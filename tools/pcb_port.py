@@ -116,7 +116,7 @@ def port_module(force):
 # SCK . +5V LED INT CS CC1 +5V MISO MOSI; the header carries +5V at -6.35, LED -3.81, +3V3 -1.27, INT / CS 1.27,
 # MISO / MOSI 3.81, SCK 6.35.
 PARTS = [
-    ("U", ("INT", "LED_DIN", "CC1", "CC2"), -12.2, 13.9, 0),     # ESD array, CC2 comes round the receptacle's west end
+    ("U", ("INT_CONN", "LED_DIN", "CC1", "CC2"), -12.2, 13.9, 0),     # ESD array, CC2 comes round the receptacle's west end
     ("U", ("SCK", "MOSI", "MISO_CONN", "CS_CONN"), 7.3, 13.7, 0),
     ("U", ("+5V", "+3V3"), -11.5, 7.2, 0),                       # regulator beside the header's +5V pins
     ("D", ("+5V", "GND"), -9.0, 10.1, 0),                        # VBUS TVS
@@ -129,6 +129,7 @@ PARTS = [
     ("R", ("CC1", "GND"), -3.4, 11.1, 180),
     ("R", ("MISO", "MISO_CONN"), 5.0, 10.4, 0),
     ("R", ("CC2", "GND"), -8.0, 15.0, 90),
+    ("R", ("INT_CONN", "INT"), -12.5, 10.5, 0),                  # robustness review 3: 1 k behind the array, between it and the regulator
 ]
 
 def usb_port(force):

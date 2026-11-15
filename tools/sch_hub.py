@@ -370,7 +370,13 @@ def build_conn():
     b.c("100n", "VBUS_IN")
     b.r("10k", "USB_OK", "USB_PRESENT")  # 5.5k source: pulls an RP2350-E9 pad low
     b.r("15k", "USB_PRESENT", "GND")  # 2.3 V at the Pico with VBUS at 3.8 V, 3.3 V at 5.5 V
-    b.r("0R", "AUX_5V", "VBUS_IN", dnp=True)
+    # AUX_5V from the chain (reserved for a Qi module): fuse and Schottky, both unfitted (robustness review 7; user,
+    # 2026-11-14). The diode keeps the host from charging a pack over a bridged seam pin; it does not keep a pack
+    # off VBUS_IN, so the values are chosen in the Qi session. Was one unfitted 0R.
+    b.dnp.add(b.part("F", "Device:Fuse", "DNP (Qi)", "Fuse:Fuse_1206_3216Metric", (8, 18), {1: "AUX_5V", 2: "AUX_F"},
+                     {"MPN": "not fitted: chip fuse 1206, chosen with the Qi module"}))
+    b.dnp.add(b.part("D", "Device:D_Schottky", "DNP (Qi)", "Diode_SMD:D_SOD-123F", (10, 18), {2: "AUX_F", 1: "VBUS_IN"},
+                     {"MPN": "not fitted: Schottky SOD-123F, 20 V, chosen with the Qi module"}))
     b.row(2)
     b.group = "conv"
     # SYS bulk and the 5 V buck-boost (TPS552892, datasheet section 8.2: 400 kHz, 4.7 uH, PFM at light load)
@@ -389,6 +395,17 @@ def build_conn():
     # never runs under its 3.0 V minimum when a pack sags
     b.r("100k", "SYS", "CONV_EN")
     b.r("54.9k", "CONV_EN", "GND")
+    # Overvoltage on +5V (robustness review 1; user, 2026-11-14): with the FB divider broken (100k open, 31.6k
+    # bridged) the converter runs up to its own 23.5 V limit. TPS3700 on SYS: INB- over 0.4 V (133k / 10k: 5.72 V,
+    # 5.55-5.89 V with tolerances) pulls CONV_EN low through OUTB within about 30 us; the rail then saw-tooths
+    # under about 6.7 V (TPS25810: 7 V absolute) instead. INA+ to GND, OUTA unused.
+    b.group = "ovp"
+    b.part("U", "keyboard:TPS3700DDC", "TPS3700", "Package_TO_SOT_SMD:TSOT-23-6", (30, 16),
+           {5: "SYS", 2: "GND", 3: "GND", 4: "OV_SNS", 1: None, 6: "CONV_EN"}, {"MPN": "TI TPS3700DDCR"})
+    b.r("133k", "+5V", "OV_SNS")
+    b.r("10k", "OV_SNS", "GND")
+    b.c("100n", "SYS")
+    b.group = "conv"
     b.r("49.9k", "FSW", "GND")  # 400 kHz
     b.c("100n", "BOOT1", "L1")
     b.c("100n", "BOOT2", "L2")
@@ -421,7 +438,8 @@ def build_conn():
         "400 kHz (49.9k), FB 100k / 31.6k, EN/UVLO 100k / 54.9k (on above 3.5 V, off below 2.95 V),\n"
         "ISP = ISN = VOUT (no output current limit; the ports have their own), EXTVCC and CDC open (internal VCC, no cable compensation), DITH/SYNC to GND.\n"
         "Layout (M2): AGND (pin 17) and PGND (pin 9) join only at the VCC capacitor; boot capacitors at the pins; FB and COMP away from L1 / L2.\n"
-        "DNP 0R from AUX_5V to VBUS_IN: reserved for a later Qi module. Footprints still open (M2): TPS552892, CSD25483F4, inductor.")
+        "TPS3700 on +5V: over about 5.7 V (133k / 10k) it holds CONV_EN low, so a broken FB divider cannot take +5V to the converter's 23.5 V limit.\n"
+        "Unfitted fuse + Schottky from AUX_5V to VBUS_IN: reserved for a later Qi module. Footprints still open (M2): TPS552892, CSD25483F4, inductor.")
     return b, w, h
 
 

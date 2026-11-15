@@ -114,6 +114,10 @@ met 2026-11-13; signed off by the user 2026-11-13.
    **Placement findings closed 2026-11-14** (decoupling at the pins, port TVS at the receptacles, converter VCC and COMP
    parts at their pins with a 1 uF added at the VCC pin (user), key LED capacitor beside the LED (user): `hub-conn`, `usb-port` and the three key boards placed and
    routed again, plates re-run; spec §2, §3a). Left: checks on real parts (next.md).
+   **Robustness review closed 2026-11-15** (user decisions, options UI; spec §3a): overvoltage detector on +5V (TPS3700
+   on `CONV_EN`), unfitted fuse + Schottky in `AUX_5V`, more and larger power vias, PGND vias at the converter, ESD
+   arrays in the signal path on `hub-conn` and `port-module`, 1 k in INT and 150 R in MISO on `port-module`: both
+   boards placed and routed again. Open from it: a fast crowbar on the pod's 3.3 V (own session, M3b).
 4. Plates (1.6 mm FR4; user, 2026-11-14) from the same file. Done 2026-11-14: `tools/pcb_plate.py`,
    `hardware/plate-{left,right,numpad}`, DRC 0, checked against the three key boards.
 5. Fab outputs, BOM with European sources, a costed quote. **Fab outputs done 2026-11-14: `python3 tools/fab.py`** writes

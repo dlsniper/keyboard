@@ -375,6 +375,38 @@
       },
       {
         "netclass": "Power",
+        "pattern": "/VPACK"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/BAT+"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/VFUSE"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/+5V_RAW"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/+5V_LED"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/SW_3V3"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/L5A"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/L5B"
+      },
+      {
+        "netclass": "Power",
         "pattern": "/+3V3"
       },
       {

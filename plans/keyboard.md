@@ -95,7 +95,7 @@ upgradeable; FDM-printed ASA case; parts from Mouser Europe / European distribut
   | 11 | GND | 12 | SCK |
 
   (Detect needs no pin: it is done on CC, on the port board.) A small **port board**
-  (receptacle, Rd, 3.3 V regulator, CS filter and pull-up, INT pull-up, 33 R in MISO, ESD arrays and a VBUS TVS) plugs onto it, held
+  (receptacle, Rd, 3.3 V regulator, CS filter and pull-up, INT pull-up, 1 k in INT and 150 R in MISO (robustness review, 2026-11-14; MISO was 33 R), ESD arrays and a VBUS TVS) plugs onto it, held
   by two M2 screws placed off-centre so it cannot go on reversed. A worn port is a
   two-screw swap, and a different cable later needs only new port boards.
   **M2 (user, 2026-11-13):** the bay is at the inner (split) end of a full-width rear strip, 25 mm deep behind the
@@ -798,8 +798,16 @@ tables and the boards against each other).
   33 R in series at the buffer outputs, 100 k pull-downs on the cable side. LED
   data: one 74AHCT125 at 5 V for the three ports, 330 R in series, low by default.
   ESD arrays (TPD4E1U06) on the six signals and CC, TVS0500 on the port's VBUS.
+  **Arrays in the path (robustness review 4; user, 2026-11-14)**: on `hub-conn` and `port-module` every receptacle
+  pin reaches its array before anything else. The autorouter joins a net's pads in any order, so for the router each
+  such net is cut at the array pad (`route_hub.py` `split_at_arrays` / `merge_at_arrays`) and joined again by a
+  1 mm track into the pad. `tools/esd_stub.py <board>` measures it (exit 1 over 2 mm of stub).
+  **Module side (review 3; user)**: J1's INT pins lie 0.15 mm from +5V and MISO 0.16-0.20 mm (the receptacle's own
+  pitch), so INT has 1 k in series before the pull-up and the MCP23S17, and MISO's series resistor is 150 R (9 mA
+  into the chip's clamp on a bridge, was 40 mA at 33 R). M4 step 2 measures the MISO edge with it; if 4 MHz has
+  too little margin the value goes down again (value only, no copper).
 - **Battery chain, 2x8 pogo seam** (user, 2026-11-13), reversal-safe (pin k meets
-  17-k): 1 PACK1, 2 GND, 3 PACK2, 4 PACK3, 5 GND, 6 PACK4, 7 PACK5, 8 AUX_5V, 9 AUX_5V, 10 PACK5, 11 PACK4, 12 GND, 13 PACK3, 14 PACK2, 15 GND, 16 PACK1. Each module puts its own pack on `PACK1` upwards and passes
+  17-k): 1 PACK1, 2 GND, 3 PACK2, 4 PACK3, 5 GND, 6 PACK4, 7 PACK5, 8 AUX_5V, 9 AUX_5V, 10 PACK5, 11 PACK4, 12 GND, 13 PACK3, 14 PACK2, 15 GND, 16 PACK1. **`AUX_5V` (robustness review 7; user, 2026-11-14)**: reserved for a Qi module; on `hub-conn` it reaches `VBUS_IN` through an unfitted 1206 fuse and an unfitted SOD-123F Schottky (was one unfitted 0R), so on a built board it floats and a bridge to the PACK4 / PACK5 pins beside it (0.44 mm) does nothing. When fitted: the diode keeps the host from charging a pack over such a bridge; it does NOT keep a pack off `VBUS_IN` (the KTS1693 conducts from OUT to IN), and the line is still thin autorouted copper: values and width belong to the Qi session. Each module puts its own pack on `PACK1` upwards and passes
   `PACK1`-`PACK4` from below on as `PACK2`-`PACK5`, so hub input n is the n-th
   module from the hub and input 5 is the lowest. Modules stay passive (holder, PTC).
 - **Power path** (rev 8.1 parts and values unless said): per pack input SMF4L9.0CA,
@@ -822,7 +830,14 @@ tables and the boards against each other).
   3 x 22 uF + 100 n + **220 uF polymer** (the TPS25810 asks for 120 uF or more; the
   converter allows 10-1000 uF). **EN/UVLO 100 k / 54.9 k**: on above about 3.5 V, off
   below about 2.95 V, so a sagging pack switches the converter off cleanly instead of
-  running it under its 3.0 V minimum. Start-up: VCC comes from VIN, then from the 5 V
+  running it under its 3.0 V minimum. **Overvoltage detector (robustness review 1; user, 2026-11-14)**: with the FB
+  divider broken (100 k open or 31.6 k bridged) the converter would run +5V up to its own limit of 22.5-24.5 V, with
+  no current limit (ISP = ISN = VOUT), into parts rated 7 V (TPS25810) and 5.5 V (Pico VSYS). A **TPS3700** (window
+  comparator, 0.4 V reference, open drain, supplied from `SYS`; datasheet `build/ds/tps3700.pdf`) senses +5V through
+  133 k / 10 k and pulls `CONV_EN` low above 5.72 V (5.55-5.89 V with tolerances) after about 30 us. The rail does
+  not latch off: it saw-tooths between about 5.5 V and, at worst, about 6.7 V (27 V/ms from 8 A into 300 uF, plus
+  the inductor's energy), and the keyboard restarts over and over, which is the sign of the fault. INA+ to GND,
+  OUTA unused. Not covered: the detector's own divider open (protection lost, no harm). Start-up: VCC comes from VIN, then from the 5 V
   output while VIN is below it. Layout notes for M2 are on the sheet (AGND and PGND
   join at the VCC capacitor).
 - **USB / battery switchover, simulated** (`python3 tools/sim_switchover.py`, new at

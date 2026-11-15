@@ -347,7 +347,7 @@ def stage(bd, col, n):
     if n < 5:
         bd.put(bd.sel("Q", f"PG{n}", "VBAT"), x0 + 10.9, y0 + 12.4, 270)
     bd.taken += [(x0 + 4.9, y0, x0 + COL_W, y0 + 2.9),                                    # PACK copper and vias
-                 (x0 + 8.6, y0 + 13.6, x0 + COL_W, y0 + ST_VBAT_Y + 1.1)]                 # VBAT copper and vias
+                 (x0 + 8.6, y0 + 13.6, x0 + COL_W, y0 + ST_VBAT_Y + 1.9)]                 # VBAT copper and vias (two rows: robustness review 6)
     bleed = [r for r in bd.group(f"pack{n}") if f"/BLD{n}" in bd.comps[r]["nets"].values()]    # goes to the rear, beside its FET
     bd.pack_k([r for r in bd.group(f"pack{n}") if r not in bleed], [(x0 + 0.2, y0 + 0.2, x0 + COL_W - 0.1, COL_Y1)], gap_ic=STAGE_GAP_IC)
 
@@ -378,7 +378,7 @@ def hub_conn(force):
     bd.fix(bd.by_value("STACK"), *g.STACK_XY, angle=90)
     bd.fix(bd.by_value("J_USB"), *g.JUSB_XY, angle=90, by="box")
     turn = targets(bd, bd.by_value("CHAIN"))
-    bd.taken += [PLUG_ZONE, (111.5, 66.6, 133.0, 68.2), (111.5, 73.6, 133.0, 76.4)]     # plug; chain via rows north and south
+    bd.taken += [PLUG_ZONE, (111.5, 65.5, 133.0, 68.2), (111.5, 73.6, 133.0, 77.5)]     # plug; chain via rows north and south (two vias a contact)
     # 5 V converter, as the TPS552892 datasheet's layout: capacitors at the VIN and VOUT strips with PGND between them,
     # inductor on the other side with the boot capacitors at the switch strips, VCC capacitor at its pin
     ix, iy = CONV
@@ -407,6 +407,12 @@ def hub_conn(force):
     bd.put(bd.sel("R", "CONV_EN", "GND"), ix + 5.95, iy + 1.0, 0)
     bd.put(bd.sel("R", "CONV_EN", "SYS"), ix + 5.95, iy + 3.2, 180)
     bd.taken += [(53.5, iy - 2.6, 57.9, iy - 0.9), (53.5, 85.9, 78.2, 87.6)]              # +5V vias; PGND vias
+    # Overvoltage detector on +5V (robustness review 1; user, 2026-11-14): east of the EN divider it pulls low, its
+    # 100 n between it and the input capacitors' SYS area, the sense divider below it
+    bd.put(bd.vals("ovp", "100n", "SYS")[0], 77.6, 94.3, 0)
+    bd.put(bd.sel("U", "OV_SNS"), 77.6, 97.0, 180)
+    bd.put(bd.sel("R", "OV_SNS", "GND"), 77.6, 99.9, 0)
+    bd.put(bd.sel("R", "OV_SNS", "+5V"), 77.6, 102.0, 0)
     bd.pack_k(bd.group("conv")[:0] + [r for r in bd.group("conv") if bd.comps[r]["value"] not in ("47u", "220u")],
               [(53.7, iy - 0.8, 58.0, 113.0), (53.7, iy + 13.0, 78.0, 113.0)])
     # USB and battery switches around the SYS node, bulk capacitors beside it
@@ -424,7 +430,7 @@ def hub_conn(force):
         stage(bd, col, n)
     for p, x in zip("ABC", g.PORT_X):
         port(bd, p, X0 + x)
-    rear = [(81.5, 62.4, 111.3, 79.4), (89.5, 79.4, 111.3, 85.7), (133.3, 62.4, 146.6, 76.6), (112.0, 62.4, 133.0, 66.3),
+    rear = [(81.5, 62.4, 111.3, 79.4), (89.5, 79.4, 111.3, 85.7), (133.3, 62.4, 146.6, 76.6), (112.0, 62.4, 133.0, 65.3),
             (70.8, 62.4, 78.0, 68.8), (58.5, 108.0, 78.0, 113.3),
             (COL_X0 + 2 * COL_W + 0.3, 103.5, COL_X0 + 3 * COL_W - 0.2, COL_Y1), (COL_X0 + 4 * COL_W + 0.3, 103.5, 146.5, COL_Y1)]
     bd.put(bd.sel("U", "LED_A", "LEDB_A"), 137.82, 68.46, 0)            # 74AHCT125 where the packing had put it, and

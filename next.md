@@ -1,6 +1,6 @@
 # Next
 
-State 2026-11-14 (after M3 session 6), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
+State 2026-11-15 (after the M2 robustness review session), branch `rev9-go`. **Spec rev 9.1**: `plans/keyboard.md`. The user restored the **hub tower and
 AA battery modules** (product differentiator; never drop them): one socketed Pico 2 W in the hub scans dumb key
 modules through SPI port expanders (1 kHz+, n-key rollover), core layer swappable, up to 5 AA modules, cable-free
 pods as a later upgrade through the module connector. Rev 8 material is under `archive/rev8/` (reference for hub,
@@ -773,7 +773,47 @@ datasheet before a board changes. Its scripts: scratchpad `review/` (gone after 
 **Boards these would touch if taken: `hub-conn` (1, 4, 5, 6, 7: placed and routed again), `port-module` (3, 4),
 `pod-power` again (8), `chain-cap` / `battery` not.** Take them as one session before the order (D7), decisions
 through the options UI, critique first: 1 and 6 are cheap and worth it; 3 interacts with the M4 SPI test.
-**Next**: fit prints when printed (`plans/prompt-m3-session-7.md`); the review session (prompt in the same file).
+**M2 robustness review session done (2026-11-15): `hub-conn` and `port-module` placed and routed again; no other
+board changed (`pod-power` untouched).** Both: DRC 0 errors, 0 warnings, 0 unconnected, parity 0; ERC 0 and
+`tools/kicad-check.sh` / `tools/pcb_check.sh` exit 0 on all boards; fab outputs regenerated (`python3 tools/fab.py`).
+Outline, holes and connectors of both boards are identical to before (compared with the boards from before the
+session), so **no shell was rebuilt**.
+Datasheet check of the "inferred" findings (`build/ds`): **1 holds** (TPS552892 output overvoltage only at
+22.5-24.5 V, ISP = ISN = VOUT means no current limit; TPS25810 7 V absolute, Pico VSYS 5.5 V). **7 holds only in
+part**: R83 was already unfitted and absent from BOM / CPL; fitted, the KTS1693 does conduct OUT to IN. **8 holds**
+(nRF52840 VDD 3.9 V absolute, TPS2553 7 V, pack up to 10 V; TPS629210 with MODE/S-CONF open is undefined).
+User decisions (options UI):
+1. **Overvoltage detector on +5V (hub-conn)**: TPS3700 (U26, `keyboard:TPS3700DDC`, new symbol in `gen_kicad.py`)
+   supplied from SYS, INB- from +5V through 133k / 10k (trips at 5.72 V, 5.55-5.89 V over tolerance), OUTB pulls
+   CONV_EN low, 100 nF on SYS. It does not latch: with a broken feedback divider the rail saw-tooths below about
+   6.7 V. Datasheet `build/ds/tps3700.pdf`.
+3. **port-module: 1 k in INT (new R7) and R4 150 R in MISO**, both on the module side; INT pull-up is behind the
+   series resistor; three new assertions in `sch_keys.py` (48, 0 failed). The 150 R still has to pass the M4 SPI test.
+4. **ESD arrays in the path on port-module and hub-conn**: the router gets every array-pad net cut at the array
+   (`split_at_arrays` / `merge_at_arrays` in `tools/route_hub.py`: receptacle side on a temporary net `<net>~J`
+   ending in a virtual pad 0.45 mm from the array pad, joined after `finish()` with a locked track). Checked by the
+   new **`tools/esd_stub.py [--max 2.0] board ...`** (KiCad's Python; exit 1 over the limit): longest stub now
+   0.2 mm on both (before: 27.7 mm port-module, 21.4 mm hub-conn). Limit: the way from the receptacle to the array is
+   still long on port-module (up to about 33 mm), it is only no longer a branch.
+5. **Converter pins**: the necks were already at the package limit (0.25 mm strips), so nothing to shorten; gained
+   are PGND vias nearer the pins and 1.0 / 0.6 mm vias on the +5V island.
+6. **Power vias**: the review's counts were partly wrong (Q8 had 3 VBAT vias, VBUS_IN 4 + 3). Now: chain contacts and
+   transfers 2 vias each, 4 entry vias, 5 VBAT vias per stage column, a third via per port VBUS. Counts on the
+   board: +5V 22, PACK1-5 9 / 13 / 12 / 11 / 12, VBAT 34, VBUS_IN 8, VBUS_A/B/C 3 each.
+7. **AUX_5V**: R83 replaced by footprints for a 1206 fuse and a SOD-123F Schottky (AUX_5V to VBUS_IN), both
+   unfitted ("DNP (Qi)", not in BOM / CPL). Limit: the AUX_5V copper is still a thin autorouted line; widen it when
+   the Qi module is designed.
+8. **Pod 3.3 V: "fast crowbar, own session"**. A supervisor (20-30 us) is too slow: with the high side shorted +3V3
+   passes 3.9 V after about 3 us. Nothing changed on pod-power; prompt in `plans/prompt-m3b-session-6.md`.
+Findings 2 and 9 were not part of the session.
+Routing notes: hub-conn takes about 15 minutes per try and about one try in four comes out clean; the accepted
+board had one hole_to_hole warning (a GND via 0.48 mm from an LEDO_A via) that was moved 0.06 mm by hand, so **a
+new routing run will not reproduce this exact board**. `Cu.find` strips the `~J` suffix. Running `gen_kicad.py`
+rewrites the UUIDs in `hardware/lib/keyboard.pretty` (reverted; only `keyboard.kicad_sym` changed).
+**KiCad was open on both boards during the session: reload `hardware/hub-conn/hub-conn.kicad_pcb` and
+`hardware/port-module/port-module.kicad_pcb` (File, Revert) and do not save the old view.**
+**Next**: the pod's fast crowbar (`plans/prompt-m3b-session-6.md`); fit prints when printed
+(`plans/prompt-m3-session-7.md`); both independent.
 **Still carried to M2**: SK6812MINI-E footprint is right only on B.Cu (placed there); PEC11R lug span 13.2 mm in
 the footprint against 13.4 mm in the drawing; SMF4L9.0CA datasheet could not be
 downloaded (403), check it by hand; Amphenol 12401548E4-2A drawing not read yet; sheets were never opened in KiCad (hub-conn is A0 and full); TPS552892: AGND and PGND join

@@ -63,7 +63,7 @@ class Cu:
 
     def find(self, prefix, *nets):
         got = [r for r, f in self.fps.items() if r.rstrip("0123456789") == prefix
-               and set(nets) <= {p.GetNetname().lstrip("/") for p in f.Pads()}]
+               and set(nets) <= {p.GetNetname().lstrip("/").split("~")[0] for p in f.Pads()}]     # "~J": split_at_arrays
         if len(got) != 1:
             sys.exit(f"{prefix} with nets {nets}: {got}")
         return got[0]
@@ -136,10 +136,11 @@ def chain(c):
         else:
             n = int(net[-1])
             if north:
-                c.track(net, [(x, y), (x, y - 2.25)], STUB_W, B)
-                c.via(net, x, y - 2.25)
-                c.track(net, [(x, y - 2.25), (x + 1.27, y - 1.3), (x + 1.27, y_s + 3.43)], STUB_W, I2)
-                c.via(net, x + 1.27, y_s + 3.43)
+                # robustness review 6 (user, 2026-11-14): two vias at each end of the transfer, not one
+                c.track(net, [(x, y), (x, y - 3.35)], STUB_W, B)
+                c.via(net, x, y - 2.25); c.via(net, x, y - 3.35)
+                c.track(net, [(x, y - 3.35), (x, y - 2.25), (x + 1.27, y - 1.3), (x + 1.27, y_s + 4.53)], STUB_W, I2)
+                c.via(net, x + 1.27, y_s + 3.43); c.via(net, x + 1.27, y_s + 4.53)
                 c.track(net, [(x + 1.27, y_s + 3.43), (x + 1.27, LANE_Y[n])], STUB_W, B)
                 ends.setdefault(n, []).append(x + 1.27)
             else:
@@ -153,15 +154,22 @@ def chain(c):
     for n, (ex, ey) in entry.items():
         net, y = f"PACK{n}", LANE_Y[n]
         if n == 1:                                              # outermost lane: straight south on B
-            c.track(net, [(ex, y), (ex, ey)], LANE_W, B)
+            c.track(net, [(ex, y), (ex, ey + 1.1)], LANE_W, B)
         else:
             x = exit_x[n]
             if not min(ends[n]) < x - 0.55 and x + 0.55 < max(ends[n]):
                 sys.exit(f"exit of PACK{n} is off its lane")
             c.via(net, x - 0.55, y); c.via(net, x + 0.55, y)
-            path = [(x, y), (ex, y), (ex, ey)] if n != 5 else [(x, y), (138.5, y), (138.5, 84.5), (ex, 84.5), (ex, ey)]
+            s = 1 if (ex if n != 5 else 138.5) > x else -1          # two more along the lane, where the trunk runs over it
+            for d in (1.65, 2.75):
+                if min(ends[n]) + 0.4 <= x + s * d <= max(ends[n]) - 0.4:
+                    c.via(net, x + s * d, y)
+                else:
+                    print(f"PACK{n}: no lane under an exit via at {x + s * d:.2f}")
+            path = [(x, y), (ex, y), (ex, ey + 1.1)] if n != 5 else [(x, y), (138.5, y), (138.5, 84.5), (ex, 84.5), (ex, ey + 1.1)]
             c.track(net, path, TRUNK_W, I2)                     # PACK5 steps round the mounting hole
-        c.via(net, ex - 0.55, ey); c.via(net, ex + 0.55, ey)
+        for dy in (0.0, 1.1):                                   # four entry vias (robustness review 6)
+            c.via(net, ex - 0.55, ey + dy); c.via(net, ex + 0.55, ey + dy)
     return entry
 
 
@@ -184,12 +192,14 @@ def stages(c, entry):
             q2 = c.find("Q", f"PG{n}", "VBAT")
             px, py = c.mean(q2, "1", "2", "3")
             c.track(vm, [(px, d5[1]), (px, py - 0.4)], 1.5)
-            c.track("VBAT", [(vx, c.pad(q2, "5")[1] + 0.3), (vx, bus_y)], 2.0)
+            c.track("VBAT", [(vx, c.pad(q2, "5")[1] + 0.3), (vx, bus_y + 0.95)], 2.0)
         else:
             c.track("VBAT", [d5, d8], 1.2)
-            c.track("VBAT", [((d5[0] + d8[0]) / 2, d5[1]), (vx, d5[1] + 2.5), (vx, bus_y)], 2.0)
+            c.track("VBAT", [((d5[0] + d8[0]) / 2, d5[1]), (vx, d5[1] + 2.5), (vx, bus_y + 0.95)], 2.0)
         for dx in (-1.05, 0.0, 1.05):
             c.via("VBAT", vx + dx, bus_y)
+        for dx in (-0.525, 0.525):                              # robustness review 6: five, not three (4.2-5 A)
+            c.via("VBAT", vx + dx, bus_y + 0.95)
         last = max(last, vx)
     # VBAT bus on In2 along the columns, up to the battery switch
     q18 = c.find("Q", "QB_G", "SYS")
@@ -254,13 +264,14 @@ def converter(c):
     c.track("+5V", [c.pad(out[-1], "1"), c.pad(out[0], "1")], 1.3)
     vy = iy - 1.6
     c.track("+5V", [c.pad(out[0], "1"), (55.7, vy)], 2.2)
-    for x in (54.6, 55.7, 56.8):
-        c.via("+5V", x, vy)
+    for x in (54.6, 55.7, 56.8):                  # robustness review 6: 0.6 mm drills (no room for a second row beside the
+        c.via("+5V", x, vy, 1.0, 0.6)             # capacitor pads): one and a half times the barrel of a 0.4 mm via each
     # PGND: north between the VIN and VOUT capacitors to a bar along their GND pads with a via row; south between the
     # boot capacitors to vias under the inductor
     y_g = min(c.pad(r, "2")[1] for r in row)
     c.track("GND", [(ix, iy - 1.4), (ix, iy - 2.3), (ix - 0.1, iy - 2.5)], 0.3)
     c.track("GND", [(ix - 0.1, iy - 2.5), (ix - 0.1, y_g)], 0.85)
+    c.via("GND", ix - 0.1, iy - 2.35, 0.6, 0.3); c.via("GND", ix - 0.1, iy - 3.2, 0.6, 0.3)    # robustness review 5
     c.track("GND", [(c.pad(row[0], "2")[0], y_g), (c.pad(row[-1], "2")[0], y_g)], 1.3)
     for r in row:
         x, y = c.pad(r, "2")
@@ -367,7 +378,7 @@ def rail_5v(c):
         c.via("GND", *c.pad(u, "21"), 0.6, 0.3)                  # the GND pin between CC1 and CC2: to the exposed pad
         for d in (-0.85, 0.85):                                  # PCB review: more than one via under the exposed pad
             c.via("GND", c.pad(u, "21")[0], c.pad(u, "21")[1] + d, 0.6, 0.3)
-        c.via(vb, px + 6.6, 134.6); c.via(vb, px + 6.6, 135.8)
+        c.via(vb, px + 6.6, 133.4); c.via(vb, px + 6.6, 134.6); c.via(vb, px + 6.6, 135.8)     # three (robustness review 6)
         # In2 bar close in front of the A row (just clear of the locating peg), not further north: the band it covers
         # takes no via, and the A row's signals need theirs between the row and the ESD arrays
         by = c.pad(j, "A1")[1] + 5.02 - 5.6
@@ -837,6 +848,80 @@ def freeroute(b, name, passes, drop_gnd):
         sys.exit("SES import failed")
 
 
+# ---- ESD arrays in the path (robustness review 4; user, 2026-11-14) ------------------------------------------------
+def split_at_arrays(b):
+    """The autorouter joins a net's pads in whatever order is shortest, so an ESD array often hung on a stub while the
+    receptacle pin went straight on to the resistor or chip. For the router only, every array pad's net is cut in two
+    at the array: the receptacle's pins (and the scripted escape tracks) move to a net of their own that ends in a
+    0.3 mm pad just outside the array pad; the rest of the net keeps the array pad. merge_at_arrays() then joins the
+    two with a short track into the array pad, so a strike passes the array before anything else (tools/esd_stub.py
+    measures the result)."""
+    done, fps = [], list(b.GetFootprints())
+    tracks = list(b.GetTracks())
+    for u in sorted((f for f in fps if f.GetValue() == "TPD4E1U06"), key=lambda f: f.GetReference()):
+        uc = u.GetPosition()
+        for p in u.Pads():
+            net = p.GetNetname()
+            jp = [q for f in fps if f.GetReference().startswith("J") and any(k in f.GetValue() for k in ("USB-C", "MODULE PORT"))
+                  for q in f.Pads() if q.GetNetname() == net]
+            if not net or net == "GND" or net.startswith("unconnected") or not jp:
+                continue
+            c, box = p.GetPosition(), p.GetBoundingBox()
+            dx, dy = c.x - uc.x, c.y - uc.y
+            if abs(dx) >= abs(dy):
+                q = pcbnew.VECTOR2I(int(c.x + math.copysign(box.GetWidth() // 2 + mm(0.45), dx)), c.y)
+            else:
+                q = pcbnew.VECTOR2I(c.x, int(c.y + math.copysign(box.GetHeight() // 2 + mm(0.45), dy)))
+            near = [o for f in fps for o in f.Pads() if o is not p and o.GetNetname() != net
+                    and o.IsOnLayer(F) and o.GetBoundingBox().GetInflated(mm(0.33)).Contains(q)]
+            near += [v for v in tracks if v.Type() == pcbnew.PCB_VIA_T and (v.GetPosition() - q).EuclideanNorm() < v.GetWidth(F) // 2 + mm(0.33)]
+            if near:
+                print(f"no room for the path pad at {u.GetReference()}.{p.GetNumber()} ({net})")
+                continue
+            ni = pcbnew.NETINFO_ITEM(b, net + "~J")
+            b.Add(ni)
+            for o in jp:
+                o.SetNet(ni)
+            for tr in tracks:
+                if tr.GetNetname() == net:
+                    tr.SetNet(ni)
+            fp = pcbnew.FOOTPRINT(b)
+            fp.SetReference(f"VJ{len(done) + 1}")
+            fp.SetFPID(pcbnew.LIB_ID("keyboard", "path_pad"))
+            fp.SetPosition(q)
+            pad = pcbnew.PAD(fp)
+            pad.SetNumber("1")
+            pad.SetAttribute(pcbnew.PAD_ATTRIB_SMD)
+            ls = pcbnew.LSET()
+            ls.AddLayer(F)
+            pad.SetLayerSet(ls)
+            pad.SetShape(F, pcbnew.PAD_SHAPE_CIRCLE)
+            pad.SetSize(F, pcbnew.VECTOR2I(mm(0.3), mm(0.3)))
+            pad.SetPosition(q)
+            pad.SetNet(ni)
+            fp.Add(pad)
+            b.Add(fp)
+            done.append((net, ni, fp, jp, (q.x, q.y), (c.x, c.y)))
+    print(f"ESD arrays: {len(done)} nets cut at their array for the router")
+    return done
+
+
+def merge_at_arrays(b, done):
+    for net, ni, fp, jp, q, c in done:
+        n0 = b.FindNet(net)
+        for tr in b.GetTracks():
+            if tr.GetNetCode() == ni.GetNetCode():
+                tr.SetNet(n0)
+        for o in jp:
+            o.SetNet(n0)
+        b.Remove(fp)
+        t = pcbnew.PCB_TRACK(b)
+        t.SetStart(pcbnew.VECTOR2I(*q)); t.SetEnd(pcbnew.VECTOR2I(*c))
+        t.SetWidth(mm(0.2)); t.SetLayer(F); t.SetNet(n0); t.SetLocked(True)
+        b.Add(t)
+        b.Remove(ni)
+
+
 # ---- ground ----------------------------------------------------------------------------------------------------------
 def gnd_vias(b):
     """A GND via beside every SMD GND pad on the top side (in the pad for an exposed pad), tied to it by a short track."""
@@ -989,7 +1074,9 @@ def power_areas(c, name):
                                             (l1x + 1.0, l1y + 3.3), (x8 - 0.125, l1y + 3.3)]))
         areas.append(("L2", "SW2_conv", F, [(x10 + 0.125, ys - 0.2), (x10 - 0.125, ys - 0.2), (x10 - 0.125, ys + 0.25), (l2x - 1.0, ys + 0.25),
                                             (l2x - 1.0, l1y + 3.3), (x10 + 0.125, l1y + 3.3)]))
-        vias += [("GND", ix - 0.1, yn - 1.1), ("GND", ix, ys + 2.9)]
+        # robustness review 5: the PGND via 0.65 mm from the strip's end (was 1.1) and a second one behind it
+        # (drawn in converter(), before the router: as late additions they found no room in two tries of three)
+        vias += [("GND", ix, ys + 2.9)]
         for f in c.fps.values():
             if "MODULE PORT" not in f.GetValue():
                 continue
@@ -999,7 +1086,7 @@ def power_areas(c, name):
             by = c.pad(j, "A1")[1] + 5.02 - 5.6
             areas.append((f"VBUS_{p}", f"VBUS_{p}_top", F, [(px + 5.9, oy - 0.4), (ox + 0.3, oy - 0.4), (ox + 0.3, oy + 0.4), (px + 7.9, oy + 0.4),
                                                            (px + 7.7, 136.4), (px + 7.7, 137.75), (px + 5.9, 137.75)]))     # down over the TVS0500's VBUS pads
-            areas.append((f"VBUS_{p}", f"VBUS_{p}_in2", I2, [(px - 3.2, by - 2.8), (px + 7.4, by - 2.8), (px + 7.4, by + 3.1), (px - 3.2, by + 3.1)]))
+            areas.append((f"VBUS_{p}", f"VBUS_{p}_in2", I2, [(px - 3.2, by - 2.8), (px + 5.9, by - 2.8), (px + 5.9, by - 3.9), (px + 7.4, by - 3.9), (px + 7.4, by + 3.1), (px - 3.2, by + 3.1)]))
             tx, ty = c.pad(sw, "21")
             box = c.fps[sw].FindPadByNumber("21").GetBoundingBox()
             w, h = MM(box.GetWidth()), MM(box.GetHeight())
@@ -1594,7 +1681,9 @@ def main():
             keep_out(b, mm(100 + ANT_BAND_A), e.GetTop() - mm(1), e.GetRight() + mm(1), e.GetTop() + mm(ANT_BAND_T), "ANT_band", fills=True)
         gnd_vias(b)                                 # before the router, so that it leaves them their room
         router_fences(b)
+    cut = []
     if "--no-route" not in sys.argv:
+        cut = split_at_arrays(b) if name in ("hub-conn", "port-module") else []
         freeroute(b, name, passes, drop_gnd=four)   # (a second run from its own result starts over: no gain)
     on_plane = [t for t in b.GetTracks() if t.Type() != pcbnew.PCB_VIA_T and t.GetLayer() == I1]
     if on_plane:
@@ -1633,6 +1722,10 @@ def main():
             subprocess.run(fill, capture_output=True)
         if not dropped and not closed:
             break
+    if cut:                                         # only now: what the autorouter left open on a cut net was closed by
+        merge_at_arrays(b, cut)                     # finish() inside that half (joined earlier, MOSI_B's A11 went round its array)
+        pcbnew.SaveBoard(str(pcb), b)
+        subprocess.run(fill, capture_output=True)
     if four and "--no-route" not in sys.argv:
         tidy(b)
         pcbnew.SaveBoard(str(pcb), b)

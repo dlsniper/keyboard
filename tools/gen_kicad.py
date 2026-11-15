@@ -397,6 +397,16 @@ SYMBOLS = [
         right=[("1", "~{RESET}", "passive")],
         bottom=[("3", "GND", "power_in")],
     ),
+    # TI TPS3700 SBVS187, DDC (SOT-23-6 thin) pinout: window comparator, 400 mV thresholds, open-drain outputs, 1.8-18 V
+    symbol(
+        "TPS3700DDC", "U", "Package_TO_SOT_SMD:TSOT-23-6",
+        "https://www.ti.com/lit/ds/symlink/tps3700.pdf",
+        "Window comparator, 400 mV reference, OUTA low while INA+ is under it, OUTB low while INB- is over it, open drain, SOT-23-6 thin",
+        "overvoltage undervoltage detector window comparator",
+        left=[("5", "VDD", "passive"), ("3", "INA+", "passive"), ("4", "INB-", "passive")],
+        right=[("1", "OUTA", "passive"), ("6", "OUTB", "passive")],
+        bottom=[("2", "GND", "power_in")],
+    ),
     # 74x125 quad tri-state buffer as one unit (the stock 74xx symbols are derived and multi-unit). SOIC-14.
     symbol(
         "74x125_SO14", "U", "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm",
